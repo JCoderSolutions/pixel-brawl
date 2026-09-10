@@ -1,0 +1,23 @@
+# Godot
+.godot/
+*.import
+export_presets.cfg.imported
+*.translation
+
+# Obsidian (se regeneran solos / estado de sesión local)
+vault/.obsidian/workspace.json
+vault/.obsidian/workspace-mobile.json
+vault/.obsidian/cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Logs / scratch
+*.log
+node_modules/

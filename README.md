@@ -23,5 +23,5 @@ Contrato operativo: `vault/docs/WORKFLOW.md`. Estado vivo: `vault/System/Status-
 
 ## Git
 
-SSH key dedicada para este repo (ver `~/.ssh/config`, alias `github.com-pixelbrawl`).
-Identidad local: `jcoder` / `jcodersolutions@gmail.com`. Conventional Commits.
+- Conventional Commits por unidad de trabajo (detalles en `vault/docs/commit-conventions.md`).
+- Configuración por-PC: la identidad git es local a cada máquina, no está versionada.
