@@ -1,6 +1,6 @@
 ---
 type: "task"
-status: "todo"
+status: "done"
 priority: "high"
 phase: "PHASE-1"
 ---
@@ -13,7 +13,7 @@ Crear el proyecto Godot 4 con configuración pixel-perfect, estructura de carpet
 
 ## Criterios de done
 
-- [ ] `project.godot` creado con `texture/filter` = Nearest y viewport con integer scaling
-- [ ] Carpetas `scenes/`, `scripts/`, `assets/` base creadas
-- [ ] Export presets Web y Android configurados
-- [ ] Rapida: se abre en Godot sin errores y exporta a Web
+- [x] `project.godot` creado con `texture/filter` = Nearest y viewport con integer scaling
+- [x] Carpetas `scenes/`, `scripts/`, `assets/` base creadas
+- [x] Export presets Web y Android configurados
+- [x] Rapida: se abre en Godot sin errores y exporta a Web
