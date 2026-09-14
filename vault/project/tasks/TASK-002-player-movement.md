@@ -1,6 +1,6 @@
 ---
 type: "task"
-status: "todo"
+status: "in-progress"
 priority: "high"
 phase: "PHASE-1"
 ---
@@ -13,7 +13,7 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
 
 ## Criterios de done
 
-- [ ] Script `player.gd` con `move_and_slide` + gravedad ajustable
-- [ ] Cuelga del mapa: colisiones con las plataformas
-- [ ] Flip horizontal según dirección
+- [x] Script `player.gd` con `move_and_slide` + gravedad ajustable
+- [x] Cuelga del mapa: colisiones con las plataformas
+- [x] Flip horizontal según dirección
 - [ ] Rápido test manual: moverse con flechas/WASD se siente responsivo
