@@ -3,6 +3,7 @@
 *.import
 export_presets.cfg.imported
 *.translation
+build/
 
 # Obsidian (se regeneran solos / estado de sesión local)
 vault/.obsidian/workspace.json
