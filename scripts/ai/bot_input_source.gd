@@ -9,6 +9,7 @@ extends InputSource
 ## Priorities, Superfighters style:
 ##   1. Flee a grenade about to blow (NORMAL and HARD).
 ##   2. Unarmed and a weapon is closer than the enemy: grab it.
+##   2b. A power-up it can use is closer than the enemy: walk over it.
 ##   3. Close in on the nearest enemy and punch, slash, shoot or throw.
 ##   Every tick: never walk off a ledge or into a hazard; jump gaps it can
 ##   clear, walls in the way and platforms the enemy stands on.
@@ -133,6 +134,12 @@ func _think() -> void:
 		if _dist(pickup) <= GRAB_DISTANCE:
 			_pending |= InputFrame.PICKUP
 		return
+	var power_up := _nearest(_loose_power_ups())
+	if power_up != null and (_target == null or _dist(power_up) < _dist(_target) * profile.weapon_greed):
+		# Power-ups are collected by touch: just walk onto it.
+		_goal_x = power_up.global_position.x
+		_destination = power_up
+		return
 	_destination = _target
 	if _target == null:
 		_goal_x = NAN
@@ -211,6 +218,19 @@ func _loose_weapons() -> Array:
 	for node in body.get_tree().get_nodes_in_group(WeaponPickup.GROUP):
 		if not node.is_queued_for_deletion() and absf(node.global_position.y - body.global_position.y) <= CLIMB_RANGE:
 			found.append(node)
+	return found
+
+
+## Reachable power-ups, minus medkits while at full health.
+func _loose_power_ups() -> Array:
+	var found := []
+	var full_health: bool = body.health.current_health >= body.health.max_health
+	for node in body.get_tree().get_nodes_in_group(PowerUpPickup.GROUP):
+		if node.is_queued_for_deletion() or absf(node.global_position.y - body.global_position.y) > CLIMB_RANGE:
+			continue
+		if full_health and node.power_up.effect == PowerUpData.Effect.HEAL:
+			continue
+		found.append(node)
 	return found
 
 

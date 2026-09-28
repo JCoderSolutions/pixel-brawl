@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PowerUpData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/powerups/power_up_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"medkit"
+display_name = "Botiquín"
+effect = 0
+amount = 40.0
+duration = 0.0
+color = Color(0.894, 0.231, 0.267, 1)

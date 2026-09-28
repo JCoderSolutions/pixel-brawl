@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PowerUpData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/powerups/power_up_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"shield"
+display_name = "Escudo"
+effect = 3
+amount = 50.0
+duration = 10.0
+color = Color(0.173, 0.91, 0.961, 1)
