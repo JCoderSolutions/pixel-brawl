@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-28"
+last_updated_notes: "TASK-022 festejo del ganador y efecto al agarrar power-ups"
 last_updated_notes: "TASK-022 armas dibujadas con formas nativas (mano y piso)"
 last_updated_notes: "TASK-012 menú de opciones (volumen, pantalla completa, táctil) en progreso"
 last_updated_notes: "TASK-022 luchador animado con formas nativas en progreso"

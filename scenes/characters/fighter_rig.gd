@@ -11,7 +11,8 @@ extends Control
 ## Angles are in radians from hanging straight down; negative swings the
 ## limb forward (towards +x, the facing side).
 
-enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM }
+## VICTORY is never picked from a fighter's state: screens set it.
+enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY }
 
 ## Seconds for a full stride (two steps) at run speed.
 const RUN_PERIOD := 0.5
@@ -58,6 +59,9 @@ func _init() -> void:
 func _process(delta: float) -> void:
 	var fighter := get_parent()
 	if fighter == null or not fighter.has_method("is_on_floor"):
+		# Not on a fighter (winner screen, menus): play `anim` as set.
+		anim_time += delta
+		queue_redraw()
 		return
 	var state := read_state(fighter)
 	armed = state.armed
@@ -109,7 +113,7 @@ static func choose_anim(state: Dictionary) -> Anim:
 static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 	var p := {"hip_y": -LEG_LENGTH, "bob": 0.0, "lean": 0.0,
 			"leg_front": 0.08, "leg_back": -0.08, "knee_front": 0.0, "knee_back": 0.0,
-			"arm_front": -0.1, "arm_back": 0.15}
+			"arm_front": -0.1, "arm_back": 0.15, "shoulder_spread": 0.0}
 	match anim:
 		Anim.IDLE, Anim.AIM:
 			p.bob = 1.0 if sin(t * TAU / 1.2) > 0.0 else 0.0
@@ -155,6 +159,13 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 			p.lean = 0.2
 			p.leg_front = -0.3
 			p.leg_back = 0.3
+		Anim.VICTORY:
+			var pump := sin(t * 10.0)
+			# Arms up in a V from spread shoulders, beside the head.
+			p.shoulder_spread = 4.0
+			p.arm_front = -2.6 - 0.15 * pump
+			p.arm_back = 2.6 + 0.15 * pump
+			p.bob = -2.0 if sin(t * 6.0) > 0.0 else 0.0
 		Anim.HURT:
 			p.lean = -0.35
 			p.arm_front = 2.0
@@ -175,7 +186,8 @@ static func parts(p: Dictionary, team: Color, flashing := false) -> Array[Dictio
 	var shoulder := hip + up * (TORSO_HEIGHT - 1.0)
 	var back := team.darkened(0.3)
 	_limb(out, "leg_back", hip + Vector2(-1.5, 0), p.leg_back, p.knee_back, PANTS.darkened(0.3), DARK)
-	_arm(out, "arm_back", shoulder, p.arm_back, back, SKIN.darkened(0.25))
+	var spread := Vector2(p.shoulder_spread, 0.0)
+	_arm(out, "arm_back", shoulder - spread, p.arm_back, back, SKIN.darkened(0.25))
 	_add(out, "torso", _bar(hip, p.lean + PI, TORSO_HEIGHT, TORSO_WIDTH), team)
 	_limb(out, "leg_front", hip + Vector2(1.5, 0), p.leg_front, p.knee_front, PANTS, DARK)
 	var head := (shoulder + up * (HEAD_SIZE / 2.0 + 1.0)).round()
@@ -183,7 +195,7 @@ static func parts(p: Dictionary, team: Color, flashing := false) -> Array[Dictio
 	_add(out, "head", _box(head - Vector2(half, half), Vector2(HEAD_SIZE, HEAD_SIZE)), SKIN)
 	_add(out, "headband", _box(head - Vector2(half, half - 1.0), Vector2(HEAD_SIZE, 2.0)), team.lightened(0.3))
 	_add(out, "eye", _box(head + Vector2(1.0, -1.0), Vector2(2.0, 2.0)), DARK)
-	_arm(out, "arm_front", shoulder, p.arm_front, team.lightened(0.18), SKIN)
+	_arm(out, "arm_front", shoulder + spread, p.arm_front, team.lightened(0.18), SKIN)
 	# Spread legs reach below the hips' drop: lift the body so the lowest
 	# shoe corner rests on the floor line instead of sinking through it.
 	var lowest := -INF

@@ -65,6 +65,13 @@ func _test_run_cycle() -> void:
 	_check(idle_a.bob != idle_b.bob, "idle breathes")
 	_check(FighterRig.pose(Anim.CROUCH, 0.0).hip_y > FighterRig.pose(Anim.IDLE, 0.0).hip_y, "crouching lowers the hips")
 	_check(FighterRig.pose(Anim.ATTACK, 0.0).arm_front < -1.2, "a punch throws the front arm forward")
+	var cheer := FighterRig.pose(Anim.VICTORY, 0.1)
+	_check(cheer.arm_front < -2.0 and cheer.arm_back > 2.0, "a victory raises both arms")
+	var hops := {}
+	for i in 10:
+		hops[FighterRig.pose(Anim.VICTORY, i * 0.05).bob] = true
+	_check(hops.size() > 1, "a victory hops")
+	_check(not Anim.VICTORY in [FighterRig.choose_anim(_state()), FighterRig.choose_anim(_state({"armed": true}))], "fighters only cheer when told to")
 
 
 func _test_poses_fit_frame() -> void:

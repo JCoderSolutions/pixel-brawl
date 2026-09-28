@@ -238,6 +238,13 @@ func _test_hud_and_winner_screen() -> void:
 	_check(hud.score_text(0) == "1", "HUD score updates (got '%s')" % hud.score_text(0))
 	_check(winner.visible, "winner screen appears on match end")
 	_check(winner.title_text() == "¡P1 GANA!", "winner screen names P1 (got '%s')" % winner.title_text())
+	var rig: FighterRig = winner.get_node("%WinnerRig")
+	_check(rig.anim == FighterRig.Anim.VICTORY, "the winner cheers on the winner screen")
+	_check(rig.color == manager.PLAYER_COLORS[0], "in the winner's colour")
+	var cheer_time := rig.anim_time
+	await process_frame
+	await process_frame
+	_check(rig.anim_time > cheer_time, "the cheer is animated")
 	winner.rematch()
 	await process_frame
 	_check(not winner.visible, "rematch hides the winner screen")
