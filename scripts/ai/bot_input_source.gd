@@ -13,8 +13,8 @@ extends InputSource
 ##   Every tick: never walk off a ledge or into a hazard; jump gaps it can
 ##   clear, walls in the way and platforms the enemy stands on.
 ##
-## Hazards (fire, acid, spikes) join the "hazards" group; the bot treats
-## ground covered by one as a hole.
+## Hazards (HazardZone: void, fire, acid, spikes, flame jets) join the
+## "hazards" group; the bot treats ground covered by a live one as a hole.
 
 const HAZARD_GROUP := &"hazards"
 const WORLD_MASK := 1
@@ -29,6 +29,8 @@ const LEDGE_PROBE := 14.0
 const LEDGE_DROP := 40.0
 const GAP_JUMP_REACH := 56.0
 const CLIMB_HEIGHT := 24.0
+## Hazards up to this high above the feet (spikes, flame jets) block a step.
+const HAZARD_HEADROOM := 24.0
 const CLIMB_RANGE := 56.0
 const GRENADE_THREAT_RADIUS := 64.0
 const GRENADE_MIN_RANGE := 50.0
@@ -234,7 +236,8 @@ func _should_climb() -> bool:
 	return rise >= CLIMB_HEIGHT and absf(_destination.global_position.x - body.global_position.x) <= CLIMB_RANGE
 
 
-## True if there is floor (and no hazard) under the point `offset_x` px ahead.
+## True if there is floor, and no live hazard on it or in the drop above
+## it, at the point `offset_x` px ahead.
 func _safe_ground(offset_x: float) -> bool:
 	var feet := body.global_position
 	var probe := Vector2(feet.x + offset_x, feet.y)
@@ -243,14 +246,41 @@ func _safe_ground(offset_x: float) -> bool:
 	var hit := space.intersect_ray(query)
 	if hit.is_empty() or _is_hazard(hit.collider):
 		return false
-	var point := PhysicsPointQueryParameters2D.new()
-	point.position = hit.position + Vector2(0, -2)
-	point.collide_with_areas = true
-	point.collision_mask = 0xFFFFFFFF
-	for overlap in space.intersect_point(point, 8):
-		if _is_hazard(overlap.collider):
-			return false
+	return not _hazard_in_column(probe.x, feet.y - HAZARD_HEADROOM, hit.position.y + 2.0)
+
+
+## Hazard zones are matched by geometry, not physics queries: HazardZone
+## (scripts/hazards) only scans for fighters and is invisible to queries.
+func _hazard_in_column(x: float, top: float, bottom: float) -> bool:
+	for zone in body.get_tree().get_nodes_in_group(HAZARD_GROUP):
+		if not zone is Node2D or not _hazard_live(zone):
+			continue
+		var rect := _hazard_rect(zone)
+		if x >= rect.position.x and x <= rect.end.x and rect.position.y <= bottom and rect.end.y >= top:
+			return true
+	return false
+
+
+## Off traps are safe to cross, except the ones pulsing on a timer.
+func _hazard_live(zone: Node) -> bool:
+	if zone.get("active") == false:
+		return zone.get("cycle_on") is float and zone.cycle_on > 0.0
 	return true
+
+
+## HazardZone: origin at the top-left corner plus `size`. Anything else: the
+## union of its rectangle collision shapes.
+func _hazard_rect(zone: Node2D) -> Rect2:
+	if zone.get("size") is Vector2:
+		return Rect2(zone.global_position, zone.size)
+	var rect := Rect2()
+	for shape_node in zone.find_children("*", "CollisionShape2D", true, false):
+		var shape := (shape_node as CollisionShape2D).shape as RectangleShape2D
+		if shape == null:
+			continue
+		var r := Rect2(shape_node.global_position - shape.size * 0.5, shape.size)
+		rect = r if not rect.has_area() else rect.merge(r)
+	return rect
 
 
 func _gap_jumpable(direction: float) -> bool:
