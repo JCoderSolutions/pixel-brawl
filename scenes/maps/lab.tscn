@@ -11,13 +11,13 @@
 [ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="w_rifle"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="w_sawed_off"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="w_bat"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="w_bazooka"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/acid_pit.tscn" id="13"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="16"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="12"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="13"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="14"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/acid_pit.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="22"]
 
 [sub_resource type="RectangleShape2D" id="bound_shape"]
 size = Vector2(32, 1200)
@@ -101,30 +101,30 @@ shape = SubResource("bound_shape")
 
 [node name="DestructibleMap" type="Node2D" parent="."]
 script = ExtResource("2")
-layout = PackedStringArray("", "", "", "", "", "", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "..........X......................................X", "", "", "", "", "", "", "", "", "", "", "", ".............................BB", "........................============", "", "....................====================", "", "..................==....................==", "", "..====..........======................======..........====", "", ".======.......==========............==========.......======", "", "BBBBBBBBB...BBBBBBBBBBBBB==========BBBBBBBBBBBBB...BBBBBBBBB", "XXXXXXXXXXXXXXXXXXXXXXXXX..........XXXXXXXXXXXXXXXXXXXXXXXXX", "........................XXXXXXXXXXXX", "")
+layout = PackedStringArray("", "", "", "", "", "", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "..........X......................................X", "", "", "", "", "", "", "", "", "", "", "", ".............................BB", "........................============", "", "....................====================", "", "..................==....................==", "", "..====..........======................======..........====", "", ".======.......==========............==========.......======", "", "BBBBBBBBB..BBBBBBBBBBBBBB==========BBBBBBBBBBBBBB..BBBBBBBBB", "XXXXXXXXXXXXXXXXXXXXXXXXX..........XXXXXXXXXXXXXXXXXXXXXXXXX", "........................XXXXXXXXXXXX", "")
 
 [node name="Hazards" type="Node2D" parent="."]
 
-[node name="AcidChannel" parent="Hazards" instance=ExtResource("13")]
+[node name="AcidChannel" parent="Hazards" instance=ExtResource("17")]
 position = Vector2(400, 489)
 size = Vector2(160, 23)
 
-[node name="AcidPoolLeft" parent="Hazards" instance=ExtResource("13")]
+[node name="AcidPoolLeft" parent="Hazards" instance=ExtResource("17")]
 position = Vector2(144, 484)
-size = Vector2(48, 12)
+size = Vector2(32, 12)
 
-[node name="AcidPoolRight" parent="Hazards" instance=ExtResource("13")]
-position = Vector2(768, 484)
-size = Vector2(48, 12)
+[node name="AcidPoolRight" parent="Hazards" instance=ExtResource("17")]
+position = Vector2(784, 484)
+size = Vector2(32, 12)
 
-[node name="LeakLeft" parent="Hazards" instance=ExtResource("13")]
+[node name="LeakLeft" parent="Hazards" instance=ExtResource("17")]
 position = Vector2(160, 128)
 size = Vector2(16, 352)
 cycle_on = 1.0
 cycle_off = 3.5
 damage_per_second = 60.0
 
-[node name="LeakRight" parent="Hazards" instance=ExtResource("13")]
+[node name="LeakRight" parent="Hazards" instance=ExtResource("17")]
 position = Vector2(784, 128)
 size = Vector2(16, 352)
 cycle_on = 1.0
@@ -132,12 +132,12 @@ cycle_off = 3.5
 damage_per_second = 60.0
 active = false
 
-[node name="FloodJet" parent="Hazards" instance=ExtResource("16")]
+[node name="FloodJet" parent="Hazards" instance=ExtResource("20")]
 position = Vector2(464, 432)
 kind = 2
 size = Vector2(32, 48)
 
-[node name="FloodSwitch" parent="Hazards" instance=ExtResource("18")]
+[node name="FloodSwitch" parent="Hazards" instance=ExtResource("22")]
 position = Vector2(472, 304)
 targets = Array[NodePath]([NodePath("../FloodJet")])
 cooldown = 3.0
@@ -157,7 +157,7 @@ position = Vector2(296, 384)
 position = Vector2(664, 384)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
-weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("w_rifle"), ExtResource("w_sawed_off"), ExtResource("w_bat"), ExtResource("w_bazooka")])
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15")])
 spawn_interval = 5
 max_active = 4
 

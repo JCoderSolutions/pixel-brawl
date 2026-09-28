@@ -26,10 +26,8 @@ selector de mapa en el menú.
 - [x] Menú: opción de mapa (aleatorio o uno fijo; se recuerda al volver)
 - [x] Test headless `scripts/test_maps.gd`
 - [ ] Test manual: jugar cada mapa en PC y teléfono
-- [x] Sumar las armas nuevas (rifle, recortada, bate, bazuca) a los spawners
-      de los 4 mapas y de `test_arena` (`test_maps.gd` exige el arsenal completo)
-- [x] Bots terminan la partida en lab y fundición: saltan pozos de 48 px y
-      suben a islas a través de la lava (`main` quedó en rojo al juntar #20 y #22)
+- [x] Todas las armas (PR #21) y los power-ups en los spawners de los mapas
+      y de `test_arena`
 
 ## Mapas
 
@@ -46,9 +44,9 @@ selector de mapa en el menú.
   (32 px): el salto llega a ~57 px y los bots bajan escalones de hasta 72 px
   (4 filas), así que no hace falta escalonar de a una fila para bajar.
 - Plataformas en pirámide de tablones `=` (atravesables desde abajo).
-- Huecos saltables de 3 tiles como máximo: los bots buscan dónde aterrizar
-  entre 56 y 80 px adelante, hasta 36 px más arriba (`GAP_JUMP_MAX`,
-  `JUMP_RISE` en `bot_input_source.gd`).
+- Huecos saltables de 3 tiles como máximo; si el hueco tiene un peligro
+  vivo (pileta, trampa en ciclo), 2 tiles: el bot frena al ver el peligro y
+  salta solo si hay suelo seguro 56 px más adelante.
 - Ningún punto de arma con algo donde pararse justo encima (1-3 filas): un
   bot parado arriba no alcanza el arma y se queda esperando.
 - Pozos 4 px o más por debajo del borde del suelo.

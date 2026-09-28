@@ -11,13 +11,13 @@
 [ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="w_rifle"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="w_sawed_off"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="w_bat"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="w_bazooka"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/void_zone.tscn" id="14"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="17"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="12"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="13"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="14"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/void_zone.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="21"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="22"]
 
 [sub_resource type="RectangleShape2D" id="bound_shape"]
 size = Vector2(32, 1200)
@@ -123,25 +123,25 @@ layout = PackedStringArray("", "", "", "", "", "", "......................XXXXXX
 
 [node name="Hazards" type="Node2D" parent="."]
 
-[node name="Drop" parent="Hazards" instance=ExtResource("14")]
+[node name="Drop" parent="Hazards" instance=ExtResource("18")]
 position = Vector2(384, 464)
 size = Vector2(192, 64)
 
-[node name="EdgeLeft" parent="Hazards" instance=ExtResource("14")]
+[node name="EdgeLeft" parent="Hazards" instance=ExtResource("18")]
 position = Vector2(-64, 464)
 size = Vector2(96, 64)
 
-[node name="EdgeRight" parent="Hazards" instance=ExtResource("14")]
+[node name="EdgeRight" parent="Hazards" instance=ExtResource("18")]
 position = Vector2(928, 464)
 size = Vector2(96, 64)
 
-[node name="SteelBeam" parent="Hazards" instance=ExtResource("17")]
+[node name="SteelBeam" parent="Hazards" instance=ExtResource("21")]
 position = Vector2(416, 112)
 size = Vector2(128, 16)
 color = Color(0.761, 0.522, 0.412, 1)
 detail_color = Color(0.451, 0.243, 0.224, 1)
 
-[node name="BeamSwitch" parent="Hazards" instance=ExtResource("18")]
+[node name="BeamSwitch" parent="Hazards" instance=ExtResource("22")]
 position = Vector2(664, 400)
 targets = Array[NodePath]([NodePath("../SteelBeam")])
 one_shot = true
@@ -161,7 +161,7 @@ position = Vector2(168, 320)
 position = Vector2(776, 320)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
-weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("w_rifle"), ExtResource("w_sawed_off"), ExtResource("w_bat"), ExtResource("w_bazooka")])
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15")])
 spawn_interval = 5
 max_active = 4
 

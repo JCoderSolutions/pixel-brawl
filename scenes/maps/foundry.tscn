@@ -11,6 +11,14 @@
 [ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="12"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="13"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="14"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/fire_pit.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="21"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="22"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="w_rifle"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="w_sawed_off"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="w_bat"]
@@ -94,39 +102,39 @@ shape = SubResource("bound_shape")
 
 [node name="DestructibleMap" type="Node2D" parent="."]
 script = ExtResource("2")
-layout = PackedStringArray("", "", "", "", "", "", "", "", "................XXXXXXXXXXXXXXXXXXXXXXXXXXXX", "", "", "", "", "", "", "", "", "", "", "", "..................========================", "", "............=========..................=========", "", "......====........................................====", "", "....========....................................========", "", "..============......XXXX...XXXXXX...XXXX......============", ".#........................................................#", "BBBBBBBBBBBBBBBBBB........................BBBBBBBBBBBBBBBBBB", "XXXXXXXXXXXXXXXXXX........................XXXXXXXXXXXXXXXXXX", ".................XXXXXXXXXXXXXXXXXXXXXXXXXX", "")
+layout = PackedStringArray("", "", "", "", "", "", "", "", "................XXXXXXXXXXXXXXXXXXXXXXXXXXXX", "", "", "", "", "", "", "", "", "", "", "", "..................========================", "", "............=========..................=========", "", "......====........................................====", "", "....========....................................========", "", "..============................................============", ".#........................................................#", "BBBBBBBBBBBBBBBBBB..XXXXX..XXXXXX..XXXXX..BBBBBBBBBBBBBBBBBB", "XXXXXXXXXXXXXXXXXX........................XXXXXXXXXXXXXXXXXX", ".................XXXXXXXXXXXXXXXXXXXXXXXXXX", "")
 
 [node name="Hazards" type="Node2D" parent="."]
 
-[node name="LavaLake" parent="Hazards" instance=ExtResource("12")]
+[node name="LavaLake" parent="Hazards" instance=ExtResource("16")]
 position = Vector2(288, 484)
 size = Vector2(384, 28)
 damage_per_second = 70.0
 
-[node name="JetLeft" parent="Hazards" instance=ExtResource("16")]
-position = Vector2(400, 432)
+[node name="JetLeft" parent="Hazards" instance=ExtResource("20")]
+position = Vector2(352, 432)
 cycle_on = 1.0
 cycle_off = 2.5
 
-[node name="JetRight" parent="Hazards" instance=ExtResource("16")]
-position = Vector2(544, 432)
+[node name="JetRight" parent="Hazards" instance=ExtResource("20")]
+position = Vector2(592, 432)
 cycle_on = 1.0
 cycle_off = 2.5
 active = true
 
-[node name="CrucibleLeft" parent="Hazards" instance=ExtResource("17")]
+[node name="CrucibleLeft" parent="Hazards" instance=ExtResource("21")]
 position = Vector2(352, 144)
 size = Vector2(32, 32)
 color = Color(0.894, 0.231, 0.267, 1)
 detail_color = Color(0.996, 0.682, 0.204, 1)
 
-[node name="CrucibleRight" parent="Hazards" instance=ExtResource("17")]
+[node name="CrucibleRight" parent="Hazards" instance=ExtResource("21")]
 position = Vector2(576, 144)
 size = Vector2(32, 32)
 color = Color(0.894, 0.231, 0.267, 1)
 detail_color = Color(0.996, 0.682, 0.204, 1)
 
-[node name="HoistSwitch" parent="Hazards" instance=ExtResource("18")]
+[node name="HoistSwitch" parent="Hazards" instance=ExtResource("22")]
 position = Vector2(480, 304)
 targets = Array[NodePath]([NodePath("../CrucibleLeft"), NodePath("../CrucibleRight")])
 one_shot = true
@@ -140,21 +148,22 @@ position = Vector2(80, 480)
 position = Vector2(864, 480)
 
 [node name="P3" type="Marker2D" parent="Spawns"]
-position = Vector2(472, 448)
+position = Vector2(472, 480)
 
 [node name="P4" type="Marker2D" parent="Spawns"]
 position = Vector2(120, 384)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15")])
 weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("w_rifle"), ExtResource("w_sawed_off"), ExtResource("w_bat"), ExtResource("w_bazooka")])
 spawn_interval = 5
 max_active = 4
 
 [node name="W1" type="Marker2D" parent="WeaponSpawner"]
-position = Vector2(344, 438)
+position = Vector2(328, 470)
 
 [node name="W2" type="Marker2D" parent="WeaponSpawner"]
-position = Vector2(600, 438)
+position = Vector2(616, 470)
 
 [node name="W3" type="Marker2D" parent="WeaponSpawner"]
 position = Vector2(384, 310)
