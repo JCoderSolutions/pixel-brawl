@@ -203,9 +203,10 @@ window/size/viewport_height=270
 window/size/mode=2
 window/size/window_width_override=960
 window/size/window_height_override=540
-window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
+window/stretch/mode="viewport"
+window/stretch/aspect="expand"
 window/stretch/scale_mode=1
+window/handheld/orientation=6
 
 [layer_names]
 
@@ -217,6 +218,9 @@ window/stretch/scale_mode=1
 
 [rendering]
 
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
+environment/defaults/default_clear_color=Color(0.1, 0.11, 0.17, 1)
 textures/canvas_textures/default_texture_filter=0
 textures/vram_compression/import_etc2_astc=true
 renderer/rendering_method="mobile"

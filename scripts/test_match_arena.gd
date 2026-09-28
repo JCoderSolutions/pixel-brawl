@@ -30,7 +30,10 @@ func _run_tests() -> void:
 	await _test_arena_platforms_reachable()
 	await _test_game_boots_into_menu()
 	await _test_arena_runs_two_player_match()
-	print("OK: weapon buttons per slot, pick up/fire/drop, semi-auto, facing, death drop + ragdoll, jump height, reachable platforms, menu boot and 2P arena match verified" if _ok else "FAILED")
+	_test_display_is_pixel_perfect_and_responsive()
+	_test_body_fits_32px_sprite()
+	await _test_arena_camera_centres_the_map()
+	print("OK: weapon buttons per slot, pick up/fire/drop, semi-auto, facing, death drop + ragdoll, jump height, reachable platforms, menu boot, 2P arena match, pixel-perfect responsive display and 32x32 body verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -291,3 +294,46 @@ func _test_arena_runs_two_player_match() -> void:
 	arena.queue_free()
 	await process_frame
 	_check(manager.state == manager.State.IDLE, "leaving the arena tears the match down")
+
+
+## Pixel art is upscaled from the 480x270 base by whole numbers only, and
+## any spare room (phones, portrait, ultrawide) shows more world instead of
+## black bars.
+func _test_display_is_pixel_perfect_and_responsive() -> void:
+	var setting := func(key: String): return ProjectSettings.get_setting(key)
+	_check(setting.call("display/window/stretch/mode") == "viewport", "renders at base resolution, then upscales")
+	_check(setting.call("display/window/stretch/aspect") == "expand", "extra screen space extends the view")
+	_check(setting.call("display/window/stretch/scale_mode") == 1, "upscale by whole numbers only")
+	_check(setting.call("rendering/2d/snap/snap_2d_transforms_to_pixel") == true, "sprites snap to whole pixels")
+	_check(setting.call("display/window/handheld/orientation") == DisplayServer.SCREEN_SENSOR, "phones rotate freely")
+	_check(setting.call("rendering/textures/canvas_textures/default_texture_filter") == 0, "nearest filtering keeps pixels sharp")
+
+
+## Sprites will be 32x32 frames anchored at the feet (origin at the bottom
+## centre); every body shape has to fit inside that frame.
+func _test_body_fits_32px_sprite() -> void:
+	var player = PLAYER_SCENE.instantiate()
+	var frame := Rect2(-16, -32, 32, 32)
+	for path in ["CollisionShape2D", "Hurtbox/CollisionShape2D"]:
+		var collider: CollisionShape2D = player.get_node(path)
+		var size: Vector2 = collider.shape.size
+		var rect := Rect2(collider.position - size / 2.0, size)
+		_check(frame.encloses(rect), "%s %s fits the 32x32 sprite frame" % [path, rect])
+	var visual: Control = player.get_node("Visual")
+	_check(frame.encloses(Rect2(visual.position, visual.size)), "placeholder visual fits the 32x32 frame")
+	player.free()
+
+
+func _test_arena_camera_centres_the_map() -> void:
+	var arena: Node2D = load(ARENA_PATH).instantiate()
+	arena.autostart = false
+	root.add_child(arena)
+	var camera := arena.get_node_or_null("Camera2D") as Camera2D
+	_check(camera != null and camera.anchor_mode == Camera2D.ANCHOR_MODE_DRAG_CENTER, "arena has a centred camera")
+	if camera != null:
+		_check(camera.position == Vector2(240, 135), "camera centres the 480x270 map, so extra space splits evenly")
+	var background: ColorRect = arena.get_node("Background")
+	_check(ProjectSettings.get_setting("rendering/environment/defaults/default_clear_color") == background.color,
+		"space beyond the map uses the arena background colour")
+	arena.queue_free()
+	await process_frame

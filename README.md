@@ -17,6 +17,14 @@ la arena (gana el primero en llevarse 3 rondas).
 | Disparar arma | K | . / Numpad 1 | RB |
 | Recoger / soltar arma | L | , / Numpad 2 | Y |
 
+### Pantalla y arte
+
+- Resolución base 480x270, escalada en múltiplos enteros (pixel-perfect).
+  En teléfono (vertical u horizontal) o pantallas anchas el espacio sobrante
+  muestra más mundo en vez de franjas negras; la cámara centra el mapa.
+- Sprites de 32x32 con el origen en los pies (centro inferior). El cuerpo
+  del jugador (18x30) y su hurtbox caben dentro de ese marco.
+
 ## Stack
 
 | Componente | Elección |
