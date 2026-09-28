@@ -44,7 +44,9 @@ selector de mapa en el menú.
   (32 px): el salto llega a ~57 px y los bots solo bajan escalones de hasta
   ~40 px, así que con 3 filas suben pero no bajan.
 - Plataformas en pirámide de tablones `=` (atravesables desde abajo).
-- Huecos saltables de 3 tiles como máximo (los bots saltan hasta 56 px).
+- Huecos saltables de 3 tiles como máximo; si el hueco tiene un peligro
+  vivo (pileta, trampa en ciclo), 2 tiles: el bot frena al ver el peligro y
+  salta solo si hay suelo seguro 56 px más adelante.
 - Ningún punto de arma con algo donde pararse justo encima (1-3 filas): un
   bot parado arriba no alcanza el arma y se queda esperando.
 - Pozos 4 px o más por debajo del borde del suelo.

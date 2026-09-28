@@ -101,7 +101,7 @@ shape = SubResource("bound_shape")
 
 [node name="DestructibleMap" type="Node2D" parent="."]
 script = ExtResource("2")
-layout = PackedStringArray("", "", "", "", "", "", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "..........X......................................X", "", "", "", "", "", "", "", "", "", "", "", ".............................BB", "........................============", "", "....................====================", "", "..................==....................==", "", "..====..........======................======..........====", "", ".======.......==========............==========.......======", "", "BBBBBBBBB...BBBBBBBBBBBBB==========BBBBBBBBBBBBB...BBBBBBBBB", "XXXXXXXXXXXXXXXXXXXXXXXXX..........XXXXXXXXXXXXXXXXXXXXXXXXX", "........................XXXXXXXXXXXX", "")
+layout = PackedStringArray("", "", "", "", "", "", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "..........X......................................X", "", "", "", "", "", "", "", "", "", "", "", ".............................BB", "........................============", "", "....................====================", "", "..................==....................==", "", "..====..........======................======..........====", "", ".======.......==========............==========.......======", "", "BBBBBBBBB..BBBBBBBBBBBBBB==========BBBBBBBBBBBBBB..BBBBBBBBB", "XXXXXXXXXXXXXXXXXXXXXXXXX..........XXXXXXXXXXXXXXXXXXXXXXXXX", "........................XXXXXXXXXXXX", "")
 
 [node name="Hazards" type="Node2D" parent="."]
 
@@ -111,11 +111,11 @@ size = Vector2(160, 23)
 
 [node name="AcidPoolLeft" parent="Hazards" instance=ExtResource("17")]
 position = Vector2(144, 484)
-size = Vector2(48, 12)
+size = Vector2(32, 12)
 
 [node name="AcidPoolRight" parent="Hazards" instance=ExtResource("17")]
-position = Vector2(768, 484)
-size = Vector2(48, 12)
+position = Vector2(784, 484)
+size = Vector2(32, 12)
 
 [node name="LeakLeft" parent="Hazards" instance=ExtResource("17")]
 position = Vector2(160, 128)

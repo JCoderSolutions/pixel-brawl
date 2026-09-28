@@ -94,7 +94,7 @@ shape = SubResource("bound_shape")
 
 [node name="DestructibleMap" type="Node2D" parent="."]
 script = ExtResource("2")
-layout = PackedStringArray("", "", "", "", "", "", "", "", "................XXXXXXXXXXXXXXXXXXXXXXXXXXXX", "", "", "", "", "", "", "", "", "", "", "", "..................========================", "", "............=========..................=========", "", "......====........................................====", "", "....========....................................========", "", "..============......XXXX...XXXXXX...XXXX......============", ".#........................................................#", "BBBBBBBBBBBBBBBBBB........................BBBBBBBBBBBBBBBBBB", "XXXXXXXXXXXXXXXXXX........................XXXXXXXXXXXXXXXXXX", ".................XXXXXXXXXXXXXXXXXXXXXXXXXX", "")
+layout = PackedStringArray("", "", "", "", "", "", "", "", "................XXXXXXXXXXXXXXXXXXXXXXXXXXXX", "", "", "", "", "", "", "", "", "", "", "", "..................========================", "", "............=========..................=========", "", "......====........................................====", "", "....========....................................========", "", "..============................................============", ".#........................................................#", "BBBBBBBBBBBBBBBBBB..XXXXX..XXXXXX..XXXXX..BBBBBBBBBBBBBBBBBB", "XXXXXXXXXXXXXXXXXX........................XXXXXXXXXXXXXXXXXX", ".................XXXXXXXXXXXXXXXXXXXXXXXXXX", "")
 
 [node name="Hazards" type="Node2D" parent="."]
 
@@ -104,12 +104,12 @@ size = Vector2(384, 28)
 damage_per_second = 70.0
 
 [node name="JetLeft" parent="Hazards" instance=ExtResource("20")]
-position = Vector2(400, 432)
+position = Vector2(352, 432)
 cycle_on = 1.0
 cycle_off = 2.5
 
 [node name="JetRight" parent="Hazards" instance=ExtResource("20")]
-position = Vector2(544, 432)
+position = Vector2(592, 432)
 cycle_on = 1.0
 cycle_off = 2.5
 active = true
@@ -140,7 +140,7 @@ position = Vector2(80, 480)
 position = Vector2(864, 480)
 
 [node name="P3" type="Marker2D" parent="Spawns"]
-position = Vector2(472, 448)
+position = Vector2(472, 480)
 
 [node name="P4" type="Marker2D" parent="Spawns"]
 position = Vector2(120, 384)
@@ -151,10 +151,10 @@ spawn_interval = 5
 max_active = 4
 
 [node name="W1" type="Marker2D" parent="WeaponSpawner"]
-position = Vector2(344, 438)
+position = Vector2(328, 470)
 
 [node name="W2" type="Marker2D" parent="WeaponSpawner"]
-position = Vector2(600, 438)
+position = Vector2(616, 470)
 
 [node name="W3" type="Marker2D" parent="WeaponSpawner"]
 position = Vector2(384, 310)
