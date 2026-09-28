@@ -78,3 +78,8 @@ shape = SubResource("platform_shape3")
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(240, 200)
+
+[node name="Dummy" parent="." instance=ExtResource("1")]
+modulate = Color(1, 0.55, 0.55, 1)
+position = Vector2(300, 200)
+is_controlled = false
