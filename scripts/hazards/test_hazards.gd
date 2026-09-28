@@ -279,6 +279,7 @@ func _test_hazards_arena() -> void:
 	var kinds := {}
 	for zone in arena.find_children("*", "HazardZone", true, false):
 		kinds[zone.kind] = true
+		_check(zone.is_in_group(HazardZone.GROUP), "%s is in the hazards group for bots" % zone.name)
 	_check(kinds.has(HazardZone.Kind.VOID) and kinds.has(HazardZone.Kind.FIRE) and kinds.has(HazardZone.Kind.ACID), "arena has void, fire and acid")
 	var switches := arena.find_children("*", "TrapSwitch", true, false)
 	_check(switches.size() >= 2, "arena has trap switches (%d)" % switches.size())

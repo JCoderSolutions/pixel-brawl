@@ -26,6 +26,8 @@ const COLORS := {
 }
 ## Players only (layer 2).
 const FIGHTER_MASK := 2
+## Every zone joins this group so bots can steer around it like a gap.
+const GROUP := &"hazards"
 
 @export var kind := Kind.FIRE:
 	set(value):
@@ -68,6 +70,7 @@ func _ready() -> void:
 	_update_shape()
 	if Engine.is_editor_hint():
 		return
+	add_to_group(GROUP)
 	collision_layer = 0
 	collision_mask = FIGHTER_MASK
 	monitorable = false
