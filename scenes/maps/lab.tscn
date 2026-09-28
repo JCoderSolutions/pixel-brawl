@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
@@ -11,6 +11,10 @@
 [ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="w_rifle"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="w_sawed_off"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="w_bat"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="w_bazooka"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/acid_pit.tscn" id="13"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
@@ -153,7 +157,7 @@ position = Vector2(296, 384)
 position = Vector2(664, 384)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
-weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("w_rifle"), ExtResource("w_sawed_off"), ExtResource("w_bat"), ExtResource("w_bazooka")])
 spawn_interval = 5
 max_active = 4
 

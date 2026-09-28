@@ -17,6 +17,8 @@ const BIG_MAPS := [
 	"res://scenes/maps/lab.tscn",
 	"res://scenes/maps/foundry.tscn",
 ]
+## Every weapon in scripts/weapons/data/ drops in every map.
+const ALL_WEAPONS := [&"pistol", &"shotgun", &"katana", &"grenade", &"assault_rifle", &"sawed_off", &"bat", &"bazooka"]
 const TILE := 16
 ## Movement limits in tiles, from the player (~57 px jump, ~100 px long jump).
 const JUMP_ROWS := 3
@@ -124,6 +126,9 @@ func _test_map_layout(path: String) -> void:
 
 	var spawner: WeaponSpawner = map.get_node("WeaponSpawner")
 	_check(spawner.weapons.any(func(w): return w is GrenadeData), "%s spawns grenades" % name)
+	var ids := spawner.weapons.map(func(w): return w.id)
+	for weapon_id in ALL_WEAPONS:
+		_check(weapon_id in ids, "%s spawns %s" % [name, weapon_id])
 	var space := map.get_world_2d().direct_space_state
 	for marker in spawner.get_children():
 		if marker is Marker2D:
