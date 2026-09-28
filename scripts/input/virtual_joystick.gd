@@ -1,4 +1,4 @@
-class_name VirtualJoystick
+class_name TouchStick
 extends Control
 ## On-screen stick for touch screens. The first finger that lands inside the
 ## control becomes its owner and sets the stick's centre (floating stick), so

@@ -54,11 +54,11 @@ func _spawn_controls(mode: TouchControls.Visibility, slot := 1) -> TouchControls
 
 
 func _test_axis_math() -> void:
-	_check(VirtualJoystick.axis_for(Vector2(3, 0), 32, 0.2) == Vector2.ZERO, "inside deadzone is neutral")
-	_check(VirtualJoystick.axis_for(Vector2(100, 0), 32, 0.2).is_equal_approx(Vector2(1, 0)), "past radius clamps to 1")
-	var half := VirtualJoystick.axis_for(Vector2(-19.2, 0), 32, 0.2)
+	_check(TouchStick.axis_for(Vector2(3, 0), 32, 0.2) == Vector2.ZERO, "inside deadzone is neutral")
+	_check(TouchStick.axis_for(Vector2(100, 0), 32, 0.2).is_equal_approx(Vector2(1, 0)), "past radius clamps to 1")
+	var half := TouchStick.axis_for(Vector2(-19.2, 0), 32, 0.2)
 	_check(is_equal_approx(half.x, -0.5), "deadzone is rescaled so 60%% travel reads 0.5 (got %s)" % half.x)
-	_check(VirtualJoystick.axis_for(Vector2(0, 40), 0, 0.2) == Vector2.ZERO, "zero radius is safe")
+	_check(TouchStick.axis_for(Vector2(0, 40), 0, 0.2) == Vector2.ZERO, "zero radius is safe")
 
 
 func _test_layout_fits_every_orientation() -> void:

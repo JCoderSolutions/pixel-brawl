@@ -30,7 +30,7 @@ const RUNTIME_ACTIONS := ["fire", "pickup"]
 ## AUTO shows the controls on touch screens, or as soon as a finger touches.
 @export var visibility := Visibility.AUTO
 
-@onready var joystick: VirtualJoystick = $Joystick
+@onready var joystick: TouchStick = $Joystick
 @onready var buttons := {
 	"Attack": $Attack as TouchActionButton,
 	"Jump": $Jump as TouchActionButton,

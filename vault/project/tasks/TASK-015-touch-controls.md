@@ -30,7 +30,7 @@ que alimentan las mismas acciones `p1_*` que el teclado y el gamepad.
 
 ## Detalles
 
-- Sin código táctil en el player: `VirtualJoystick` y `TouchActionButton` hacen
+- Sin código táctil en el player: `TouchStick` y `TouchActionButton` hacen
   `Input.action_press/release`, y `DeviceInputSource` los lee como cualquier
   otro dispositivo. Así el input sigue siendo un `InputFrame` determinista.
 - Cada control guarda el índice de su dedo: stick + salto + golpe a la vez.
