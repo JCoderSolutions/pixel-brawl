@@ -3,8 +3,9 @@ extends Node2D
 
 ## Hand of a fighter. Add it as a child of any body (player, bot, remote peer)
 ## at hand height and drive it with `facing`, `try_use()`, `try_pick_up()`
-## and `drop()`. Ranged weapons spawn Projectiles; melee weapons reuse the
-## same Hitbox as punches, so both go through Hurtbox -> HealthComponent.
+## and `drop()`. Ranged weapons spawn Projectiles, grenades are thrown as
+## Grenade bodies and melee weapons reuse the same Hitbox as punches, so every
+## hit goes through Hurtbox -> HealthComponent.
 
 signal weapon_equipped(weapon: WeaponData, ammo: int)
 signal weapon_dropped(weapon: WeaponData, ammo: int)
@@ -14,6 +15,7 @@ signal fired(weapon: WeaponData, projectile_count: int)
 
 const PROJECTILE_SCENE := preload("res://scenes/items/projectile.tscn")
 const PICKUP_SCENE := preload("res://scenes/items/weapon_pickup.tscn")
+const GRENADE_SCENE := preload("res://scenes/items/grenade.tscn")
 
 @export var pickup_radius := 28.0
 @export var drop_velocity := Vector2(90.0, -160.0)
@@ -70,7 +72,9 @@ func try_use() -> bool:
 		return false
 	var used := weapon
 	_cooldown = used.cooldown
-	if used.is_ranged():
+	if used is GrenadeData:
+		_throw(used)
+	elif used.is_ranged():
 		_fire(used)
 	else:
 		_start_swing(used)
@@ -121,6 +125,15 @@ func _fire(data: WeaponData) -> void:
 		_world().add_child(projectile)
 		projectile.setup(muzzle, forward.rotated(deg_to_rad(angle)), data, _wielder(), exclude)
 	fired.emit(data, angles.size())
+
+
+func _throw(data: GrenadeData) -> void:
+	var grenade: Grenade = GRENADE_SCENE.instantiate()
+	_world().add_child(grenade)
+	var from := global_position + Vector2(data.muzzle_offset * facing, 0.0)
+	var launch := Vector2(data.throw_velocity.x * facing, data.throw_velocity.y)
+	grenade.setup(data, from, launch, _wielder())
+	fired.emit(data, 1)
 
 
 func _start_swing(data: WeaponData) -> void:

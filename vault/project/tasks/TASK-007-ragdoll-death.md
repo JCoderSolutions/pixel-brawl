@@ -25,7 +25,7 @@ la dirección del golpe final y queda tirado en el mapa, como en Superfighters.
 - [x] Escena de prueba propia `scenes/effects/ragdoll_test.tscn`
 - [x] Test headless `scripts/test_ragdoll.gd`
 - [ ] Test manual de sensaciones: el vuelo y la caída se ven bien
-- [ ] Enganchar `RagdollOnDeath` a `player.tscn` / arenas (cuando se libere el dueño del archivo)
+- [x] Enganchar `RagdollOnDeath` a `player.tscn`; la arena limpia los cuerpos al empezar cada ronda
 
 ## Detalles
 
