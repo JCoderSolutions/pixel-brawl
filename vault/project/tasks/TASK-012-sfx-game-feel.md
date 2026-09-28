@@ -23,7 +23,13 @@ gratuitos CC0.
 - [x] `ImpactBurst` (`scenes/effects/impact_burst.gd`): partículas CPU sin textura (píxeles cuadrados), presets HIT, SPARK, DUST, DEBRIS, EXPLOSION con paleta Endesga 32
 - [x] `GameFeel` (autoload, `scenes/effects/game_feel.gd`): se engancha solo a las señales existentes (`Hitbox.hit_landed`, `Projectile.impacted`, `WeaponHolder.fired/weapon_equipped`, `Explosion.exploded`, `DestructibleBlock.destroyed`, `HealthComponent.died`) y detecta salto/aterrizaje de los luchadores sin tocar `player.gd`
 - [x] Hit-stop en golpes melee (0.06 s) y explosiones (0.09 s), en tiempo real
-- [ ] Música de partida (falta elegir pista CC0 o componer chiptune)
+- [x] Música chiptune propia (CC0) generada por `assets/audio/generate_music.py`:
+      `menu` (100 BPM, La menor, 19.2 s) y `battle` (150 BPM, Mi menor, 25.6 s),
+      en loop sin cortes e importadas en IMA-ADPCM (~490 KB en total).
+      `AudioManager.play_track()` no reinicia la pista que ya suena; el menú pone
+      `menu` y cada partida `battle`. Los `.import` de `assets/audio/music/` se
+      versionan (excepción en `.gitignore`). Test `scripts/audio/test_music.gd`
+- [ ] Test manual de la música (volumen frente a los SFX, que el loop no se note)
 - [ ] Menú de opciones con sliders de volumen (la API ya está)
 - [ ] Test manual de sensación (volúmenes, duración del hit-stop)
 

@@ -1,6 +1,8 @@
 # Godot
 .godot/
 *.import
+# La música necesita sus opciones de import (loop + IMA-ADPCM) en el repo.
+!assets/audio/music/*.import
 export_presets.cfg.imported
 *.translation
 build/

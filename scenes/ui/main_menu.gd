@@ -18,6 +18,9 @@ static var _last_map := 0
 
 
 func _ready() -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_track(&"menu")
 	_play_button.pressed.connect(_on_play)
 	_quit_button.pressed.connect(get_tree().quit)
 	_quit_button.visible = not OS.has_feature("web")
