@@ -29,6 +29,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-001-setup-godot-project|TASK-001 — Setup Godot]] | `done` | high | PHASE-1 |
 | [[project/tasks/TASK-002-player-movement|TASK-002 — Player movement]] | `in-progress` | high | PHASE-1 |
 | [[project/tasks/TASK-003-melee-combat|TASK-003 — Basic melee combat]] | `in-progress` | high | PHASE-1 |
+| [[project/tasks/TASK-007-ragdoll-death|TASK-007 — Ragdoll death]] | `in-progress` | medium | PHASE-2 |
 
 ## Tareas por desglosar (backlog)
 
@@ -37,7 +38,6 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | TASK-004 — Destructible tile layer | PHASE-1 |
 | TASK-005 — Weapon spawn and pickup | PHASE-2 |
 | TASK-006 — Grenade + explosion destroys tiles | PHASE-2 |
-| TASK-007 — Ragdoll death | PHASE-2 |
 | TASK-008 — Local 2-player split keyboard | PHASE-2 |
 | TASK-009 — Map set (4+ maps) | PHASE-3 |
 | TASK-010 — Power-up system | PHASE-3 |
