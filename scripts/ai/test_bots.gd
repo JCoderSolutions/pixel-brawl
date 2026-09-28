@@ -167,11 +167,27 @@ func _test_bot_jumps_small_gap() -> void:
 	await _free(arena)
 
 
+## Stand-in for HazardZone (scripts/hazards): origin at the top-left corner,
+## `size`, `active`, in the hazards group and invisible to physics queries.
+func _add_zone(arena: Node2D, rect: Rect2, active: bool) -> Node2D:
+	var script := GDScript.new()
+	script.source_code = "extends Node2D\nvar size := Vector2.ZERO\nvar active := true\nvar cycle_on := 0.0\n"
+	script.reload()
+	var zone := Node2D.new()
+	zone.set_script(script)
+	zone.position = rect.position
+	zone.size = rect.size
+	zone.active = active
+	zone.add_to_group(BotInputSource.HAZARD_GROUP)
+	arena.add_child(zone)
+	return zone
+
+
 func _test_bot_avoids_hazard() -> void:
 	var arena := _make_arena([[-300, 500]])
 	var bot := _add_bot(arena, -100, HARD)
 	_add_dummy(arena, 300)
-	# An acid pool on the floor: an Area2D in the hazards group.
+	# An acid pool on the floor: a plain Area2D in the hazards group.
 	var acid := Area2D.new()
 	acid.add_to_group(BotInputSource.HAZARD_GROUP)
 	acid.collision_layer = 1 << 5
@@ -183,6 +199,24 @@ func _test_bot_avoids_hazard() -> void:
 	arena.add_child(acid)
 	await _frames(180)
 	_check(bot.position.x < 60.0, "bot stops before an acid pool it cannot jump")
+	await _free(arena)
+
+	# A fire pit sunk into the floor, HazardZone style (top-left + size).
+	arena = _make_arena([[-300, 60], [60, 220], [220, 500]])
+	bot = _add_bot(arena, -100, HARD)
+	_add_dummy(arena, 300)
+	_add_zone(arena, Rect2(60, -2, 160, 18), true)
+	await _frames(180)
+	_check(bot.position.x < 60.0, "bot stops before a live fire pit")
+	await _free(arena)
+
+	# A switched-off trap is safe floor: the bot walks over it.
+	arena = _make_arena([[-300, 500]])
+	bot = _add_bot(arena, -100, HARD)
+	_add_dummy(arena, 300)
+	_add_zone(arena, Rect2(60, -16, 160, 16), false)
+	await _frames(240)
+	_check(bot.position.x > 220.0, "bot crosses a trap that is off")
 	await _free(arena)
 
 
