@@ -36,8 +36,9 @@ func _ready() -> void:
 	_camera.snap()
 
 
+## Players only: ragdolls of the fallen land in the same parent.
 func fighters() -> Array[Node]:
-	return _fighters.get_children()
+	return _fighters.get_children().filter(func(n): return n is CharacterBody2D)
 
 
 func camera() -> SharedCamera:
