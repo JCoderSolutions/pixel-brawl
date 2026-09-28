@@ -33,6 +33,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-007-ragdoll-death|TASK-007 — Ragdoll death]] | `in-progress` | medium | PHASE-2 |
 | [[project/tasks/TASK-008-local-multiplayer-input|TASK-008 — Input por jugador]] | `in-progress` | high | PHASE-2 |
 | [[project/tasks/TASK-004-destructible-tiles|TASK-004 — Destructible tile layer]] | `in-progress` | high | PHASE-1 |
+| [[project/tasks/TASK-018-shared-camera|TASK-018 — Cámara compartida]] | `in-progress` | high | PHASE-2 |
 
 ## Tareas por desglosar (backlog)
 
