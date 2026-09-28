@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.2.2
+  GODOT_BIN: ${{ github.workspace }}/.godot-bin/godot
+
+jobs:
+  test:
+    name: Tests headless
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: .godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Descargar Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .godot-bin
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip -d .godot-bin
+          mv ".godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$GODOT_BIN"
+          rm godot.zip
+
+      - name: Importar recursos
+        run: timeout 300 "$GODOT_BIN" --headless --editor --quit --path .
+
+      - name: Correr tests
+        run: GODOT="$GODOT_BIN" tools/run_tests.sh
+
+  build-web:
+    name: Build Web
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot + templates Web
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            .godot-bin
+            ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-${{ env.GODOT_VERSION }}-linux-web-templates
+
+      - name: Descargar Godot y templates Web
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .godot-bin
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip -d .godot-bin
+          mv ".godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$GODOT_BIN"
+          rm godot.zip
+          # El .tpz trae todas las plataformas (~900 MB); solo se guardan los de Web.
+          curl -sSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q templates.tpz 'templates/web*' 'templates/version.txt'
+          TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$TEMPLATES_DIR"
+          mv templates/* "$TEMPLATES_DIR/"
+          rm -rf templates templates.tpz
+
+      - name: Importar recursos
+        run: timeout 300 "$GODOT_BIN" --headless --editor --quit --path .
+
+      - name: Exportar build Web
+        run: |
+          mkdir -p build/web
+          "$GODOT_BIN" --headless --path . --export-release "Web" build/web/index.html
+          test -f build/web/index.wasm
+          # Service worker que agrega COOP/COEP: GitHub Pages no permite configurar headers.
+          cp web/coi-serviceworker.js build/web/
+
+      - name: Subir artifact de Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    name: Publicar en GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build-web
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

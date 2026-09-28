@@ -20,7 +20,7 @@ con un pipeline de daño reutilizable para armas, props y tiles destructibles.
 - [x] `HealthComponent` reutilizable (daño, curación, muerte una sola vez)
 - [x] `Hitbox` / `Hurtbox` desacoplados, un golpe por ventana, sin autogolpe
 - [x] Ataque del player con startup / active / recovery, hitstun, knockback e i-frames
-- [x] Acción `attack` (J / Ctrl) y dummy de práctica en `test_arena`
+- [x] Acción `attack` (J; desde TASK-008 `p1_attack` J, `p2_attack` Ctrl / Enter) y dummy de práctica en `test_arena`
 - [x] Test headless `scripts/test_melee.gd`
 - [ ] Test manual de sensaciones: el golpe se siente con peso y el alcance es justo
 
@@ -29,8 +29,8 @@ con un pipeline de daño reutilizable para armas, props y tiles destructibles.
 - Capas de física: 1 `world`, 2 `players`, 3 `hitboxes`, 4 `hurtboxes`.
   Los players no chocan entre sí (layer 2, mask 1), como en Superfighters.
 - `Hitbox` ataca solo `Hurtbox` (mask 4) y abre la ventana con `activate()`.
-- `is_controlled = false` desactiva el input: sirve para dummies hoy y para
-  jugadores remotos/segundo jugador en TASK-008.
+- `is_controlled = false` desactiva el input: sirve para dummies. El input por
+  jugador (slots, bots, red) vive en TASK-008.
 - El origen del personaje está en los pies: shapes, hurtbox y visual crecen
   hacia arriba desde y = 0, y al agacharse se reubican (`_set_body_height`).
 - Los shapes del player son `resource_local_to_scene`: sin eso, todas las

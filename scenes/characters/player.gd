@@ -10,8 +10,11 @@ extends CharacterBody2D
 @export var coyote_time := 0.1
 @export var jump_buffer := 0.12
 @export var crouch_height := 14.0
-## Only the controlled player reads input; others (dummies, remote peers) don't.
+## Only the controlled player reads input; others (dummies) don't.
 @export var is_controlled := true
+## Local slot whose `p<slot>_*` actions drive this player when no other
+## input source is assigned.
+@export_range(1, 4) var player_slot := 1
 
 @export_group("Melee")
 @export var attack_startup := 0.05
@@ -27,6 +30,11 @@ var _facing_right := true
 var _attack_timer := 0.0
 var _hitstun_timer := 0.0
 var _invulnerable_timer := 0.0
+var _prev_buttons := 0
+
+## Swap in a ScriptedInputSource, a bot or a network source to drive this
+## player; by default a controlled player reads its slot's device actions.
+var input_source: InputSource
 
 @onready var _visual: ColorRect = $Visual
 @onready var _collider: CollisionShape2D = $CollisionShape2D
@@ -41,6 +49,8 @@ var _invulnerable_timer := 0.0
 
 
 func _ready() -> void:
+	if input_source == null and is_controlled:
+		input_source = DeviceInputSource.new(player_slot)
 	$Hurtbox.hit_received.connect(_on_hit_received)
 	health.died.connect(_on_died)
 
@@ -57,16 +67,25 @@ func _physics_process(delta: float) -> void:
 		if _invulnerable_timer == 0.0:
 			_end_invulnerability()
 
-	var can_act := is_controlled and _hitstun_timer == 0.0 and not health.is_dead()
-	var input_dir := Input.get_axis("move_left", "move_right") if can_act else 0.0
-	var want_crouch := can_act and Input.is_action_pressed("crouch")
+	# Sample every tick, even when unable to act, so a button held through
+	# hitstun doesn't read as a fresh press once control returns.
+	var frame := _sample_input()
+	var just_pressed := frame.buttons & ~_prev_buttons
+	_prev_buttons = frame.buttons
 
-	if can_act and Input.is_action_just_pressed("jump"):
+	var can_act := _hitstun_timer == 0.0 and not health.is_dead()
+	if not can_act:
+		frame = InputFrame.new()
+		just_pressed = 0
+	var input_dir := frame.move_x()
+	var want_crouch := frame.is_held(InputFrame.CROUCH)
+
+	if just_pressed & InputFrame.JUMP:
 		_jump_buffer_timer = jump_buffer
 	else:
 		_jump_buffer_timer = max(_jump_buffer_timer - delta, 0.0)
 
-	if can_act and Input.is_action_just_pressed("attack"):
+	if just_pressed & InputFrame.ATTACK:
 		start_attack()
 	_update_attack(delta)
 
@@ -77,6 +96,12 @@ func _physics_process(delta: float) -> void:
 	_perform_jump(input_dir)
 
 	move_and_slide()
+
+
+func _sample_input() -> InputFrame:
+	if not is_controlled or input_source == null:
+		return InputFrame.new()
+	return input_source.sample()
 
 
 func is_attacking() -> bool:
