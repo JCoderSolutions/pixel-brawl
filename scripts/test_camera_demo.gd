@@ -17,6 +17,9 @@ func _run_tests() -> void:
 	demo.human_player_one = false
 	root.add_child(demo)
 	var camera: SharedCamera = demo.camera()
+	# Headless has no real window; simulate the default 960x540 one (2x), where
+	# pixel-perfect zoom can step down to 0.5.
+	camera.screen_scale_override = 2.0
 	await physics_frame
 
 	var outside := 0
@@ -41,6 +44,7 @@ func _run_tests() -> void:
 	_check(outside == 0, "living fighters stayed on screen (%d misses)" % outside)
 	_check(camera.zoom.x >= camera.min_zoom - 0.001 and camera.zoom.x <= camera.max_zoom + 0.001,
 		"zoom stayed in range (%s)" % camera.zoom)
+	_check(is_equal_approx(fmod(camera.zoom.x * 2.0, 1.0), 0.0), "zoom is pixel-perfect (%s)" % camera.zoom)
 	print("OK: camera demo keeps four real fighters framed" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 

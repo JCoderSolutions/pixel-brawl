@@ -10,14 +10,24 @@ extends Camera2D
 ## small hits wiggle and big blasts punch. Anything can shake the view with
 ## `SharedCamera.shake(self, 0.5)` without holding a reference to the camera.
 ##
-## The map limit beats min_zoom: the view never gets bigger than `bounds`, so
-## a map narrower than view_size / min_zoom can leave far-apart fighters off
-## screen. Size maps with the 16:9 view in mind (e.g. 960x544 for zoom 0.5).
+## The map limit beats min_zoom, so a map smaller than view_size / min_zoom
+## can leave far-apart fighters off screen. Size maps with the 16:9 view in
+## mind (e.g. 960x544 for zoom 0.5).
+##
+## Responsive: the view size comes from the viewport every tick, so portrait
+## phones, landscape phones and PC windows all frame correctly. With
+## `letterbox_bounds` a map whose shape doesn't match the screen (a wide map
+## on an upright phone) is shown whole on its tight axis and centred on the
+## other, so the extra strip shows background instead of cutting fighters.
 
 const GROUP := &"shared_cameras"
 
 ## World area the view must stay inside (usually the map's playable rect).
 @export var bounds := Rect2(0, 0, 480, 270)
+## When the map's aspect differs from the screen's, allow seeing past the map
+## on one axis (centred) rather than zooming in and losing fighters. Off:
+## never show past the map, whatever it costs.
+@export var letterbox_bounds := true
 ## Nodes in this group are followed automatically, on top of add_target().
 @export var target_group := &""
 ## Offset from a target's origin to the point we frame (players stand on
@@ -32,6 +42,13 @@ const GROUP := &"shared_cameras"
 @export var zoom_smoothing := 4.0
 ## Rounds the view to whole world pixels so the pixel art doesn't swim.
 @export var pixel_snap := true
+## Only use zooms where one world pixel covers a whole number of screen
+## pixels, so sprites never get uneven rows/columns at any window size.
+## Eased zoom then moves in visible steps instead of gliding.
+@export var pixel_perfect_zoom := true
+## Screen pixels per viewport pixel; 0 reads it from the window stretch.
+## Tests set it to simulate a given screen.
+@export var screen_scale_override := 0.0
 
 @export_group("Shake")
 ## Maximum displacement in world pixels at full trauma.
@@ -160,7 +177,8 @@ func _min_zoom_for_bounds() -> float:
 	var view := _view_size()
 	if bounds.size.x <= 0.0 or bounds.size.y <= 0.0:
 		return 0.0
-	return maxf(view.x / bounds.size.x, view.y / bounds.size.y)
+	var per_axis := view / bounds.size
+	return minf(per_axis.x, per_axis.y) if letterbox_bounds else maxf(per_axis.x, per_axis.y)
 
 
 func _clamp_center(center: Vector2, z: float) -> Vector2:
@@ -176,7 +194,7 @@ func _clamp_center(center: Vector2, z: float) -> Vector2:
 
 
 func _apply(shake_offset: Vector2) -> void:
-	var z := maxf(_zoom, _min_zoom_for_bounds())
+	var z := _final_zoom(_zoom)
 	var base := _clamp_center(_center, z)
 	var center := _clamp_center(base + shake_offset, z)
 	# Pinned against the map edge the clamp would swallow the kick, so bounce
@@ -188,6 +206,33 @@ func _apply(shake_offset: Vector2) -> void:
 		center = center.round()
 	zoom = Vector2(z, z)
 	global_position = _clamp_center(center, z)
+
+
+## The zoom actually shown: never bigger than the map and, with
+## pixel_perfect_zoom, snapped to whole screen pixels per world pixel.
+func _final_zoom(eased: float) -> float:
+	var lowest := _min_zoom_for_bounds()
+	var z := maxf(eased, lowest)
+	if not pixel_perfect_zoom:
+		return z
+	var screen := _screen_scale()
+	# Round down so everyone still fits; step back up if that would show past
+	# the map or go under min_zoom.
+	var steps := maxf(floorf(z * screen + 0.001), 1.0)
+	var floor_zoom := maxf(lowest, min_zoom)
+	if steps / screen < floor_zoom - 0.001:
+		steps = ceilf(floor_zoom * screen - 0.001)
+	return steps / screen
+
+
+func _screen_scale() -> float:
+	if screen_scale_override > 0.0:
+		return screen_scale_override
+	if not is_inside_tree():
+		return 1.0
+	# Includes the window stretch (e.g. 2 on a 960x540 window for a 480x270
+	# base). Below 1 the art is downscaled anyway, so treat it as 1.
+	return maxf(get_viewport().get_final_transform().x.length(), 1.0)
 
 
 func _shake_offset() -> Vector2:

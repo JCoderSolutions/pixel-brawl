@@ -3,8 +3,6 @@ extends SceneTree
 ## Shared camera: frames every living fighter, zooms to fit them inside the
 ## map and shakes on hits/explosions without ever showing past the map edge.
 
-const VIEW := Vector2(480, 270)
-
 var _ok := true
 
 
@@ -24,6 +22,10 @@ func _run_tests() -> void:
 	await _test_static_shake_reaches_cameras()
 	await _test_target_damage_adds_trauma()
 	await _test_target_group_is_followed()
+	await _test_pixel_perfect_zoom_steps()
+	await _test_pixel_perfect_respects_bounds()
+	await _test_portrait_screen()
+	await _test_portrait_screen_on_wide_map()
 	print("OK: shared camera follows, zooms, clamps and shakes" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
@@ -41,6 +43,9 @@ func _make_camera(bounds := Rect2(0, 0, 960, 540)) -> SharedCamera:
 	camera.margin = Vector2(32, 32)
 	camera.min_zoom = 0.5
 	camera.max_zoom = 1.5
+	# Continuous zoom keeps these checks exact; pixel-perfect steps have their own tests.
+	camera.pixel_perfect_zoom = false
+	camera.letterbox_bounds = false
 	root.add_child(camera)
 	return camera
 
@@ -58,7 +63,7 @@ func _make_target(at: Vector2, with_health := true) -> Node2D:
 
 
 func _visible_rect(camera: SharedCamera) -> Rect2:
-	var size := VIEW / camera.zoom
+	var size := camera.get_viewport_rect().size / camera.zoom
 	return Rect2(camera.global_position - size / 2.0, size)
 
 
@@ -265,3 +270,121 @@ func _test_target_group_is_followed() -> void:
 	_check(camera.global_position.is_equal_approx(Vector2(300, 300)),
 		"fighters in target_group are followed without add_target (got %s)" % camera.global_position)
 	await _cleanup([camera, a, b])
+
+
+func _test_pixel_perfect_zoom_steps() -> void:
+	# At 2x screen scale every world pixel must cover a whole number of
+	# screen pixels, even while the zoom eases between framings.
+	var camera := _make_camera()
+	camera.pixel_perfect_zoom = true
+	camera.screen_scale_override = 2.0
+	camera.max_zoom = 1.7
+	var a := _make_target(Vector2(480, 300))
+	var b := _make_target(Vector2(480, 300))
+	camera.add_target(a)
+	camera.add_target(b)
+	camera.snap()
+	_check(is_equal_approx(camera.zoom.x, 1.5), "1.7 max zoom steps down to 3 screen px per pixel (zoom %s)" % camera.zoom)
+	var whole := true
+	var fits := true
+	for i in 180:
+		a.position.x -= 2.0
+		b.position.x += 2.0
+		camera.advance(1.0 / 60.0)
+		var pixels := camera.zoom.x * 2.0
+		whole = whole and absf(pixels - roundf(pixels)) < 0.001
+	for i in 240:
+		camera.advance(1.0 / 60.0)
+	var view := _visible_rect(camera)
+	fits = view.grow(0.01).has_point(a.global_position) and view.grow(0.01).has_point(b.global_position)
+	_check(whole, "zoom always maps a world pixel to whole screen pixels")
+	_check(fits, "stepping the zoom still keeps both fighters in view")
+	await _cleanup([camera, a, b])
+
+
+func _test_pixel_perfect_respects_bounds() -> void:
+	# Odd screen scale (a 1170 px tall phone): the smallest step that still
+	# fits inside the map wins, never one that shows past the edge.
+	var bounds := Rect2(0, 0, 600, 400)
+	var camera := _make_camera(bounds)
+	camera.pixel_perfect_zoom = true
+	camera.screen_scale_override = 1.125
+	camera.min_zoom = 0.25
+	var a := _make_target(Vector2(10, 390))
+	var b := _make_target(Vector2(590, 10))
+	camera.add_target(a)
+	camera.add_target(b)
+	camera.snap()
+	var pixels := camera.zoom.x * 1.125
+	_check(absf(pixels - roundf(pixels)) < 0.001, "zoom lands on a whole screen-pixel step (%s)" % camera.zoom)
+	_check(bounds.grow(0.01).encloses(_visible_rect(camera)), "pixel-perfect zoom never shows past the map")
+	await _cleanup([camera, a, b])
+
+
+func _test_portrait_screen() -> void:
+	# A phone held upright: the view is tall and narrow, so fighters spread
+	# sideways force a stronger zoom out than on a landscape screen.
+	var screen := SubViewport.new()
+	screen.size = Vector2i(270, 480)
+	root.add_child(screen)
+	var bounds := Rect2(0, 0, 960, 960)
+	var camera := SharedCamera.new()
+	camera.bounds = bounds
+	camera.focus_offset = Vector2.ZERO
+	camera.margin = Vector2(32, 32)
+	camera.min_zoom = 0.25
+	camera.pixel_perfect_zoom = false
+	screen.add_child(camera)
+	var a := Node2D.new()
+	var b := Node2D.new()
+	a.position = Vector2(300, 600)
+	b.position = Vector2(700, 600)
+	screen.add_child(a)
+	screen.add_child(b)
+	camera.add_target(a)
+	camera.add_target(b)
+	camera.snap()
+	var view := _visible_rect(camera)
+	_check(view.size.x < view.size.y, "portrait screen gives a tall view (%s)" % view.size)
+	_check(view.grow(0.01).has_point(a.position) and view.grow(0.01).has_point(b.position),
+		"both fighters fit on a portrait screen (%s)" % view)
+	_check(bounds.grow(0.01).encloses(view), "portrait view stays inside the map")
+	_check(camera.zoom.x <= 270.0 / 464.0 + 0.001, "zoom fits the narrow width (zoom %s)" % camera.zoom)
+	await _cleanup([screen])
+
+
+func _test_portrait_screen_on_wide_map() -> void:
+	# Upright phone on a 16:9 map: filling the tall view with map would mean
+	# zooming in 2x and losing fighters, so letterbox the height instead.
+	var screen := SubViewport.new()
+	screen.size = Vector2i(480, 1040)
+	root.add_child(screen)
+	var bounds := Rect2(0, 0, 960, 544)
+	var cameras := {}
+	for letterbox in [true, false]:
+		var camera := SharedCamera.new()
+		camera.bounds = bounds
+		camera.focus_offset = Vector2.ZERO
+		camera.min_zoom = 0.25
+		camera.pixel_perfect_zoom = false
+		camera.letterbox_bounds = letterbox
+		screen.add_child(camera)
+		cameras[letterbox] = camera
+	var a := Node2D.new()
+	var b := Node2D.new()
+	a.position = Vector2(60, 500)
+	b.position = Vector2(900, 500)
+	screen.add_child(a)
+	screen.add_child(b)
+	for camera in cameras.values():
+		camera.add_target(a)
+		camera.add_target(b)
+		camera.snap()
+	var view := _visible_rect(cameras[true])
+	_check(view.grow(0.01).has_point(a.position) and view.grow(0.01).has_point(b.position),
+		"letterboxed portrait view keeps both fighters (%s)" % view)
+	_check(view.position.x >= -0.01 and view.end.x <= 960.01, "letterbox never shows past the map sideways")
+	_check(is_equal_approx(view.get_center().y, bounds.get_center().y), "the tall axis is centred on the map")
+	var strict := _visible_rect(cameras[false])
+	_check(bounds.grow(0.01).encloses(strict), "letterbox off never shows past the map (%s)" % strict)
+	await _cleanup([screen])
