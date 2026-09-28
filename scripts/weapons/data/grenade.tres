@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="GrenadeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/grenade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+fuse_time = 2.0
+throw_velocity = Vector2(260, -220)
+bounce = 0.45
+explosion_radius = 40.0
+min_damage_ratio = 0.35
+explosion_knockback = 320.0
+explosion_lift = 120.0
+block_damage = 30
+id = &"grenade"
+display_name = "Granada"
+kind = 0
+damage = 45
+knockback = Vector2(0, 0)
+cooldown = 0.6
+max_ammo = 3
+automatic = false
+color = Color(0.388, 0.78, 0.302, 1)
+muzzle_offset = 8.0
