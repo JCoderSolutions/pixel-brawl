@@ -40,7 +40,7 @@ color = Color(0.35, 0.36, 0.42, 1)
 shape = SubResource("floor_shape")
 
 [node name="Platform" type="StaticBody2D" parent="."]
-position = Vector2(120, 190)
+position = Vector2(120, 206)
 
 [node name="PlatformVisual" type="ColorRect" parent="Platform"]
 offset_left = -60.0
@@ -51,9 +51,10 @@ color = Color(0.35, 0.36, 0.42, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Platform"]
 shape = SubResource("platform_shape")
+one_way_collision = true
 
 [node name="Platform2" type="StaticBody2D" parent="."]
-position = Vector2(360, 190)
+position = Vector2(360, 206)
 
 [node name="PlatformVisual" type="ColorRect" parent="Platform2"]
 offset_left = -60.0
@@ -64,6 +65,7 @@ color = Color(0.35, 0.36, 0.42, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2"]
 shape = SubResource("platform_shape2")
+one_way_collision = true
 
 [node name="Bounds" type="Node2D" parent="."]
 
@@ -82,7 +84,7 @@ shape = SubResource("bound_shape")
 [node name="DestructibleMap" type="Node2D" parent="."]
 position = Vector2(0, -6)
 script = ExtResource("2")
-layout = PackedStringArray("", "", "", "", "", "", "", "", "............X####X", "", "", "", ".#", ".#..................##", ".#..................##", ".#..................##")
+layout = PackedStringArray("", "", "", "", "", "", "", "", "", "", "............X####X", "", ".#", ".#", ".#..................##", ".#..................##")
 
 [node name="Spawns" type="Node2D" parent="."]
 

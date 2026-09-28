@@ -190,8 +190,8 @@ func _test_death_drops_weapon_and_ragdolls() -> void:
 	await process_frame
 
 
-## The arena's steps are 66 px (floor -> platform) and 62 px (platform ->
-## bridge); a jump must clear them with some room to spare.
+## The arena's steps are 50 px (floor -> platform) and 46 px (platform ->
+## bridge); the current jump (~57 px) must clear them with room to spare.
 func _test_jump_clears_platform_step() -> void:
 	var frames: Array[InputFrame] = []
 	_hold(frames, 5)
@@ -203,7 +203,7 @@ func _test_jump_clears_platform_step() -> void:
 	for i in 60:
 		await physics_frame
 		top = minf(top, d.player.global_position.y)
-	_check(floor_y - top >= 72.0, "jump rises at least 72 px (got %.1f)" % (floor_y - top))
+	_check(floor_y - top >= 55.0, "jump rises at least 55 px (got %.1f)" % (floor_y - top))
 	d.arena.queue_free()
 	await process_frame
 

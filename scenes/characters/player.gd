@@ -2,8 +2,7 @@ extends CharacterBody2D
 
 @export var run_speed := 140.0
 @export var crouch_speed_multiplier := 0.4
-## Rises ~76 px: clears the arena's 66 px steps with room to spare.
-@export var jump_velocity := -370.0
+@export var jump_velocity := -320.0
 @export var gravity := 900.0
 @export var acceleration := 1800.0
 @export var air_acceleration := 1200.0
