@@ -1,0 +1,10 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/weapon_spawner.gd" id="1"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/pistol.tres" id="2"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="3"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="4"]
+
+[node name="WeaponSpawner" type="Node2D"]
+script = ExtResource("1")
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("2"), ExtResource("3"), ExtResource("4")])

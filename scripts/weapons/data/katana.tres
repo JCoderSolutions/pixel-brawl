@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"katana"
+display_name = "Katana"
+kind = 1
+damage = 28
+knockback = Vector2(260, -140)
+cooldown = 0.4
+max_ammo = -1
+automatic = false
+color = Color(0.753, 0.796, 0.863, 1)
+reach = Vector2(30, 20)
+melee_offset = 20.0
+melee_startup = 0.05
+melee_active = 0.12
