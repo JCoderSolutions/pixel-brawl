@@ -66,9 +66,9 @@ layout = PackedStringArray("", "", "", "", "", "..........X######X", "", "", "",
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(240, 200)
 
-[node name="Dummy" parent="." instance=ExtResource("1")]
+[node name="Player2" parent="." instance=ExtResource("1")]
 position = Vector2(300, 200)
-is_controlled = false
+player_slot = 2
 
-[node name="Visual" parent="Dummy" index="0"]
+[node name="Visual" parent="Player2" index="0"]
 color = Color(0.894, 0.231, 0.267, 1)
