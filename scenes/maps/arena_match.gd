@@ -8,6 +8,9 @@ extends Node2D
 ## Tests turn this off to use the arena as a plain map.
 @export var autostart := true
 @export var controlled_ids: Array[int] = [0, 1]
+## Fighters below this Y fell off the map and die (handed to the GameManager,
+## so each map sets its own: big maps sit lower than the first arena).
+@export var kill_zone_y := 400.0
 
 @onready var _players: Node2D = $Players
 @onready var _map: DestructibleMap = $DestructibleMap
@@ -21,6 +24,9 @@ func _ready() -> void:
 	for marker in $Spawns.get_children():
 		spawns.append(marker.position)
 	GameManager.controlled_ids = controlled_ids
+	GameManager.kill_zone_y = kill_zone_y
+	# Letterbox strips (upright phones) take the map's own background colour.
+	RenderingServer.set_default_clear_color($Background.color)
 	GameManager.round_started.connect(_on_round_started)
 	GameManager.player_spawned.connect(_on_player_spawned)
 	GameManager.setup(_players, spawns)
