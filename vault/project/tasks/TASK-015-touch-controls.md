@@ -24,8 +24,8 @@ que alimentan las mismas acciones `p1_*` que el teclado y el gamepad.
 - [x] Escena de prueba `scenes/ui/touch/touch_test.tscn` (el mouse hace de dedo en PC)
 - [x] Test headless `scripts/test_touch_controls.gd`
 - [ ] Instanciar `scenes/ui/touch/touch_controls.tscn` en la escena de partida (hilo de integración)
-- [ ] `p1_fire`/`p1_pickup` en `project.godot` con teclas, y que el player los lea al integrar armas
-- [ ] Vertical real: `window/stretch/aspect="expand"` en `project.godot` (hoy "keep" deja franjas)
+- [x] `p1_fire`/`p1_pickup` en `project.godot` con teclas y leídas por `DeviceInputSource` (llegó por main)
+- [x] Vertical real: `window/stretch/aspect="expand"` en `project.godot` (llegó con PR #10)
 - [ ] Test manual en un teléfono real (tamaño de botones, zona del stick)
 
 ## Detalles

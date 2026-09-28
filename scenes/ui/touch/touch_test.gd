@@ -4,10 +4,6 @@ extends Node2D
 ## finger, so the stick and buttons can be tried without a phone. The label
 ## shows what player 1 reads this tick through DeviceInputSource.
 
-## Lets the viewport grow to the window's shape so portrait can be tried here;
-## the project itself still letterboxes (stretch aspect "keep").
-@export var expand_aspect := true
-
 @export var hud: Label
 
 var _source := DeviceInputSource.new(1)
@@ -15,11 +11,6 @@ var _source := DeviceInputSource.new(1)
 ## must not edit project.godot, so the left mouse button is turned into a
 ## finger here. Skipped on touch screens, where the mouse is itself emulated.
 var _mouse_as_finger := not DisplayServer.is_touchscreen_available()
-
-
-func _ready() -> void:
-	if expand_aspect:
-		get_tree().root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 
 
 func _input(event: InputEvent) -> void:
