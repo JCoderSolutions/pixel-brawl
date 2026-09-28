@@ -44,7 +44,7 @@ var _jump_rising := false
 ## player; by default a controlled player reads its slot's device actions.
 var input_source: InputSource
 
-@onready var _visual: ColorRect = $Visual
+@onready var _visual: FighterRig = $Visual
 @onready var _collider: CollisionShape2D = $CollisionShape2D
 @onready var _collision_shape: RectangleShape2D = _collider.shape
 @onready var _stand_height: float = _collision_shape.size.y
@@ -128,6 +128,15 @@ func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
 		weapons.try_use()
 
 
+## The rig (FighterRig) reads these to pick its pose.
+func is_crouching() -> bool:
+	return _is_crouching
+
+
+func is_in_hitstun() -> bool:
+	return _hitstun_timer > 0.0
+
+
 func is_attacking() -> bool:
 	return _attack_timer > 0.0
 
@@ -158,20 +167,21 @@ func _on_hit_received(_damage: int, knockback: Vector2, _source: Node) -> void:
 	_hitstun_timer = hitstun
 	_invulnerable_timer = invulnerability
 	$Hurtbox.set_deferred("monitorable", false)
-	_visual.color = Color.WHITE
+	_visual.flash = true
 
 
 func _end_invulnerability() -> void:
 	if health.is_dead():
 		return
 	$Hurtbox.set_deferred("monitorable", true)
-	_visual.color = _base_color
+	_visual.flash = false
 
 
 func _on_died(_source: Node) -> void:
 	_attack_timer = 0.0
 	_hitbox.deactivate()
 	$Hurtbox.set_deferred("monitorable", false)
+	_visual.flash = false
 	_visual.color = _base_color.darkened(0.6)
 	# Dead hands let go; deferred because physics bodies can't be added
 	# from inside the hit's physics callback.
@@ -239,7 +249,6 @@ func _set_body_height(height: float) -> void:
 	_collider.position.y = -height / 2.0
 	_hurtbox_shape.size.y = height - 2.0
 	_hurtbox_collider.position.y = -height / 2.0
-	_visual.offset_top = -height
 
 
 func _flip(facing_right: bool) -> void:
