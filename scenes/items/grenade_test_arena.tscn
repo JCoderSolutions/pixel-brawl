@@ -1,0 +1,89 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/grenades_demo.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="2"]
+[ext_resource type="Script" path="res://scripts/weapons/weapon_holder.gd" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/items/target_dummy.tscn" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/weapon_spawner.gd" id="5"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="6"]
+[ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="7"]
+
+[sub_resource type="RectangleShape2D" id="floor_shape"]
+size = Vector2(480, 20)
+
+[sub_resource type="RectangleShape2D" id="side_shape"]
+size = Vector2(32, 600)
+
+[node name="GrenadeTestArena" type="Node2D" node_paths=PackedStringArray("player", "holder", "hud")]
+script = ExtResource("1")
+player = NodePath("Player")
+holder = NodePath("Player/WeaponHolder")
+hud = NodePath("Hud")
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 480.0
+offset_bottom = 270.0
+color = Color(0.1, 0.11, 0.17, 1)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(240, 260)
+
+[node name="Visual" type="ColorRect" parent="Floor"]
+offset_left = -240.0
+offset_top = -10.0
+offset_right = 240.0
+offset_bottom = 10.0
+color = Color(0.35, 0.36, 0.42, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("floor_shape")
+
+[node name="LeftBound" type="StaticBody2D" parent="."]
+position = Vector2(-16, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftBound"]
+shape = SubResource("side_shape")
+
+[node name="RightBound" type="StaticBody2D" parent="."]
+position = Vector2(496, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightBound"]
+shape = SubResource("side_shape")
+
+[node name="Map" type="Node2D" parent="."]
+position = Vector2(80, 58)
+script = ExtResource("7")
+layout = PackedStringArray("", "", "", "", "", "", "", "", " X######X  ####", "           ####", "           ####", "           ####")
+
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(120, 250)
+
+[node name="WeaponHolder" type="Node2D" parent="Player"]
+position = Vector2(0, -17)
+script = ExtResource("3")
+
+[node name="Dummy" parent="." instance=ExtResource("4")]
+position = Vector2(360, 250)
+
+[node name="DummyFar" parent="." instance=ExtResource("4")]
+position = Vector2(430, 250)
+
+[node name="WeaponSpawner" type="Node2D" parent="."]
+script = ExtResource("5")
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("6")])
+spawn_interval = 4.0
+max_active = 2
+
+[node name="Left" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(30, 240)
+
+[node name="Platform" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(150, 176)
+
+[node name="Hud" type="Label" parent="."]
+offset_left = 6.0
+offset_top = 4.0
+offset_right = 474.0
+offset_bottom = 40.0
+theme_override_font_sizes/font_size = 8
+text = "Granada"

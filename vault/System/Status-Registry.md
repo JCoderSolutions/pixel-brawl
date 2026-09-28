@@ -34,6 +34,9 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-008-local-multiplayer-input|TASK-008 — Input por jugador]] | `in-progress` | high | PHASE-2 |
 | [[project/tasks/TASK-004-destructible-tiles|TASK-004 — Destructible tile layer]] | `in-progress` | high | PHASE-1 |
 | [[project/tasks/TASK-015-touch-controls|TASK-015 — Touch controls]] | `in-progress` | high | PHASE-4 |
+| [[project/tasks/TASK-006-grenade-explosion|TASK-006 — Grenade + explosion]] | `in-progress` | high | PHASE-2 |
+| [[project/tasks/TASK-005-weapons-and-projectiles|TASK-005 — Armas y proyectiles]] | `in-progress` | high | PHASE-2 |
+| [[project/tasks/TASK-011-rounds-hud-winner|TASK-011 — HUD + rondas + ganador]] | `in-progress` | high | PHASE-3 |
 
 ## Tareas por desglosar (backlog)
 
@@ -45,7 +48,6 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | TASK-007 — Ragdoll death | PHASE-2 |
 | TASK-009 — Map set (4+ maps) | PHASE-3 |
 | TASK-010 — Power-up system | PHASE-3 |
-| TASK-011 — HUD + rounds + winner | PHASE-3 |
 | TASK-012 — SFX + chiptune | PHASE-3 |
 | TASK-013 — WebRTC host/join | PHASE-4 |
 | TASK-014 — Lobby con código de sala | PHASE-4 |

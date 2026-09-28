@@ -26,7 +26,8 @@ aparecen al azar en el mapa y hacen daño por el mismo pipeline de TASK-003.
 - [x] `WeaponSpawner`: aparición aleatoria en `Marker2D`, `max_active`, semilla reproducible
 - [x] Escena jugable `scenes/items/weapons_test_arena.tscn`
 - [x] Test headless `scripts/weapons/test_weapons.gd`
-- [ ] Integrar `WeaponHolder` en `player.gd` y acciones `fire`/`pickup` en `project.godot`
+- [x] Integrar `WeaponHolder` en `player.gd` y acciones `p1..p4_fire`/`p1..p4_pickup` en `project.godot`
+  (P1 K/L, P2 punto/coma o numpad 1/2, mando RB/Y; el HUD muestra arma y munición)
 - [ ] Test manual de sensaciones (cadencia, daño, retroceso)
 
 ## Detalles
@@ -52,3 +53,7 @@ aparecen al azar en el mapa y hacen daño por el mismo pipeline de TASK-003.
 - Memoria Engram: pendiente (sin acceso a Engram desde la sesión en la nube)
 - Verificación: `godot --headless --path . -s scripts/weapons/test_weapons.gd` →
   `OK: weapon data, projectiles, walls, range, shotgun spread, katana, ammo, pickup/drop, player hit and spawner verified`
+- Integración (2026-09-28): `InputFrame.FIRE`/`PICKUP`; armas automáticas
+  disparan manteniendo, el resto necesita pulsar otra vez. Recoger sin nada
+  cerca suelta el arma. Al morir el jugador suelta el arma (diferido).
+  Test: `scripts/test_match_arena.gd`.
