@@ -1,6 +1,6 @@
 ---
 type: "phase"
-status: "planned"
+status: "in-progress"
 project: "pixel-brawl"
 phase_id: "PHASE-1"
 goals: "Core mechanics: movimiento, combate básico, mapa destructible, export web"
@@ -17,9 +17,9 @@ goals: "Core mechanics: movimiento, combate básico, mapa destructible, export w
 
 ## Tareas
 
-- [ ] [[project/tasks/TASK-001-setup-godot-project|TASK-001 — Setup Godot project]] — `todo`
-- [ ] [[project/tasks/TASK-002-player-movement|TASK-002 — Player movement]] — `todo`
-- [ ] TASK-003 — Basic melee combat — `todo` (por desglosar)
+- [x] [[project/tasks/TASK-001-setup-godot-project|TASK-001 — Setup Godot project]] — `done`
+- [ ] [[project/tasks/TASK-002-player-movement|TASK-002 — Player movement]] — `in-progress`
+- [ ] [[project/tasks/TASK-003-melee-combat|TASK-003 — Basic melee combat]] — `in-progress`
 - [ ] TASK-004 — Destructible tile layer — `todo` (por desglosar)
 
 ## Criterio de salida
