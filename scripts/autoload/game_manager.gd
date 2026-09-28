@@ -41,6 +41,12 @@ const PLAYER_COLORS: Array[Color] = [
 ## Players whose input is read locally; the rest are dummies until
 ## local 2P (TASK-008) or netcode assign them a controller.
 @export var controlled_ids: Array[int] = [0]
+## Matches against the computer: one BotProfile.Difficulty per bot. Bots take
+## the ids after the humans and extra spawn points are spread across the map.
+## Empty = local players only.
+var bot_difficulties: Array[int] = []
+## Local humans in a match with bots; 0 just watches the bots fight.
+var human_players := 1
 
 var state := State.IDLE
 var current_round := 0
@@ -65,6 +71,10 @@ func setup(arena: Node, spawn_points: Array[Vector2]) -> void:
 	teardown()
 	_arena = arena
 	_spawn_points = spawn_points
+	if not bot_difficulties.is_empty():
+		var count := human_players + bot_difficulties.size()
+		_spawn_points = spread_spawns(spawn_points, count)
+		controlled_ids.assign(range(count))
 	if not arena.tree_exiting.is_connected(teardown):
 		arena.tree_exiting.connect(teardown)
 
@@ -88,6 +98,32 @@ func start_match() -> void:
 	match_started.emit()
 	scores_changed.emit(scores)
 	_start_round()
+
+
+## Sets up the next match against `bots` computer players of one difficulty;
+## 0 bots goes back to local players only.
+func configure_bots(bots: int, difficulty: int, humans := 1) -> void:
+	human_players = humans
+	bot_difficulties.clear()
+	for i in bots:
+		bot_difficulties.append(difficulty)
+
+
+func is_bot(id: int) -> bool:
+	return id >= human_players and id - human_players < bot_difficulties.size()
+
+
+## Keeps the given spawn points and, if more players than points are needed,
+## adds evenly spaced ones on the line from the first point to the last.
+static func spread_spawns(points: Array[Vector2], count: int) -> Array[Vector2]:
+	var result: Array[Vector2] = []
+	result.assign(points.slice(0, count))
+	var extra := count - result.size()
+	if extra <= 0 or points.is_empty():
+		return result
+	for i in extra:
+		result.append(points[0].lerp(points[-1], float(i + 1) / (extra + 1)))
+	return result
 
 
 func get_player(id: int) -> Node:
@@ -150,6 +186,10 @@ func _spawn(id: int) -> void:
 	player.position = _spawn_points[id]
 	player.is_controlled = id in controlled_ids
 	player.player_slot = id + 1
+	if is_bot(id):
+		player.is_controlled = true
+		# Seeded by id: the same match setup always plays out the same way.
+		player.input_source = BotInputSource.new(player, bot_difficulties[id - human_players], id)
 	player.get_node("Visual").color = PLAYER_COLORS[id % PLAYER_COLORS.size()]
 	_arena.add_child(player)
 	player.health.died.connect(_on_player_died.bind(id), CONNECT_ONE_SHOT)
