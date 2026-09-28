@@ -30,6 +30,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-002-player-movement|TASK-002 — Player movement]] | `in-progress` | high | PHASE-1 |
 | [[project/tasks/TASK-017-ci-web-build|TASK-017 — CI + build Web en Pages]] | `in-progress` | high | PHASE-4 |
 | [[project/tasks/TASK-003-melee-combat|TASK-003 — Basic melee combat]] | `in-progress` | high | PHASE-1 |
+| [[project/tasks/TASK-007-ragdoll-death|TASK-007 — Ragdoll death]] | `in-progress` | medium | PHASE-2 |
 | [[project/tasks/TASK-008-local-multiplayer-input|TASK-008 — Input por jugador]] | `in-progress` | high | PHASE-2 |
 | [[project/tasks/TASK-004-destructible-tiles|TASK-004 — Destructible tile layer]] | `in-progress` | high | PHASE-1 |
 
@@ -39,6 +40,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | --- | --- |
 | TASK-005 — Weapon spawn and pickup | PHASE-2 |
 | TASK-006 — Grenade + explosion destroys tiles | PHASE-2 |
+| TASK-008 — Local 2-player split keyboard | PHASE-2 |
 | TASK-007 — Ragdoll death | PHASE-2 |
 | TASK-009 — Map set (4+ maps) | PHASE-3 |
 | TASK-010 — Power-up system | PHASE-3 |
