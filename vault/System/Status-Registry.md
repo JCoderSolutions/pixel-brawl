@@ -1,7 +1,7 @@
 ---
 type: "status-registry"
 project: "pixel-brawl"
-last_updated: "2026-09-07"
+last_updated: "2026-09-28"
 ---
 
 # Status Registry — Pixel Brawl
@@ -17,7 +17,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 
 | Fase | Estado | Nota |
 | --- | --- | --- |
-| [[project/phases/PHASE-1-core|PHASE-1 — Core mechanics]] | `planned` | Arranca con TASK-001 |
+| [[project/phases/PHASE-1-core|PHASE-1 — Core mechanics]] | `in-progress` | TASK-002 y TASK-003 esperan test manual |
 | [[project/phases/PHASE-2-caos|PHASE-2 — Items y caos]] | `planned` | Espera PHASE-1 |
 | [[project/phases/PHASE-3-content|PHASE-3 — Content + polish]] | `planned` | Espera PHASE-2 |
 | [[project/phases/PHASE-4-multiplayer|PHASE-4 — Multiplayer + deploy]] | `planned` | Espera PHASE-3 |
@@ -29,12 +29,12 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-001-setup-godot-project|TASK-001 — Setup Godot]] | `done` | high | PHASE-1 |
 | [[project/tasks/TASK-002-player-movement|TASK-002 — Player movement]] | `in-progress` | high | PHASE-1 |
 | [[project/tasks/TASK-017-ci-web-build|TASK-017 — CI + build Web en Pages]] | `in-progress` | high | PHASE-4 |
+| [[project/tasks/TASK-003-melee-combat|TASK-003 — Basic melee combat]] | `in-progress` | high | PHASE-1 |
 
 ## Tareas por desglosar (backlog)
 
 | Tarea | Fase |
 | --- | --- |
-| TASK-003 — Basic melee combat | PHASE-1 |
 | TASK-004 — Destructible tile layer | PHASE-1 |
 | TASK-005 — Weapon spawn and pickup | PHASE-2 |
 | TASK-006 — Grenade + explosion destroys tiles | PHASE-2 |
