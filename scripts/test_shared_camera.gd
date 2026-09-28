@@ -27,6 +27,9 @@ func _run_tests() -> void:
 	await _test_target_damage_adds_trauma()
 	await _test_target_group_is_followed()
 	await _test_pixel_perfect_zoom_steps()
+	await _test_pan_eases_in_without_overshoot()
+	await _test_zoom_out_is_quick_and_zoom_in_is_lazy()
+	await _test_view_snaps_to_screen_pixels()
 	await _test_pixel_perfect_respects_bounds()
 	await _test_portrait_screen()
 	await _test_portrait_screen_on_wide_map()
@@ -277,8 +280,8 @@ func _test_target_group_is_followed() -> void:
 
 
 func _test_pixel_perfect_zoom_steps() -> void:
-	# At 2x screen scale every world pixel must cover a whole number of
-	# screen pixels, even while the zoom eases between framings.
+	# At 2x screen scale the camera rests on zooms where every world pixel
+	# covers whole screen pixels, but glides between them instead of popping.
 	var camera := _make_camera()
 	camera.pixel_perfect_zoom = true
 	camera.screen_scale_override = 2.0
@@ -288,22 +291,106 @@ func _test_pixel_perfect_zoom_steps() -> void:
 	camera.add_target(a)
 	camera.add_target(b)
 	camera.snap()
-	_check(is_equal_approx(camera.zoom.x, 1.5), "1.7 max zoom steps down to 3 screen px per pixel (zoom %s)" % camera.zoom)
-	var whole := true
-	var fits := true
+	_check(is_equal_approx(camera.zoom.x, 1.5), "1.7 max zoom rests on 3 screen px per pixel (zoom %s)" % camera.zoom)
+	var biggest_step := 0.0
+	var glided := false
+	var previous := camera.zoom.x
 	for i in 180:
 		a.position.x -= 2.0
 		b.position.x += 2.0
 		camera.advance(1.0 / 60.0)
 		var pixels := camera.zoom.x * 2.0
-		whole = whole and absf(pixels - roundf(pixels)) < 0.001
+		glided = glided or absf(pixels - roundf(pixels)) > 0.05
+		biggest_step = maxf(biggest_step, absf(camera.zoom.x - previous))
+		previous = camera.zoom.x
 	for i in 240:
 		camera.advance(1.0 / 60.0)
+	var pixels := camera.zoom.x * 2.0
 	var view := _visible_rect(camera)
-	fits = view.grow(0.01).has_point(a.global_position) and view.grow(0.01).has_point(b.global_position)
-	_check(whole, "zoom always maps a world pixel to whole screen pixels")
-	_check(fits, "stepping the zoom still keeps both fighters in view")
+	_check(glided, "zoom glides through in-between values while it changes")
+	_check(biggest_step < 0.05, "no single frame pops the zoom (biggest step %.3f)" % biggest_step)
+	_check(absf(pixels - roundf(pixels)) < 0.001, "zoom settles on whole screen pixels (zoom %s)" % camera.zoom)
+	_check(view.grow(0.01).has_point(a.global_position) and view.grow(0.01).has_point(b.global_position),
+		"settled zoom keeps both fighters in view")
 	await _cleanup([camera, a, b])
+
+
+func _test_pan_eases_in_without_overshoot() -> void:
+	# A fighter teleporting (respawn, knockback) must not yank the view: the
+	# camera accelerates from rest and lands without swinging past.
+	var camera := _make_camera()
+	var a := _make_target(Vector2(300, 300))
+	camera.add_target(a)
+	camera.snap()
+	a.position = Vector2(600, 300)
+	camera.advance(1.0 / 60.0)
+	var first := camera.global_position.x - 300.0
+	var furthest := 0.0
+	var settle_frame := -1
+	for i in 180:
+		camera.advance(1.0 / 60.0)
+		furthest = maxf(furthest, camera.global_position.x)
+		if settle_frame < 0 and absf(camera.global_position.x - 600.0) < 1.0:
+			settle_frame = i
+	_check(first > 0.0 and first < 5.0, "first frame only starts moving (%.1f px)" % first)
+	_check(furthest <= 600.5, "no overshoot past the fighter (max x %.1f)" % furthest)
+	_check(settle_frame >= 0 and settle_frame < 90, "settles within 1.5 s (frame %d)" % settle_frame)
+	await _cleanup([camera, a])
+
+
+func _test_zoom_out_is_quick_and_zoom_in_is_lazy() -> void:
+	# Like Superfighters: widen at once so nobody leaves the screen, but only
+	# tighten once fighters have stayed close, so jumps and dodges don't pump.
+	var camera := _make_camera()
+	var a := _make_target(Vector2(200, 300))
+	var b := _make_target(Vector2(760, 300))
+	camera.add_target(a)
+	camera.add_target(b)
+	camera.snap()
+	var wide := camera.zoom.x
+	a.position = Vector2(460, 300)
+	b.position = Vector2(500, 300)
+	for i in 18:
+		camera.advance(1.0 / 60.0)
+	_check(absf(camera.zoom.x - wide) < 0.01, "a brief clinch doesn't zoom in yet (zoom %.3f)" % camera.zoom.x)
+	for i in 240:
+		camera.advance(1.0 / 60.0)
+	var tight := camera.zoom.x
+	_check(tight > wide + 0.3, "fighters that stay close get a tighter view (zoom %.3f)" % tight)
+	a.position = Vector2(200, 300)
+	b.position = Vector2(760, 300)
+	for i in 3:
+		camera.advance(1.0 / 60.0)
+	_check(camera.zoom.x < tight - 0.001, "spreading out starts widening right away")
+	for i in 30:
+		camera.advance(1.0 / 60.0)
+	var view := _visible_rect(camera)
+	_check(view.grow(8.0).has_point(a.global_position) and view.grow(8.0).has_point(b.global_position),
+		"after half a second both fighters are back in view")
+	await _cleanup([camera, a, b])
+
+
+func _test_view_snaps_to_screen_pixels() -> void:
+	# Rounding to whole *world* pixels at 3 screen px per pixel makes slow pans
+	# stutter in 3 px hops; round to screen pixels instead.
+	var camera := _make_camera()
+	camera.screen_scale_override = 2.0
+	camera.pixel_perfect_zoom = true
+	var a := _make_target(Vector2(480, 300))
+	camera.add_target(a)
+	camera.snap()
+	var on_grid := true
+	var fine := false
+	for i in 120:
+		a.position.x += 0.4
+		camera.advance(1.0 / 60.0)
+		var pixels := camera.global_position.x * camera.zoom.x * 2.0
+		on_grid = on_grid and absf(pixels - roundf(pixels)) < 0.01
+		var world := camera.global_position.x
+		fine = fine or absf(world - roundf(world)) > 0.1
+	_check(on_grid, "view lands on whole screen pixels")
+	_check(fine, "view moves in steps finer than a world pixel when zoomed in")
+	await _cleanup([camera, a])
 
 
 func _test_pixel_perfect_respects_bounds() -> void:
