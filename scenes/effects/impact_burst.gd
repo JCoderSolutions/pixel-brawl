@@ -6,7 +6,7 @@ extends CPUParticles2D
 ## and needs no asset. CPU particles so it behaves the same on Web/mobile.
 ## Frees itself once the last particle dies.
 
-enum Kind { HIT, SPARK, DUST, DEBRIS, EXPLOSION }
+enum Kind { HIT, SPARK, DUST, DEBRIS, EXPLOSION, SPARKLE }
 
 ## Endesga 32 swatches.
 const WHITE := Color("ffffff")
@@ -51,6 +51,8 @@ func configure(burst_kind: Kind, direction := Vector2.UP) -> void:
 			_preset(10, 0.6, 50.0, 130.0, 70.0, 500.0, 1.0, 3.0, BRICK, DARK_BRICK)
 		Kind.EXPLOSION:
 			_preset(28, 0.5, 60.0, 190.0, 180.0, 120.0, 1.0, 3.0, YELLOW, ORANGE)
+		Kind.SPARKLE:
+			_preset(14, 0.6, 40.0, 110.0, 180.0, -60.0, 1.0, 2.0, WHITE, YELLOW)
 	_life_left = lifetime + 0.1
 	emitting = true
 
@@ -72,6 +74,11 @@ func _preset(count: int, life: float, speed_min: float, speed_max: float,
 	ramp.set_color(0, from)
 	ramp.set_color(1, Color(to, 0.0))
 	color_ramp = ramp
+
+
+## Fades the particles from white to `color` instead of the preset's end.
+func tint(color: Color) -> void:
+	color_ramp.set_color(1, Color(color, 0.0))
 
 
 func _process(delta: float) -> void:

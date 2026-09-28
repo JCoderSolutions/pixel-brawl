@@ -9,6 +9,7 @@ extends Node
 ##   Projectile.impacted        -> flesh hit or ricochet, sparks / dust
 ##   WeaponHolder.fired         -> shot, shotgun, swing or throw, muzzle spark
 ##   WeaponHolder.weapon_equipped -> pickup blip
+##   PowerUpReceiver.power_up_applied -> pickup blip, sparkles, floating name
 ##   Explosion.exploded         -> explosion, blast burst, hit-stop
 ##   DestructibleBlock.destroyed -> block break, debris
 ##   HealthComponent.died       -> death jingle (not for map tiles)
@@ -78,6 +79,8 @@ func wire(node: Node) -> void:
 		node.weapon_equipped.connect(_on_weapon_equipped)
 	elif node is Explosion:
 		node.exploded.connect(_on_exploded)
+	elif node is PowerUpReceiver:
+		node.power_up_applied.connect(_on_power_up.bind(node))
 	elif node is DestructibleBlock:
 		node.destroyed.connect(_on_block_destroyed)
 	elif node is HealthComponent:
@@ -215,6 +218,20 @@ func _on_fired(data: WeaponData, projectile_count: int, holder: WeaponHolder) ->
 
 func _on_weapon_equipped(_weapon: WeaponData, _ammo: int) -> void:
 	_play(&"pickup")
+
+
+func _on_power_up(data: PowerUpData, receiver: PowerUpReceiver) -> void:
+	_play(&"pickup")
+	var at := receiver.global_position
+	_burst(ImpactBurst.Kind.SPARKLE, at, Vector2.UP).tint(data.color)
+	FloatingText.spawn(self, power_up_label(data), data.color, at + Vector2(0.0, -24.0))
+
+
+## What floats over a fighter who takes `data`: "+30 VIDA" or its name.
+static func power_up_label(data: PowerUpData) -> String:
+	if data.effect == PowerUpData.Effect.HEAL:
+		return "+%d VIDA" % roundi(data.amount)
+	return data.display_name.to_upper()
 
 
 func _on_exploded(center: Vector2, _radius: float, _hits: int) -> void:

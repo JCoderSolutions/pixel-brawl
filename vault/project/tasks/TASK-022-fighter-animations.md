@@ -33,6 +33,11 @@ Reemplazar el rectángulo de color por un luchador dibujado con formas nativas
       los cañones terminan en su `muzzle_offset` y el luchador armado mantiene
       el brazo del arma al frente al correr y saltar. Test
       `scripts/weapons/test_weapon_art.gd`
+- [x] Animación `VICTORY` (brazos en V y saltitos): la pantalla del ganador
+      muestra al luchador del color ganador festejando a 2x
+- [x] Al agarrar un power-up: chispas del color del power-up
+      (`ImpactBurst.Kind.SPARKLE`), sonido y su nombre flotando sobre la cabeza
+      (`FloatingText`, "+40 VIDA" para el botiquín), todo desde `GameFeel`
 - [ ] Test manual en PC y teléfono: que cada animación se lea bien a escala real
 
 ## Detalles

@@ -15,6 +15,8 @@ const PISTOL := preload("res://scripts/weapons/data/pistol.tres")
 const SHOTGUN := preload("res://scripts/weapons/data/shotgun.tres")
 const KATANA := preload("res://scripts/weapons/data/katana.tres")
 const GRENADE := preload("res://scripts/weapons/data/grenade.tres")
+const SPEED := preload("res://scripts/powerups/data/speed.tres")
+const MEDKIT := preload("res://scripts/powerups/data/medkit.tres")
 
 var _ok := true
 var _played: Array[StringName] = []
@@ -43,8 +45,9 @@ func _run_tests() -> void:
 	await _test_explosion_breaks_blocks()
 	await _test_player_death()
 	await _test_jump_and_land()
+	await _test_power_up_pickup()
 	_test_wire_once()
-	print("OK: impact bursts, melee hit + hit-stop, block thud, projectile flesh/ricochet, weapon sounds, explosion + debris, death, jump/landing and single wiring verified" if _ok else "FAILED")
+	print("OK: impact bursts, melee hit + hit-stop, block thud, projectile flesh/ricochet, weapon sounds, explosion + debris, death, jump/landing, power-up pickup feedback and single wiring verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -257,6 +260,43 @@ func _test_jump_and_land() -> void:
 	_check(jumped, "a scripted jump plays jump")
 	_check(landed_again, "coming back down plays land again")
 	_check(dust_seen >= 1, "landing kicks up dust")
+	arena.queue_free()
+	await process_frame
+
+
+func _floating_texts() -> Array:
+	return _feel.get_children().filter(func(c): return c is FloatingText)
+
+
+func _test_power_up_pickup() -> void:
+	_reset()
+	var arena := _arena()
+	var player: CharacterBody2D = PLAYER_SCENE.instantiate()
+	player.is_controlled = false
+	arena.add_child(player)
+	await _frames(2)
+	var receiver := PowerUpReceiver.find_on(player)
+	receiver.apply(SPEED)
+	_check(&"pickup" in _played, "a power-up plays the pickup blip")
+	var sparkles := _feel.get_children().filter(func(c): return c is ImpactBurst and c.kind == ImpactBurst.Kind.SPARKLE)
+	_check(sparkles.size() == 1, "a power-up throws sparkles")
+	if not sparkles.is_empty():
+		_check(sparkles[0].color_ramp.get_color(1).to_html(false) == SPEED.color.to_html(false), "the sparkles take the power-up colour")
+	var texts := _floating_texts()
+	_check(texts.size() == 1 and texts[0].text == "VELOCIDAD", "the power-up name floats over the fighter (%s)" % [texts.map(func(t): return t.text)])
+	if texts.size() == 1:
+		var start_y: float = texts[0].global_position.y
+		_check(start_y < player.global_position.y - 16.0, "the text starts above the head")
+		await create_timer(0.3).timeout
+		_check(texts[0].global_position.y < start_y and texts[0].modulate.a < 1.0, "the text rises and fades")
+		await create_timer(FloatingText.DURATION).timeout
+		_check(not is_instance_valid(texts[0]), "the text cleans itself up")
+
+	_reset()
+	player.health.take_damage(40)
+	receiver.apply(MEDKIT)
+	texts = _floating_texts()
+	_check(texts.size() == 1 and texts[0].text == "+%d VIDA" % roundi(MEDKIT.amount), "a medkit shows the health it gives (%s)" % [texts.map(func(t): return t.text)])
 	arena.queue_free()
 	await process_frame
 
