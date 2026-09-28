@@ -27,6 +27,13 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
 - [x] Test headless `scripts/test_game_manager.gd`
 - [x] Test manual: Jose jugó una partida entera con armas y menú (2026-09-28); tiempos de pausa sin cambios por ahora
 - [x] `run/main_scene` es el menú; Jugar abre la arena
+- [x] Muerte súbita: a los 90 s de pelea (`sudden_death_after`), o 10 s
+      después de que no quede ningún humano vivo en una partida con bots
+      (`sudden_death_without_humans`), todos pierden 5 de vida por segundo
+      hasta que queda uno. Arregla partidas que no terminaban porque dos bots
+      quedaban trabados (Fundición en Fácil: uno en un tablón y el otro
+      debajo). El HUD muestra "¡MUERTE SÚBITA!"
+- [ ] Test manual de la muerte súbita
 
 ## Detalles
 

@@ -26,9 +26,11 @@ func _run_tests() -> void:
 	await _test_respawn_with_lives()
 	await _test_kill_zone()
 	await _test_rematch_resets_scores()
+	await _test_sudden_death_ends_stalemates()
+	await _test_sudden_death_when_only_bots_remain()
 	await _test_hud_and_winner_screen()
 	await _test_main_menu()
-	print("OK: match start, rounds, next round respawn, match end, draw, lives respawn, kill zone, rematch, HUD, winner screen and menu verified" if _ok else "FAILED")
+	print("OK: match start, rounds, next round respawn, match end, draw, lives respawn, kill zone, rematch, sudden death (stalemates and bots-only rounds), HUD, winner screen and menu verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -215,6 +217,70 @@ func _test_rematch_resets_scores() -> void:
 	await _teardown(m)
 
 
+## Nobody can make it to the others (stuck bots, campers): after
+## `sudden_death_after` everyone drains health until one is left.
+func _test_sudden_death_ends_stalemates() -> void:
+	var m := _make_match(1, 5)
+	var manager = m[1]
+	manager.sudden_death_after = 3.0
+	var started := [0]
+	var ended := []
+	manager.sudden_death_started.connect(func(): started[0] += 1)
+	manager.round_ended.connect(func(w): ended.append(w))
+	manager.start_match()
+	_step(manager, 0.2)
+	manager.get_player(1).health.take_damage(20)
+	_step(manager, 2.5)
+	_check(started[0] == 0, "no sudden death before the time limit")
+	_check(manager.get_player(0).health.current_health == 100, "nobody drains before it")
+	_step(manager, 1.0)
+	_check(started[0] == 1, "sudden death starts at the time limit")
+	_check(manager.get_player(0).health.current_health < 100, "sudden death drains everyone")
+	_step(manager, 30.0)
+	_check(ended.size() >= 1 and ended[0] == 0, "the healthier fighter outlasts the drain (%s)" % [ended])
+	_check(started[0] >= 1 and manager.current_round >= 2, "the match goes on to the next round")
+	var round_two_started: int = started[0]
+	await _teardown(m)
+	_check(round_two_started >= 1, "sudden death fired")
+
+
+## A human lost and only bots are left: don't make them watch forever.
+func _test_sudden_death_when_only_bots_remain() -> void:
+	var arena := Node2D.new()
+	root.add_child(arena)
+	var manager = GameManagerScript.new()
+	manager.set_process(false)
+	manager.round_start_delay = 0.1
+	manager.round_end_grace = 0.1
+	manager.round_end_delay = 0.1
+	manager.rounds_to_win = 1
+	manager.sudden_death_after = 90.0
+	manager.sudden_death_without_humans = 2.0
+	manager.configure_bots(2, BotProfile.Difficulty.EASY, 1)
+	root.add_child(manager)
+	manager.setup(arena, SPAWNS)
+	var started := [0]
+	var winner := [-2]
+	manager.sudden_death_started.connect(func(): started[0] += 1)
+	manager.match_ended.connect(func(w): winner[0] = w)
+	manager.start_match()
+	_step(manager, 0.2)
+	manager.get_player(2).health.take_damage(30)
+	_step(manager, 3.0)
+	_check(started[0] == 0, "no rush while the human is still fighting")
+	_kill(manager, 0)
+	_step(manager, 1.5)
+	_check(started[0] == 0, "the bots get a moment after the human falls")
+	_step(manager, 1.0)
+	_check(started[0] == 1, "sudden death starts once only bots remain")
+	_step(manager, 30.0)
+	_check(winner[0] == 1, "the match ends with the healthier bot as winner (got %d)" % winner[0])
+	manager.teardown()
+	manager.queue_free()
+	arena.queue_free()
+	await process_frame
+
+
 func _test_hud_and_winner_screen() -> void:
 	var m := _make_match(1, 1)
 	var manager = m[1]
@@ -238,6 +304,8 @@ func _test_hud_and_winner_screen() -> void:
 	_check(hud.score_text(0) == "1", "HUD score updates (got '%s')" % hud.score_text(0))
 	_check(winner.visible, "winner screen appears on match end")
 	_check(winner.title_text() == "¡P1 GANA!", "winner screen names P1 (got '%s')" % winner.title_text())
+	manager.sudden_death_started.emit()
+	_check(hud.banner_text() == "¡MUERTE SÚBITA!", "the HUD announces sudden death (got '%s')" % hud.banner_text())
 	var rig: FighterRig = winner.get_node("%WinnerRig")
 	_check(rig.anim == FighterRig.Anim.VICTORY, "the winner cheers on the winner screen")
 	_check(rig.color == manager.PLAYER_COLORS[0], "in the winner's colour")

@@ -23,6 +23,7 @@ func _ready() -> void:
 	manager.scores_changed.connect(_on_scores_changed)
 	manager.round_started.connect(_on_round_started)
 	manager.fight_started.connect(_on_fight_started)
+	manager.sudden_death_started.connect(_on_sudden_death)
 	manager.round_ended.connect(_on_round_ended)
 	manager.match_ended.connect(_on_match_ended)
 	for id in manager.get_player_ids():
@@ -111,10 +112,19 @@ func _on_round_started(round_number: int) -> void:
 
 
 func _on_fight_started() -> void:
-	_show_banner("¡PELEA!")
+	_flash_banner("¡PELEA!")
+
+
+## Shows `text` for FIGHT_BANNER_TIME seconds, unless something replaces it.
+func _flash_banner(text: String) -> void:
+	_show_banner(text)
 	get_tree().create_timer(FIGHT_BANNER_TIME).timeout.connect(func() -> void:
-		if _banner.text == "¡PELEA!":
+		if _banner.text == text:
 			_banner.hide())
+
+
+func _on_sudden_death() -> void:
+	_flash_banner("¡MUERTE SÚBITA!")
 
 
 func _on_round_ended(winner_id: int) -> void:
