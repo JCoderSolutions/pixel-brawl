@@ -17,11 +17,8 @@ size = Vector2(90, 12)
 [node name="TestArena" type="Node2D"]
 
 [node name="Background" type="ColorRect" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_right = 480.0
+offset_bottom = 270.0
 color = Color(0.1, 0.11, 0.17, 1)
 
 [node name="Floor" type="StaticBody2D" parent="."]
@@ -29,7 +26,7 @@ position = Vector2(240, 260)
 
 [node name="FloorVisual" type="ColorRect" parent="Floor"]
 offset_left = -240.0
-offset_top = -2.0
+offset_top = -10.0
 offset_right = 240.0
 offset_bottom = 10.0
 color = Color(0.35, 0.36, 0.42, 1)
@@ -42,9 +39,9 @@ position = Vector2(120, 190)
 
 [node name="PlatformVisual" type="ColorRect" parent="Platform"]
 offset_left = -60.0
-offset_top = -2.0
+offset_top = -6.0
 offset_right = 60.0
-offset_bottom = 14.0
+offset_bottom = 6.0
 color = Color(0.35, 0.36, 0.42, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Platform"]
@@ -55,9 +52,9 @@ position = Vector2(360, 140)
 
 [node name="PlatformVisual" type="ColorRect" parent="Platform2"]
 offset_left = -60.0
-offset_top = -2.0
+offset_top = -6.0
 offset_right = 60.0
-offset_bottom = 14.0
+offset_bottom = 6.0
 color = Color(0.35, 0.36, 0.42, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2"]
@@ -68,9 +65,9 @@ position = Vector2(240, 90)
 
 [node name="PlatformVisual" type="ColorRect" parent="Platform3"]
 offset_left = -45.0
-offset_top = -2.0
+offset_top = -6.0
 offset_right = 45.0
-offset_bottom = 14.0
+offset_bottom = 6.0
 color = Color(0.35, 0.36, 0.42, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Platform3"]
@@ -80,6 +77,8 @@ shape = SubResource("platform_shape3")
 position = Vector2(240, 200)
 
 [node name="Dummy" parent="." instance=ExtResource("1")]
-modulate = Color(1, 0.55, 0.55, 1)
 position = Vector2(300, 200)
 is_controlled = false
+
+[node name="Visual" parent="Dummy" index="0"]
+color = Color(0.894, 0.231, 0.267, 1)

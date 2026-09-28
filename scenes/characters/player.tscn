@@ -6,9 +6,11 @@
 [ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_stand"]
+resource_local_to_scene = true
 size = Vector2(18, 30)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hurt"]
+resource_local_to_scene = true
 size = Vector2(16, 28)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hit"]
@@ -26,6 +28,7 @@ offset_bottom = 0.0
 color = Color(0.2, 0.545, 0.8, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -15)
 shape = SubResource("RectangleShape2D_stand")
 
 [node name="HealthComponent" type="Node" parent="."]
@@ -39,10 +42,11 @@ script = ExtResource("3")
 health = NodePath("../HealthComponent")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -15)
 shape = SubResource("RectangleShape2D_hurt")
 
 [node name="Hitbox" type="Area2D" parent="."]
-position = Vector2(16, -2)
+position = Vector2(16, -17)
 collision_layer = 4
 collision_mask = 8
 script = ExtResource("4")

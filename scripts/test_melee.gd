@@ -12,7 +12,8 @@ func _run_tests() -> void:
 	await _test_melee_hit()
 	await _test_out_of_range()
 	await _test_death()
-	print("OK: health, melee hit, knockback, single hit per swing, range and death verified" if _ok else "FAILED")
+	await _test_crouch_is_per_instance()
+	print("OK: health, melee hit, knockback, single hit per swing, range, death and per-instance shapes verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -114,5 +115,23 @@ func _test_death() -> void:
 	_check(target.health.is_dead(), "target dies at zero health")
 	target.start_attack()
 	_check(not target.is_attacking(), "dead player cannot attack")
+	duel[0].queue_free()
+	await _frames(1)
+
+
+## Scene sub-resources are shared between instances unless local to scene;
+## one player crouching must never shrink another player's collider.
+func _test_crouch_is_per_instance() -> void:
+	var duel := await _spawn_duel(60.0)
+	var crouching = duel[1]
+	var standing = duel[2]
+	await _frames(30)
+	_check(crouching.is_on_floor(), "player landed before crouching")
+	crouching._set_crouching(true)
+	var own: RectangleShape2D = crouching.get_node("CollisionShape2D").shape
+	var other: RectangleShape2D = standing.get_node("CollisionShape2D").shape
+	_check(own.size.y == crouching.crouch_height, "crouching shrinks own collider")
+	_check(other.size.y == 30.0, "other player's collider is untouched (got %s)" % other.size.y)
+	_check(crouching.get_node("CollisionShape2D").position.y == -crouching.crouch_height / 2.0, "crouch keeps feet at origin")
 	duel[0].queue_free()
 	await _frames(1)

@@ -32,6 +32,8 @@ var _invulnerable_timer := 0.0
 @onready var _collider: CollisionShape2D = $CollisionShape2D
 @onready var _collision_shape: RectangleShape2D = _collider.shape
 @onready var _stand_height: float = _collision_shape.size.y
+@onready var _hurtbox_collider: CollisionShape2D = $Hurtbox/CollisionShape2D
+@onready var _hurtbox_shape: RectangleShape2D = _hurtbox_collider.shape
 @onready var _base_color: Color = _visual.color
 @onready var health: HealthComponent = $HealthComponent
 @onready var _hitbox: Hitbox = $Hitbox
@@ -161,10 +163,17 @@ func _set_crouching(pressed: bool) -> void:
 	if want_crouch == _is_crouching:
 		return
 	_is_crouching = want_crouch
-	if _is_crouching:
-		_collision_shape.size.y = crouch_height
-	else:
-		_collision_shape.size.y = _stand_height
+	_set_body_height(crouch_height if _is_crouching else _stand_height)
+
+
+## Origin sits at the feet, so shapes grow upward from y = 0 and the body
+## never sinks into or pops out of the floor when its height changes.
+func _set_body_height(height: float) -> void:
+	_collision_shape.size.y = height
+	_collider.position.y = -height / 2.0
+	_hurtbox_shape.size.y = height - 2.0
+	_hurtbox_collider.position.y = -height / 2.0
+	_visual.offset_top = -height
 
 
 func _flip(facing_right: bool) -> void:

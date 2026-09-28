@@ -31,6 +31,12 @@ con un pipeline de daño reutilizable para armas, props y tiles destructibles.
 - `Hitbox` ataca solo `Hurtbox` (mask 4) y abre la ventana con `activate()`.
 - `is_controlled = false` desactiva el input: sirve para dummies hoy y para
   jugadores remotos/segundo jugador en TASK-008.
+- El origen del personaje está en los pies: shapes, hurtbox y visual crecen
+  hacia arriba desde y = 0, y al agacharse se reubican (`_set_body_height`).
+- Los shapes del player son `resource_local_to_scene`: sin eso, todas las
+  instancias compartían el mismo shape y agacharse encogía a los demás.
+- Los visuales del mapa coinciden exactamente con sus colisiones (antes el
+  piso y las plataformas quedaban 4 a 8 px desalineados y el fondo no se veía).
 - Los valores de feel (`attack_*`, `hitstun`, `invulnerability`, daño y
   knockback del `Hitbox`) están expuestos en el inspector para ajustarlos.
 
