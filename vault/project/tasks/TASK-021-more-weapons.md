@@ -24,8 +24,8 @@ arma es un `.tres` en `scripts/weapons/data/`.
       que explota al tocar pared, suelo o luchador y rompe el mapa con `Explosion`
 - [x] Las 4 están en el pool por defecto de `weapon_spawner.tscn`
 - [x] Test headless `scripts/weapons/test_new_weapons.gd`
-- [ ] Agregarlas al pool del mapa (`test_arena.tscn` sobrescribe `weapons`;
-      lo hace el hilo de mapas)
+- [x] Agregarlas al pool de cada mapa (`test_arena` y los 4 mapas temáticos
+      sobrescriben `weapons`)
 - [ ] Test manual del balance en PC y teléfono
 
 ## Detalles
