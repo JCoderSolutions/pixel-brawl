@@ -28,6 +28,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | --- | --- | --- | --- |
 | [[project/tasks/TASK-001-setup-godot-project|TASK-001 — Setup Godot]] | `done` | high | PHASE-1 |
 | [[project/tasks/TASK-002-player-movement|TASK-002 — Player movement]] | `in-progress` | high | PHASE-1 |
+| [[project/tasks/TASK-017-ci-web-build|TASK-017 — CI + build Web en Pages]] | `in-progress` | high | PHASE-4 |
 
 ## Tareas por desglosar (backlog)
 
