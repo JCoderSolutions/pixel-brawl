@@ -11,6 +11,8 @@ signal exploded(center: Vector2, radius: float, hits: int)
 ## Layer 4 (hurtboxes).
 const HURTBOX_MASK := 8
 const FLASH_TIME := 0.3
+## Trauma added to the cameras that see the blast.
+const SHAKE := 0.8
 
 @export var radius := 40.0
 @export var damage := 45
@@ -52,6 +54,7 @@ func detonate(source: Node = null) -> int:
 		hits += 1
 	for map: DestructibleMap in get_tree().root.find_children("*", "DestructibleMap", true, false):
 		map.damage_area(global_position, radius, block_damage, source)
+	SharedCamera.shake(self, SHAKE)
 	_flash = FLASH_TIME
 	queue_redraw()
 	exploded.emit(global_position, radius, hits)

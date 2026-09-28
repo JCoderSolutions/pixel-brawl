@@ -28,7 +28,7 @@ daña y empuja a los jugadores cercanos y rompe los bloques del mapa usando
 - [x] La explosión rompe bloques con `damage_area` (los indestructibles no)
 - [x] Escena de prueba `scenes/items/grenade_test_arena.tscn`
 - [x] Test headless `scripts/weapons/test_grenades.gd`
-- [ ] Integrar en `player.gd` / `test_arena` (lo hace el hilo de integración)
+- [x] Integrar en `test_arena`: la granada sale del `WeaponSpawner` y la explosión sacude la cámara (`SharedCamera.shake`, 0.8)
 - [ ] Test manual: lanzar, rebotar y volar la pared se siente bien
 
 ## Detalles

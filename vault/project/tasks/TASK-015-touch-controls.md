@@ -23,7 +23,7 @@ que alimentan las mismas acciones `p1_*` que el teclado y el gamepad.
 - [x] Layout calculado desde el tamaño visible: escala con la resolución, horizontal y vertical
 - [x] Escena de prueba `scenes/ui/touch/touch_test.tscn` (el mouse hace de dedo en PC)
 - [x] Test headless `scripts/test_touch_controls.gd`
-- [ ] Instanciar `scenes/ui/touch/touch_controls.tscn` en la escena de partida (hilo de integración)
+- [x] Instanciar `scenes/ui/touch/touch_controls.tscn` en la escena de partida (P1, modo AUTO)
 - [x] `p1_fire`/`p1_pickup` en `project.godot` con teclas y leídas por `DeviceInputSource` (llegó por main)
 - [x] Vertical real: `window/stretch/aspect="expand"` en `project.godot` (llegó con PR #10)
 - [ ] Test manual en un teléfono real (tamaño de botones, zona del stick)
