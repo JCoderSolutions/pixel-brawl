@@ -222,10 +222,9 @@ func _world() -> Node:
 	return wielder.get_parent() if wielder.get_parent() != null else wielder
 
 
-## Placeholder look until sprites land: a bar in the weapon's color.
+## Native-shape weapon art (WeaponArt) until sprites land.
 func _draw() -> void:
 	if weapon == null:
 		return
-	var length := weapon.muzzle_offset if weapon.is_ranged() else weapon.melee_offset
-	var x := 0.0 if facing > 0 else -length
-	draw_rect(Rect2(x, -1.5, length, 3.0), weapon.color)
+	for part in WeaponArt.shapes(weapon, facing):
+		draw_colored_polygon(part.points, part.color)

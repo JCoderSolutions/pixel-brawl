@@ -14,8 +14,6 @@ const GROUP := &"weapon_pickups"
 ## Remaining uses; -1 fills it to the weapon's max ammo on pickup.
 @export var ammo := -1
 
-@onready var _visual: ColorRect = $Visual
-
 
 func _ready() -> void:
 	add_to_group(GROUP)
@@ -29,6 +27,17 @@ func take() -> Array:
 	return [weapon, ammo]
 
 
+## The weapon's art (WeaponArt), centred on the pickup.
+func art_shapes() -> Array[Dictionary]:
+	if weapon == null:
+		return []
+	return WeaponArt.shapes(weapon, 1, true)
+
+
 func _refresh_visual() -> void:
-	if _visual != null and weapon != null:
-		_visual.color = weapon.color
+	queue_redraw()
+
+
+func _draw() -> void:
+	for part in art_shapes():
+		draw_colored_polygon(part.points, part.color)
