@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Corre los tests headless del proyecto (scripts/test_*.gd + verify_launch.gd).
+# Corre los tests headless del proyecto (scripts/**/test_*.gd + verify_launch.gd).
 # Uso: GODOT=/ruta/a/godot tools/run_tests.sh
 # Cada test es un SceneTree script que imprime "OK: ..." y hace quit(1) al fallar.
 set -uo pipefail
@@ -8,7 +8,7 @@ GODOT="${GODOT:-godot}"
 TIMEOUT="${TEST_TIMEOUT:-120}"
 cd "$(dirname "$0")/.."
 
-tests=(scripts/test_*.gd scripts/verify_launch.gd)
+tests=(scripts/test_*.gd scripts/*/test_*.gd scripts/verify_launch.gd)
 failed=0
 
 for test in "${tests[@]}"; do

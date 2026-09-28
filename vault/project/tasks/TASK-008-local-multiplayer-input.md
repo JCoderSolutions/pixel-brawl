@@ -22,7 +22,7 @@ controles táctiles, bots y online con input determinista.
 - [x] `player.gd` lee de su `input_source`; los "just pressed" salen de frames consecutivos
 - [x] Acciones `p1_*` … `p4_*` en `project.godot` (teclado dividido P1/P2 + un gamepad por slot)
 - [x] Test headless `scripts/test_input.gd`
-- [ ] Segundo jugador en la arena (lo resuelve el hilo del mapa, dueño de `test_arena.tscn`)
+- [x] Segundo jugador en la arena (la partida de `test_arena` usa los slots 1 y 2)
 - [ ] Test manual: dos personas en un teclado sin que se pisen las teclas
 
 ## Detalles

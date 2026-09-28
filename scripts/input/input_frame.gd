@@ -8,6 +8,8 @@ extends RefCounted
 const JUMP := 1
 const CROUCH := 2
 const ATTACK := 4
+const FIRE := 8
+const PICKUP := 16
 
 const AXIS_STEPS := 127
 

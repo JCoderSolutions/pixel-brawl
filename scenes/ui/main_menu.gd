@@ -3,7 +3,7 @@ extends Control
 ## Title screen. "Jugar" loads the match scene; "Salir" is hidden on web,
 ## where closing the tab is the only way out.
 
-@export_file("*.tscn") var match_scene := "res://scenes/ui/match_sandbox.tscn"
+@export_file("*.tscn") var match_scene := "res://scenes/maps/test_arena.tscn"
 
 @onready var _play_button: Button = %PlayButton
 @onready var _quit_button: Button = %QuitButton

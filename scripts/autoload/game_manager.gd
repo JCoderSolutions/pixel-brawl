@@ -149,6 +149,7 @@ func _spawn(id: int) -> void:
 	player.name = "P%d" % (id + 1)
 	player.position = _spawn_points[id]
 	player.is_controlled = id in controlled_ids
+	player.player_slot = id + 1
 	player.get_node("Visual").color = PLAYER_COLORS[id % PLAYER_COLORS.size()]
 	_arena.add_child(player)
 	player.health.died.connect(_on_player_died.bind(id), CONNECT_ONE_SHOT)

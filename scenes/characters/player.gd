@@ -46,6 +46,7 @@ var input_source: InputSource
 @onready var health: HealthComponent = $HealthComponent
 @onready var _hitbox: Hitbox = $Hitbox
 @onready var _hitbox_offset: float = absf(_hitbox.position.x)
+@onready var weapons: WeaponHolder = $WeaponHolder
 
 
 func _ready() -> void:
@@ -88,6 +89,7 @@ func _physics_process(delta: float) -> void:
 	if just_pressed & InputFrame.ATTACK:
 		start_attack()
 	_update_attack(delta)
+	_use_weapon(frame, just_pressed)
 
 	_set_crouching(want_crouch)
 	_apply_gravity(delta, want_crouch)
@@ -102,6 +104,19 @@ func _sample_input() -> InputFrame:
 	if not is_controlled or input_source == null:
 		return InputFrame.new()
 	return input_source.sample()
+
+
+## Automatic weapons fire while the button is held; the rest need a fresh
+## press per shot. Pickup grabs the nearest weapon, or drops the current one
+## when nothing is in reach.
+func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
+	if just_pressed & InputFrame.PICKUP and not weapons.try_pick_up():
+		weapons.drop()
+	if not weapons.has_weapon():
+		return
+	var trigger := frame.buttons if weapons.weapon.automatic else just_pressed
+	if trigger & InputFrame.FIRE:
+		weapons.try_use()
 
 
 func is_attacking() -> bool:
@@ -149,6 +164,9 @@ func _on_died(_source: Node) -> void:
 	_hitbox.deactivate()
 	$Hurtbox.set_deferred("monitorable", false)
 	_visual.color = _base_color.darkened(0.6)
+	# Dead hands let go; deferred because physics bodies can't be added
+	# from inside the hit's physics callback.
+	weapons.drop.call_deferred()
 
 
 func _apply_gravity(delta: float, want_crouch: bool) -> void:
@@ -208,3 +226,4 @@ func _flip(facing_right: bool) -> void:
 	_visual.pivot_offset.x = _visual.size.x / 2.0
 	_visual.scale.x = 1.0 if facing_right else -1.0
 	_hitbox.position.x = _hitbox_offset if facing_right else -_hitbox_offset
+	weapons.facing = 1 if facing_right else -1

@@ -24,7 +24,10 @@ func _check(condition: bool, message: String) -> void:
 
 func _test_player_cannot_leave(direction: float) -> void:
 	var arena: Node2D = load("res://scenes/maps/test_arena.tscn").instantiate()
-	var player = arena.get_node("Player")
+	arena.autostart = false
+	var player = load("res://scenes/characters/player.tscn").instantiate()
+	player.position = Vector2(240, 250)
+	arena.get_node("Players").add_child(player)
 	var frames: Array[InputFrame] = []
 	for i in 300:
 		# Keep running and hop now and then, like a player trying to escape.

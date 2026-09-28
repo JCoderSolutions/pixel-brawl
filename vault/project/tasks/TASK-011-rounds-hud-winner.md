@@ -23,10 +23,10 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
 - [x] Kill zone (`kill_zone_y`) para quien cae del mapa
 - [x] HUD (`scenes/ui/hud.tscn`): barra de vida y marcador por jugador, banner de ronda/pelea/ganador
 - [x] Pantalla de ganador con Revancha y Menú; menú principal con Jugar / Salir
-- [x] Escena de prueba `scenes/ui/match_sandbox.tscn`
+- [x] Partida en `scenes/maps/test_arena.tscn` (`arena_match.gd`); `match_sandbox` se retiró
 - [x] Test headless `scripts/test_game_manager.gd`
 - [ ] Test manual: jugar una partida entera y ajustar tiempos de las pausas
-- [ ] Cambiar `run/main_scene` al menú cuando se acepte el flujo
+- [x] `run/main_scene` es el menú; Jugar abre la arena
 
 ## Detalles
 
@@ -36,7 +36,8 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
 - La UI (HUD, ganador) solo escucha señales del manager; se le puede inyectar
   otra instancia (`hud.manager = ...`), así se testea sin el autoload.
 - `advance(delta)` es público para que los tests manejen el tiempo a mano.
-- P2 es un dummy (`controlled_ids = [0]`) hasta el 2P local (TASK-008).
+- La arena pone `controlled_ids = [0, 1]` y el manager asigna `player_slot = id + 1`,
+  así P1 y P2 juegan en local. El default del autoload sigue en `[0]`.
 - `project.godot`: solo se agregó la sección `[autoload]`.
 
 ## Evidencia
