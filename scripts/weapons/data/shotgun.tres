@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"shotgun"
+display_name = "Escopeta"
+kind = 0
+damage = 7
+knockback = Vector2(160, -90)
+cooldown = 0.8
+max_ammo = 6
+automatic = false
+color = Color(0.557, 0.322, 0.322, 1)
+projectiles_per_shot = 6
+spread_degrees = 20.0
+projectile_speed = 600.0
+projectile_range = 170.0
+muzzle_offset = 14.0
