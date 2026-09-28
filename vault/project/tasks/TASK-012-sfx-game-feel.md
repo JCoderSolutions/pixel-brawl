@@ -30,7 +30,12 @@ gratuitos CC0.
       `menu` y cada partida `battle`. Los `.import` de `assets/audio/music/` se
       versionan (excepción en `.gitignore`). Test `scripts/audio/test_music.gd`
 - [x] Test manual de la música: Jose la probó y está correcta (2026-09-28)
-- [ ] Menú de opciones con sliders de volumen (la API ya está)
+- [x] Menú de opciones (`scenes/ui/options_menu.tscn`, botón "Opciones" del
+      menú): volumen de música y efectos, pantalla completa (no en la app de
+      teléfono) y controles táctiles automático/siempre/nunca. `GameSettings`
+      (`scripts/autoload/game_settings.gd`) guarda en `user://settings.cfg` en
+      cada cambio y el menú lo aplica al arrancar. Test `scripts/test_settings.gd`
+- [ ] Test manual del menú de opciones en PC y teléfono
 - [ ] Test manual de sensación (volúmenes, duración del hit-stop)
 
 ## Tabla de eventos

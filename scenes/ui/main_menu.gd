@@ -2,6 +2,8 @@ extends Control
 
 ## Title screen. "Jugar" loads the chosen map (or a random one) with the
 ## chosen rivals: the local 2P match or P1 against 1-3 bots of a difficulty.
+## "Opciones" opens the options panel; the saved options are loaded and
+## applied every time the menu shows up (it is the first scene).
 ## "Salir" is hidden on web, where closing the tab is the only way out.
 
 ## The scene "Jugar" loads; apply_selection() sets it from the map option.
@@ -12,17 +14,23 @@ static var _last_map := 0
 
 @onready var _play_button: Button = %PlayButton
 @onready var _quit_button: Button = %QuitButton
+@onready var _options_button: Button = %OptionsButton
+@onready var _options: OptionsMenu = %Options
 @onready var _rivals: OptionButton = %Rivals
 @onready var _difficulty: OptionButton = %Difficulty
 @onready var _map: OptionButton = %Map
 
 
 func _ready() -> void:
+	GameSettings.load_saved()
+	GameSettings.apply()
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_track(&"menu")
 	_play_button.pressed.connect(_on_play)
 	_quit_button.pressed.connect(get_tree().quit)
+	_options_button.pressed.connect(_options.open)
+	_options.closed.connect(_options_button.grab_focus)
 	_quit_button.visible = not OS.has_feature("web")
 	_rivals.clear()
 	_rivals.add_item("2 jugadores")

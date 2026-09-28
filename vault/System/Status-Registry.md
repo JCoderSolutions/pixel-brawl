@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-28"
+last_updated_notes: "TASK-012 menú de opciones (volumen, pantalla completa, táctil) en progreso"
 last_updated_notes: "TASK-022 luchador animado con formas nativas en progreso"
 last_updated_notes: "TASK-012 música chiptune (menú y partida) en progreso"
 last_updated_notes: "TASK-009/TASK-021 armas nuevas en los mapas y bots que saltan pozos (CI verde)"

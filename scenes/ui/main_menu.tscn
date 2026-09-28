@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/main_menu.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ui/options_menu.tscn" id="2"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -66,8 +67,24 @@ custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 alignment = 1
 
-[node name="QuitButton" type="Button" parent="Box"]
+[node name="Row" type="HBoxContainer" parent="Box"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="OptionsButton" type="Button" parent="Box/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
+size_flags_horizontal = 3
+text = "Opciones"
+
+[node name="QuitButton" type="Button" parent="Box/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Salir"
+
+[node name="Options" parent="." instance=ExtResource("2")]
+unique_name_in_owner = true
+layout_mode = 1
