@@ -108,6 +108,22 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Sin Pages activado (Source = GitHub Actions) el deploy da 404; en ese caso se
+      # avisa y se salta en vez de dejar main en rojo. Se publica solo al activarlo.
+      - name: Verificar que Pages esté activado
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          build_type="$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq ".build_type // empty" 2>/dev/null || true)"
+          if [ "$build_type" = "workflow" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning title=GitHub Pages no activado::Activá Pages en https://github.com/${GITHUB_REPOSITORY}/settings/pages con Source = GitHub Actions (estado actual: '${build_type:-desactivado}'). Deploy omitido."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy
         id: deployment
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/deploy-pages@v4

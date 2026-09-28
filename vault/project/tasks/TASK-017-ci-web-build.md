@@ -38,6 +38,8 @@ en GitHub Pages para probar desde teléfono o PC sin instalar nada.
   `build/web/`. Si exportás a mano, copialo también. Se puede quitar al pasar a
   Godot 4.3+ con `variant/thread_support=false`.
 - El preset Web excluye los scripts de test del `.pck`.
+- Si Pages no está activado con Source = GitHub Actions, el job de deploy deja un
+  warning con el link a Settings → Pages y omite el deploy (main no queda en rojo).
 - En PRs el build queda como artifact descargable del run (`github-pages`), sin deploy.
 
 ## Evidencia
