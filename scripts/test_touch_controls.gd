@@ -62,7 +62,7 @@ func _test_axis_math() -> void:
 
 
 func _test_layout_fits_every_orientation() -> void:
-	for screen in [Vector2(480, 270), Vector2(270, 480), Vector2(1920, 1080), Vector2(1080, 2340)]:
+	for screen in [Vector2(480, 270), Vector2(270, 480), Vector2(1920, 1080), Vector2(1080, 2340), Vector2(2340, 1080), Vector2(768, 1024), Vector2(360, 360)]:
 		var layout := TouchControls.compute_layout(screen)
 		var screen_rect := Rect2(Vector2.ZERO, screen)
 		var names: Array = TouchControls.BUTTONS.keys()
