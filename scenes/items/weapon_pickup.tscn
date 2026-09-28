@@ -16,12 +16,5 @@ physics_material_override = SubResource("PhysicsMaterial_pickup")
 lock_rotation = true
 script = ExtResource("1")
 
-[node name="Visual" type="ColorRect" parent="."]
-offset_left = -7.0
-offset_top = -3.0
-offset_right = 7.0
-offset_bottom = 3.0
-color = Color(1, 1, 1, 1)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_pickup")

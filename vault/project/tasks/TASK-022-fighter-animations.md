@@ -28,6 +28,11 @@ Reemplazar el rectángulo de color por un luchador dibujado con formas nativas
       cuclillas, a la altura de su hitbox), golpe, recibir golpe y apuntar arma
 - [x] El destello de golpe es `flash` (todo blanco) y no pisa el color
 - [x] Test headless `scripts/test_fighter_rig.gd`
+- [x] Armas dibujadas con formas nativas (`scripts/weapons/weapon_art.gd`): el
+      mismo dibujo en la mano (`WeaponHolder`) y en el piso (`WeaponPickup`);
+      los cañones terminan en su `muzzle_offset` y el luchador armado mantiene
+      el brazo del arma al frente al correr y saltar. Test
+      `scripts/weapons/test_weapon_art.gd`
 - [ ] Test manual en PC y teléfono: que cada animación se lea bien a escala real
 
 ## Detalles

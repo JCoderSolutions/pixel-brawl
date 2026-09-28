@@ -44,6 +44,8 @@ var flash := false:
 		flash = value
 		queue_redraw()
 var anim := Anim.IDLE
+## Holding a weapon: the gun arm stays up while moving.
+var armed := false
 var anim_time := 0.0
 
 
@@ -57,7 +59,9 @@ func _process(delta: float) -> void:
 	var fighter := get_parent()
 	if fighter == null or not fighter.has_method("is_on_floor"):
 		return
-	var next := choose_anim(read_state(fighter))
+	var state := read_state(fighter)
+	armed = state.armed
+	var next := choose_anim(state)
 	if next != anim:
 		anim = next
 		anim_time = 0.0
@@ -69,7 +73,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	# Pose space has its origin at the feet, the Control's bottom centre.
 	draw_set_transform(Vector2(size.x / 2.0, size.y))
-	for part in parts(pose(anim, anim_time), color, flash):
+	for part in parts(pose(anim, anim_time, armed), color, flash):
 		draw_colored_polygon(part.points, part.color)
 
 
@@ -100,8 +104,9 @@ static func choose_anim(state: Dictionary) -> Anim:
 	return Anim.AIM if state.armed else Anim.IDLE
 
 
-## Joint angles and offsets for `anim` at `t` seconds into it.
-static func pose(anim: Anim, t: float) -> Dictionary:
+## Joint angles and offsets for `anim` at `t` seconds into it. `armed`
+## keeps the front arm pointing the weapon forward on the move.
+static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 	var p := {"hip_y": -LEG_LENGTH, "bob": 0.0, "lean": 0.0,
 			"leg_front": 0.08, "leg_back": -0.08, "knee_front": 0.0, "knee_back": 0.0,
 			"arm_front": -0.1, "arm_back": 0.15}
@@ -156,6 +161,8 @@ static func pose(anim: Anim, t: float) -> Dictionary:
 			p.arm_back = 2.6
 			p.leg_front = 0.3
 			p.leg_back = -0.2
+	if armed and anim in [Anim.IDLE, Anim.AIM, Anim.RUN, Anim.JUMP, Anim.FALL]:
+		p.arm_front = -PI / 2.0
 	return p
 
 
