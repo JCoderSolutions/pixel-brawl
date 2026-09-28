@@ -51,6 +51,10 @@ run/main_scene="res://scenes/maps/test_arena.tscn"
 config/features=PackedStringArray("4.2", "Mobile")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameManager="*res://scripts/autoload/game_manager.gd"
+
 [display]
 
 window/size/viewport_width=480
