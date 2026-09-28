@@ -53,6 +53,25 @@ func _on_player_spawned(id: int, player: Node) -> void:
 	health.health_changed.connect(func(current: int, maximum: int) -> void:
 		panel.bar.max_value = maximum
 		panel.bar.value = current)
+	panel.weapon.text = ""
+	var holder: WeaponHolder = player.get("weapons")
+	if holder != null:
+		var label: Label = panel.weapon
+		holder.weapon_equipped.connect(func(_w, _a) -> void: label.text = weapon_line(holder))
+		holder.ammo_changed.connect(func(_a) -> void: label.text = weapon_line(holder))
+		holder.weapon_dropped.connect(func(_w, _a) -> void: label.text = "")
+		holder.weapon_spent.connect(func(_w) -> void: label.text = "")
+
+
+func weapon_text(id: int) -> String:
+	return _panels[id].weapon.text if _panels.has(id) else ""
+
+
+func weapon_line(holder: WeaponHolder) -> String:
+	if not holder.has_weapon():
+		return ""
+	var uses := "∞" if holder.weapon.has_unlimited_ammo() else str(holder.ammo)
+	return "%s %s" % [holder.weapon.display_name, uses]
 
 
 func _make_panel(id: int) -> Dictionary:
@@ -73,10 +92,13 @@ func _make_panel(id: int) -> Dictionary:
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = manager.PLAYER_COLORS[id % manager.PLAYER_COLORS.size()]
 	bar.add_theme_stylebox_override("fill", fill)
+	var weapon := Label.new()
+	weapon.add_theme_font_size_override("font_size", 8)
 	box.add_child(header)
 	box.add_child(bar)
+	box.add_child(weapon)
 	_bars_row.add_child(box)
-	return {"bar": bar, "score": score}
+	return {"bar": bar, "score": score, "weapon": weapon}
 
 
 func _on_scores_changed(scores: Array) -> void:
