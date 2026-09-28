@@ -31,6 +31,7 @@ func _ready() -> void:
 	GameManager.player_spawned.connect(_on_player_spawned)
 	GameManager.setup(_players, spawns)
 	GameManager.start_match()
+	AudioManager.play_track(&"battle")
 
 
 ## Top edge of the metal-capped bridge (the first layout row holding `X`).

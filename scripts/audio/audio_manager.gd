@@ -32,6 +32,17 @@ const SFX := {
 	&"pickup": preload("res://assets/audio/sfx/pickup.wav"),
 }
 
+## Looping chiptune themes (assets/audio/generate_music.py).
+const MUSIC := {
+	&"menu": preload("res://assets/audio/music/menu.wav"),
+	&"battle": preload("res://assets/audio/music/battle.wav"),
+}
+## Mix level of each theme, so music sits under the effects.
+const MUSIC_VOLUME_DB := {
+	&"menu": -8.0,
+	&"battle": -6.0,
+}
+
 ## Simultaneous effects; the oldest voice is cut when all are busy.
 @export var voices := 12
 ## Same effect re-triggered faster than this (seconds) is skipped, so a
@@ -44,6 +55,7 @@ var _pool: Array[AudioStreamPlayer] = []
 var _next_voice := 0
 var _last_played := {}
 var _music: AudioStreamPlayer
+var _track := &""
 var _music_tween: Tween
 var _rng := RandomNumberGenerator.new()
 
@@ -61,6 +73,10 @@ func _ready() -> void:
 	_music.name = "Music"
 	_music.bus = BUS_MUSIC
 	add_child(_music)
+	if _track != &"":
+		var pending := _track
+		_track = &""
+		play_track(pending)
 
 
 ## Adds the Music and SFX buses (routed to Master) if they don't exist yet.
@@ -104,6 +120,7 @@ func play_sfx(sfx_name: StringName, volume_db := 0.0, pitch := 1.0) -> AudioStre
 ## the stream from its import settings.
 func play_music(stream: AudioStream, fade := 0.5, volume_db := 0.0) -> void:
 	_kill_music_tween()
+	_track = &""
 	_music.stream = stream
 	_music.volume_db = -60.0 if fade > 0.0 else volume_db
 	_music.play()
@@ -112,8 +129,30 @@ func play_music(stream: AudioStream, fade := 0.5, volume_db := 0.0) -> void:
 		_music_tween.tween_property(_music, "volume_db", volume_db, fade)
 
 
+## Plays a theme from MUSIC at its mix level. Asking for the theme already
+## playing does nothing, so the menu -> match -> menu loop never restarts it.
+func play_track(track: StringName, fade := 1.0) -> void:
+	if not MUSIC.has(track):
+		push_warning("Unknown music track: %s" % track)
+		return
+	if _music == null:
+		# Asked before _ready (a scene booting with the autoloads): play then.
+		_track = track
+		return
+	if track == _track and _music.playing:
+		return
+	play_music(MUSIC[track], fade, MUSIC_VOLUME_DB.get(track, 0.0))
+	_track = track
+
+
+## The MUSIC theme playing, or &"" for none (or a raw play_music stream).
+func current_track() -> StringName:
+	return _track if _music.playing else &""
+
+
 func stop_music(fade := 0.5) -> void:
 	_kill_music_tween()
+	_track = &""
 	if fade <= 0.0 or not _music.playing:
 		_music.stop()
 		return

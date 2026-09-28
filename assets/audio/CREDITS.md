@@ -16,14 +16,20 @@ python3 assets/audio/generate_sfx.py
 
 Formato: WAV mono, 16 bit, 22 050 Hz (≈170 KB en total).
 
-## Música
+## Música (`assets/audio/music/*.wav`)
 
-Todavía no hay pistas. `AudioManager.play_music()` ya existe y usa el bus
-`Music`. Fuentes gratuitas recomendadas, **solo con licencia CC0** para no
-tener que gestionar créditos:
+| Archivo | Fuente | Licencia |
+| --- | --- | --- |
+| `menu` (100 BPM, La menor, 8 compases), `battle` (150 BPM, Mi menor, 16 compases) | Generadas por `assets/audio/generate_music.py` (chiptune procedural: pulso, triángulo y ruido, sin samples externos) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
-- [Kenney — Audio](https://kenney.nl/assets/category:Audio) (CC0)
-- [OpenGameArt](https://opengameart.org/) filtrando por CC0
-- Chiptune propio con [BeepBox](https://www.beepbox.co/) o [jsfxr](https://sfxr.me/)
+Para cambiar una pista se edita su función en `generate_music.py` y se vuelve
+a correr:
 
-Toda pista o efecto que se agregue va en la tabla de arriba con su URL y licencia.
+```bash
+python3 assets/audio/generate_music.py
+```
+
+Formato: WAV mono, 16 bit, 22 050 Hz. Godot las importa en loop y comprimidas
+con IMA-ADPCM (opciones en los `.wav.import`, que sí se versionan). Si se
+agregan pistas de terceros, **solo con licencia CC0** y anotadas en esta tabla
+con su URL.
