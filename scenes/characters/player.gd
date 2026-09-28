@@ -203,5 +203,8 @@ func _set_body_height(height: float) -> void:
 
 func _flip(facing_right: bool) -> void:
 	_facing_right = facing_right
+	# Mirror around the body's centre line; the default pivot is the rect's
+	# left edge, which drew the body 18 px away from its collider.
+	_visual.pivot_offset.x = _visual.size.x / 2.0
 	_visual.scale.x = 1.0 if facing_right else -1.0
 	_hitbox.position.x = _hitbox_offset if facing_right else -_hitbox_offset
