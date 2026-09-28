@@ -22,8 +22,12 @@ const TILE := 16
 const JUMP_ROWS := 3
 const JUMP_COLS := 3
 const LEAP_COLS := 5
-## Frames a bots-only match gets to crown a winner (one round wins it).
-const MATCH_FRAMES := 60 * 90
+## Frames a bots-only match gets to crown a winner (one round wins it); the
+## maps take 500-1600, and the whole file must fit tools/run_tests.sh's 120 s.
+const MATCH_FRAMES := 60 * 40
+## Bots are seeded by id; seeding the weapon drops too makes each match replay
+## the same way, so a rare stand-off can't make the test flaky.
+const SPAWNER_SEED := 1
 
 var _ok := true
 
@@ -124,6 +128,10 @@ func _test_map_layout(path: String) -> void:
 
 	var spawner: WeaponSpawner = map.get_node("WeaponSpawner")
 	_check(spawner.weapons.any(func(w): return w is GrenadeData), "%s spawns grenades" % name)
+	for weapon_path in DirAccess.get_files_at("res://scripts/weapons/data"):
+		var weapon := load("res://scripts/weapons/data/" + weapon_path.trim_suffix(".remap"))
+		_check(weapon in spawner.weapons, "%s spawns %s" % [name, weapon_path.get_basename()])
+	_check(not spawner.power_ups.is_empty(), "%s spawns power-ups" % name)
 	var space := map.get_world_2d().direct_space_state
 	for marker in spawner.get_children():
 		if marker is Marker2D:
@@ -259,6 +267,7 @@ func _test_bots_finish_a_match(path: String) -> void:
 	manager.configure_bots(4, BotProfile.Difficulty.HARD, 0)
 	var map: Node2D = load(path).instantiate()
 	map.get_node("TouchControls").visibility = TouchControls.Visibility.NEVER
+	map.get_node("WeaponSpawner").rng_seed = SPAWNER_SEED
 	root.add_child(map)
 	var result := {"winner": -2, "rounds": 0}
 	var on_end := func(winner: int) -> void: result.winner = winner

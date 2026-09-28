@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
@@ -11,6 +11,10 @@
 [ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="12"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="13"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="14"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="15"]
 
 [sub_resource type="RectangleShape2D" id="bound_shape"]
 size = Vector2(32, 1000)
@@ -54,7 +58,7 @@ position = Vector2(80, 250)
 position = Vector2(400, 250)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
-weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15")])
 spawn_interval = 6.0
 
 [node name="Middle" type="Marker2D" parent="WeaponSpawner"]

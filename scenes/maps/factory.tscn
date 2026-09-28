@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
@@ -11,10 +11,14 @@
 [ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/spike_trap.tscn" id="15"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="16"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="17"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="12"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="13"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="14"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/spike_trap.tscn" id="19"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="21"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="22"]
 
 [sub_resource type="RectangleShape2D" id="bound_shape"]
 size = Vector2(32, 1200)
@@ -94,30 +98,30 @@ layout = PackedStringArray("", "", "", "", "", "", "", "", "..................XX
 
 [node name="Hazards" type="Node2D" parent="."]
 
-[node name="SpikePit" parent="Hazards" instance=ExtResource("15")]
+[node name="SpikePit" parent="Hazards" instance=ExtResource("19")]
 position = Vector2(448, 502)
 size = Vector2(48, 10)
 
-[node name="FlameJetLeft" parent="Hazards" instance=ExtResource("16")]
+[node name="FlameJetLeft" parent="Hazards" instance=ExtResource("20")]
 position = Vector2(304, 432)
 cycle_on = 1.2
 cycle_off = 3.0
 
-[node name="FlameJetRight" parent="Hazards" instance=ExtResource("16")]
+[node name="FlameJetRight" parent="Hazards" instance=ExtResource("20")]
 position = Vector2(640, 432)
 cycle_on = 1.2
 cycle_off = 3.0
 active = true
 
-[node name="CrusherLeft" parent="Hazards" instance=ExtResource("17")]
+[node name="CrusherLeft" parent="Hazards" instance=ExtResource("21")]
 position = Vector2(368, 144)
 size = Vector2(48, 32)
 
-[node name="CrusherRight" parent="Hazards" instance=ExtResource("17")]
+[node name="CrusherRight" parent="Hazards" instance=ExtResource("21")]
 position = Vector2(544, 144)
 size = Vector2(48, 32)
 
-[node name="CrusherSwitch" parent="Hazards" instance=ExtResource("18")]
+[node name="CrusherSwitch" parent="Hazards" instance=ExtResource("22")]
 position = Vector2(480, 304)
 targets = Array[NodePath]([NodePath("../CrusherLeft"), NodePath("../CrusherRight")])
 one_shot = true
@@ -137,7 +141,7 @@ position = Vector2(152, 352)
 position = Vector2(808, 352)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
-weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15")])
 spawn_interval = 5
 max_active = 4
 

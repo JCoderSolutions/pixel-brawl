@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
@@ -11,10 +11,14 @@
 [ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/fire_pit.tscn" id="12"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="16"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="17"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="12"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="13"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="14"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/fire_pit.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="21"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="22"]
 
 [sub_resource type="RectangleShape2D" id="bound_shape"]
 size = Vector2(32, 1200)
@@ -94,35 +98,35 @@ layout = PackedStringArray("", "", "", "", "", "", "", "", "................XXXX
 
 [node name="Hazards" type="Node2D" parent="."]
 
-[node name="LavaLake" parent="Hazards" instance=ExtResource("12")]
+[node name="LavaLake" parent="Hazards" instance=ExtResource("16")]
 position = Vector2(288, 484)
 size = Vector2(384, 28)
 damage_per_second = 70.0
 
-[node name="JetLeft" parent="Hazards" instance=ExtResource("16")]
+[node name="JetLeft" parent="Hazards" instance=ExtResource("20")]
 position = Vector2(400, 432)
 cycle_on = 1.0
 cycle_off = 2.5
 
-[node name="JetRight" parent="Hazards" instance=ExtResource("16")]
+[node name="JetRight" parent="Hazards" instance=ExtResource("20")]
 position = Vector2(544, 432)
 cycle_on = 1.0
 cycle_off = 2.5
 active = true
 
-[node name="CrucibleLeft" parent="Hazards" instance=ExtResource("17")]
+[node name="CrucibleLeft" parent="Hazards" instance=ExtResource("21")]
 position = Vector2(352, 144)
 size = Vector2(32, 32)
 color = Color(0.894, 0.231, 0.267, 1)
 detail_color = Color(0.996, 0.682, 0.204, 1)
 
-[node name="CrucibleRight" parent="Hazards" instance=ExtResource("17")]
+[node name="CrucibleRight" parent="Hazards" instance=ExtResource("21")]
 position = Vector2(576, 144)
 size = Vector2(32, 32)
 color = Color(0.894, 0.231, 0.267, 1)
 detail_color = Color(0.996, 0.682, 0.204, 1)
 
-[node name="HoistSwitch" parent="Hazards" instance=ExtResource("18")]
+[node name="HoistSwitch" parent="Hazards" instance=ExtResource("22")]
 position = Vector2(480, 304)
 targets = Array[NodePath]([NodePath("../CrucibleLeft"), NodePath("../CrucibleRight")])
 one_shot = true
@@ -142,7 +146,7 @@ position = Vector2(472, 448)
 position = Vector2(120, 384)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
-weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15")])
 spawn_interval = 5
 max_active = 4
 

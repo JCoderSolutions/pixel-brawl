@@ -26,8 +26,8 @@ selector de mapa en el menú.
 - [x] Menú: opción de mapa (aleatorio o uno fijo; se recuerda al volver)
 - [x] Test headless `scripts/test_maps.gd`
 - [ ] Test manual: jugar cada mapa en PC y teléfono
-- [ ] Cuando el PR #21 (armas nuevas) esté en `main`: sumar todas las armas
-      a los spawners de los mapas y de `test_arena`
+- [x] Todas las armas (PR #21) y los power-ups en los spawners de los mapas
+      y de `test_arena`
 
 ## Mapas
 
