@@ -27,8 +27,14 @@ const PUNCH_STANDOFF := 12.0
 const ARRIVE_DISTANCE := 4.0
 const GRAB_DISTANCE := 20.0
 const LEDGE_PROBE := 14.0
-const LEDGE_DROP := 40.0
+## Deepest step down the bot takes; fall damage starts at ~98 px (420 px/s).
+const LEDGE_DROP := 72.0
 const GAP_JUMP_REACH := 56.0
+## Farthest landing spot looked for across a gap; a running jump carries
+## ~99 px on the level and ~77 px onto a ledge JUMP_RISE higher.
+const GAP_JUMP_MAX := 80.0
+const GAP_JUMP_STEP := 8.0
+const JUMP_RISE := 36.0
 const CLIMB_HEIGHT := 24.0
 ## Hazards up to this high above the feet (spikes, flame jets) block a step.
 const HAZARD_HEADROOM := 24.0
@@ -63,6 +69,9 @@ func _init(fighter: CharacterBody2D, level := BotProfile.Difficulty.NORMAL, seed
 	body = fighter
 	profile = BotProfile.create(level)
 	_rng.seed = seed_value
+	# Bots with different seeds think on different ticks, so mirrored bots on a
+	# symmetric map don't trade identical blows and die on the same frame.
+	_tick = _rng.randi() % profile.think_interval
 	opponents_provider = _siblings
 
 
@@ -257,16 +266,18 @@ func _should_climb() -> bool:
 
 
 ## True if there is floor, and no live hazard on it or in the drop above
-## it, at the point `offset_x` px ahead.
-func _safe_ground(offset_x: float) -> bool:
+## it, at the point `offset_x` px ahead. `rise` also accepts floor up to that
+## many px above the feet (a ledge a jump can land on).
+func _safe_ground(offset_x: float, rise := 0.0) -> bool:
 	var feet := body.global_position
 	var probe := Vector2(feet.x + offset_x, feet.y)
 	var space := body.get_world_2d().direct_space_state
-	var query := PhysicsRayQueryParameters2D.create(probe + Vector2(0, -4), probe + Vector2(0, LEDGE_DROP), WORLD_MASK, [body.get_rid()])
+	var query := PhysicsRayQueryParameters2D.create(probe + Vector2(0, -4 - rise), probe + Vector2(0, LEDGE_DROP), WORLD_MASK, [body.get_rid()])
 	var hit := space.intersect_ray(query)
 	if hit.is_empty() or _is_hazard(hit.collider):
 		return false
-	return not _hazard_in_column(probe.x, feet.y - HAZARD_HEADROOM, hit.position.y + 2.0)
+	var top := minf(feet.y, hit.position.y) - HAZARD_HEADROOM
+	return not _hazard_in_column(probe.x, top, hit.position.y + 2.0)
 
 
 ## Hazard zones are matched by geometry, not physics queries: HazardZone
@@ -306,7 +317,12 @@ func _hazard_rect(zone: Node2D) -> Rect2:
 func _gap_jumpable(direction: float) -> bool:
 	if is_nan(_goal_x) or signf(_goal_x - body.global_position.x) != direction:
 		return false
-	return _safe_ground(direction * GAP_JUMP_REACH)
+	var reach := GAP_JUMP_REACH
+	while reach <= GAP_JUMP_MAX:
+		if _safe_ground(direction * reach, JUMP_RISE):
+			return true
+		reach += GAP_JUMP_STEP
+	return false
 
 
 func _is_hazard(node: Object) -> bool:

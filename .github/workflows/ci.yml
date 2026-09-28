@@ -42,7 +42,11 @@ jobs:
           rm godot.zip
 
       - name: Importar recursos
-        run: timeout 300 "$GODOT_BIN" --headless --editor --quit --path .
+        # --quit sale antes de que termine el escaneo de scripts y a veces no
+        # escribe la caché de class_name; --quit-after deja correr 600 frames.
+        run: |
+          timeout 300 "$GODOT_BIN" --headless --editor --quit-after 600 --path .
+          test -f .godot/global_script_class_cache.cfg || { echo "::error::Godot no generó la caché de class_name"; exit 1; }
 
       - name: Correr tests
         run: GODOT="$GODOT_BIN" tools/run_tests.sh
@@ -81,7 +85,11 @@ jobs:
           rm -rf templates templates.tpz
 
       - name: Importar recursos
-        run: timeout 300 "$GODOT_BIN" --headless --editor --quit --path .
+        # --quit sale antes de que termine el escaneo de scripts y a veces no
+        # escribe la caché de class_name; --quit-after deja correr 600 frames.
+        run: |
+          timeout 300 "$GODOT_BIN" --headless --editor --quit-after 600 --path .
+          test -f .godot/global_script_class_cache.cfg || { echo "::error::Godot no generó la caché de class_name"; exit 1; }
 
       - name: Exportar build Web
         run: |

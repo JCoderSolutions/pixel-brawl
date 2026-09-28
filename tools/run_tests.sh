@@ -14,7 +14,9 @@ failed=0
 for test in "${tests[@]}"; do
 	[ -f "$test" ] || continue
 	echo "::group::$test"
-	output="$(timeout "$TIMEOUT" "$GODOT" --headless --path . -s "$test" 2>&1)"
+	# --fixed-fps corre la física sin esperar al reloj real: las partidas de
+	# bots de 90 s simulados terminan en segundos y no chocan con TIMEOUT.
+	output="$(timeout "$TIMEOUT" "$GODOT" --headless --fixed-fps 60 --path . -s "$test" 2>&1)"
 	code=$?
 	echo "$output"
 	echo "::endgroup::"

@@ -41,8 +41,8 @@ selector de mapa en el menú.
 ## Reglas de diseño (para mapas nuevos)
 
 - Suelo en la fila 30 (y = 480). Los niveles caminables van cada **2 filas**
-  (32 px): el salto llega a ~57 px y los bots solo bajan escalones de hasta
-  ~40 px, así que con 3 filas suben pero no bajan.
+  (32 px): el salto llega a ~57 px y los bots bajan escalones de hasta 72 px
+  (4 filas), así que no hace falta escalonar de a una fila para bajar.
 - Plataformas en pirámide de tablones `=` (atravesables desde abajo).
 - Huecos saltables de 3 tiles como máximo; si el hueco tiene un peligro
   vivo (pileta, trampa en ciclo), 2 tiles: el bot frena al ver el peligro y
