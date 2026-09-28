@@ -21,7 +21,7 @@ goals: "Items y caos: armas random, explosiones que destruyen, ragdoll, local mu
 - [ ] TASK-005 — Weapon spawn and pickup — `todo` (por desglosar)
 - [ ] TASK-006 — Grenade + explosion destroys tiles — `todo` (por desglosar)
 - [ ] TASK-007 — Ragdoll death — `todo` (por desglosar)
-- [ ] TASK-008 — Local 2-player split keyboard — `todo` (por desglosar)
+- [ ] [[project/tasks/TASK-008-local-multiplayer-input|TASK-008 — Local 2-player split keyboard]] — `in-progress`
 
 ## Criterio de salida
 
