@@ -49,5 +49,14 @@ func _run_test() -> void:
 		push_error("FAIL: expected flip to face left after moving left")
 		_ok = false
 
-	print("OK: movement acceleration, gravity, and horizontal flip verified")
+	# Flipping must mirror the drawing in place: the visible body has to stay
+	# exactly over the collider, or players bump into "invisible" walls.
+	var xform: Transform2D = _player._visual.get_global_transform()
+	var visual_center_x: float = (xform * Vector2(_player._visual.size.x / 2.0, 0.0)).x
+	var body_center_x: float = _player.global_position.x
+	if absf(visual_center_x - body_center_x) > 0.5:
+		push_error("FAIL: flipped visual drifted off the collider (visual centre %.1f, body %.1f)" % [visual_center_x, body_center_x])
+		_ok = false
+
+	print("OK: movement acceleration, gravity, horizontal flip and flipped visual alignment verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)

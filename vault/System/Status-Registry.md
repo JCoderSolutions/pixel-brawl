@@ -17,7 +17,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 
 | Fase | Estado | Nota |
 | --- | --- | --- |
-| [[project/phases/PHASE-1-core|PHASE-1 — Core mechanics]] | `in-progress` | TASK-002 y TASK-003 esperan test manual |
+| [[project/phases/PHASE-1-core|PHASE-1 — Core mechanics]] | `in-progress` | TASK-002, TASK-003 y TASK-004 esperan test manual |
 | [[project/phases/PHASE-2-caos|PHASE-2 — Items y caos]] | `planned` | Espera PHASE-1 |
 | [[project/phases/PHASE-3-content|PHASE-3 — Content + polish]] | `planned` | Espera PHASE-2 |
 | [[project/phases/PHASE-4-multiplayer|PHASE-4 — Multiplayer + deploy]] | `planned` | Espera PHASE-3 |
@@ -32,12 +32,12 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-003-melee-combat|TASK-003 — Basic melee combat]] | `in-progress` | high | PHASE-1 |
 | [[project/tasks/TASK-007-ragdoll-death|TASK-007 — Ragdoll death]] | `in-progress` | medium | PHASE-2 |
 | [[project/tasks/TASK-008-local-multiplayer-input|TASK-008 — Input por jugador]] | `in-progress` | high | PHASE-2 |
+| [[project/tasks/TASK-004-destructible-tiles|TASK-004 — Destructible tile layer]] | `in-progress` | high | PHASE-1 |
 
 ## Tareas por desglosar (backlog)
 
 | Tarea | Fase |
 | --- | --- |
-| TASK-004 — Destructible tile layer | PHASE-1 |
 | TASK-005 — Weapon spawn and pickup | PHASE-2 |
 | TASK-006 — Grenade + explosion destroys tiles | PHASE-2 |
 | TASK-008 — Local 2-player split keyboard | PHASE-2 |

@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="1"]
+[ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
 
 [sub_resource type="RectangleShape2D" id="floor_shape"]
 size = Vector2(480, 20)
@@ -8,11 +9,11 @@ size = Vector2(480, 20)
 [sub_resource type="RectangleShape2D" id="platform_shape"]
 size = Vector2(120, 12)
 
+[sub_resource type="RectangleShape2D" id="bound_shape"]
+size = Vector2(32, 1000)
+
 [sub_resource type="RectangleShape2D" id="platform_shape2"]
 size = Vector2(120, 12)
-
-[sub_resource type="RectangleShape2D" id="platform_shape3"]
-size = Vector2(90, 12)
 
 [node name="TestArena" type="Node2D"]
 
@@ -60,25 +61,31 @@ color = Color(0.35, 0.36, 0.42, 1)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2"]
 shape = SubResource("platform_shape2")
 
-[node name="Platform3" type="StaticBody2D" parent="."]
-position = Vector2(240, 90)
+[node name="Bounds" type="Node2D" parent="."]
 
-[node name="PlatformVisual" type="ColorRect" parent="Platform3"]
-offset_left = -45.0
-offset_top = -6.0
-offset_right = 45.0
-offset_bottom = 6.0
-color = Color(0.35, 0.36, 0.42, 1)
+[node name="LeftWall" type="StaticBody2D" parent="Bounds"]
+position = Vector2(-16, -230)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform3"]
-shape = SubResource("platform_shape3")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/LeftWall"]
+shape = SubResource("bound_shape")
+
+[node name="RightWall" type="StaticBody2D" parent="Bounds"]
+position = Vector2(496, -230)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/RightWall"]
+shape = SubResource("bound_shape")
+
+[node name="DestructibleMap" type="Node2D" parent="."]
+position = Vector2(0, -6)
+script = ExtResource("2")
+layout = PackedStringArray("", "", "", "", "", "..........X######X", "", "", "", "", "", "", ".#", ".#..................##", ".#..................##", ".#..................##")
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(240, 200)
 
-[node name="Dummy" parent="." instance=ExtResource("1")]
+[node name="Player2" parent="." instance=ExtResource("1")]
 position = Vector2(300, 200)
-is_controlled = false
+player_slot = 2
 
-[node name="Visual" parent="Dummy" index="0"]
+[node name="Visual" parent="Player2" index="0"]
 color = Color(0.894, 0.231, 0.267, 1)
