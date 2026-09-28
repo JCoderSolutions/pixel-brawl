@@ -33,6 +33,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-007-ragdoll-death|TASK-007 — Ragdoll death]] | `in-progress` | medium | PHASE-2 |
 | [[project/tasks/TASK-008-local-multiplayer-input|TASK-008 — Input por jugador]] | `in-progress` | high | PHASE-2 |
 | [[project/tasks/TASK-004-destructible-tiles|TASK-004 — Destructible tile layer]] | `in-progress` | high | PHASE-1 |
+| [[project/tasks/TASK-015-touch-controls|TASK-015 — Touch controls]] | `in-progress` | high | PHASE-4 |
 
 ## Tareas por desglosar (backlog)
 
@@ -48,7 +49,6 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | TASK-012 — SFX + chiptune | PHASE-3 |
 | TASK-013 — WebRTC host/join | PHASE-4 |
 | TASK-014 — Lobby con código de sala | PHASE-4 |
-| TASK-015 — Touch controls | PHASE-4 |
 | TASK-016 — Build + publish itch.io | PHASE-4 |
 
 ## Decisiones
