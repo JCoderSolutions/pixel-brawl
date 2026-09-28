@@ -195,6 +195,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameManager="*res://scripts/autoload/game_manager.gd"
+AudioManager="*res://scripts/audio/audio_manager.gd"
 
 [display]
 
