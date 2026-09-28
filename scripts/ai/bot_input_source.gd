@@ -27,14 +27,14 @@ const PUNCH_STANDOFF := 12.0
 const ARRIVE_DISTANCE := 4.0
 const GRAB_DISTANCE := 20.0
 const LEDGE_PROBE := 14.0
-## Deepest step down the bot takes; fall damage starts at ~98 px (420 px/s).
+## Deepest step down the bot takes; fall damage starts at ~99 px (500 px/s).
 const LEDGE_DROP := 72.0
 const GAP_JUMP_REACH := 56.0
-## Farthest landing spot looked for across a gap; a running jump carries
-## ~99 px on the level and ~77 px onto a ledge JUMP_RISE higher.
+## Farthest landing spot looked for across a gap; a full running jump carries
+## ~92 px on the level and ~78 px onto a ledge JUMP_RISE higher.
 const GAP_JUMP_MAX := 80.0
 const GAP_JUMP_STEP := 8.0
-const JUMP_RISE := 36.0
+const JUMP_RISE := 32.0
 const CLIMB_HEIGHT := 24.0
 ## Hazards up to this high above the feet (spikes, flame jets) block a step.
 const HAZARD_HEADROOM := 24.0
@@ -131,6 +131,9 @@ func _decide() -> InputFrame:
 	buttons &= ~repeated
 	if _holds_automatic() and _last_buttons & InputFrame.FIRE and threat == null and _in_shot(_target):
 		buttons |= InputFrame.FIRE
+	# Letting go of jump cuts the rise short: hold it until the apex.
+	if _last_buttons & InputFrame.JUMP and not body.is_on_floor() and body.velocity.y < 0.0:
+		buttons |= InputFrame.JUMP
 	return InputFrame.create(move, buttons)
 
 

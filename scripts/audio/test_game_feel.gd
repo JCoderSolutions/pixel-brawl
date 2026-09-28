@@ -228,7 +228,9 @@ func _test_jump_and_land() -> void:
 	var frames: Array[InputFrame] = []
 	for i in 30:
 		frames.append(InputFrame.new())
-	frames.append(InputFrame.create(0.0, InputFrame.JUMP))
+	# Held for a full jump: a tapped jump is a short hop that lands softly.
+	for i in 25:
+		frames.append(InputFrame.create(0.0, InputFrame.JUMP))
 	player.input_source = ScriptedInputSource.new(frames)
 	player.position = Vector2(0, -60)
 	arena.add_child(player)

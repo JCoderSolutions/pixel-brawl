@@ -196,11 +196,12 @@ func _test_death_drops_weapon_and_ragdolls() -> void:
 
 
 ## The arena's steps are 50 px (floor -> platform) and 46 px (platform ->
-## bridge); the current jump (~57 px) must clear them with room to spare.
+## bridge); the current jump (~57 px, button held) must clear them with room
+## to spare.
 func _test_jump_clears_platform_step() -> void:
 	var frames: Array[InputFrame] = []
 	_hold(frames, 5)
-	_hold(frames, 5, 0.0, InputFrame.JUMP)
+	_hold(frames, 25, 0.0, InputFrame.JUMP)
 	var d := _make_duel(frames, 400.0)
 	await _frames(5)
 	var floor_y: float = d.player.global_position.y
