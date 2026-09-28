@@ -31,6 +31,8 @@ var facing := 1:
 
 var weapon: WeaponData
 var ammo := -1
+## Scales bullet and blade damage (strength power-up); 1 = normal.
+var damage_multiplier := 1.0
 
 var _cooldown := 0.0
 var _swing_timer := 0.0
@@ -124,6 +126,7 @@ func _fire(data: WeaponData) -> void:
 		var projectile: Projectile = PROJECTILE_SCENE.instantiate()
 		_world().add_child(projectile)
 		projectile.setup(muzzle, forward.rotated(deg_to_rad(angle)), data, _wielder(), exclude)
+		projectile.damage = roundi(projectile.damage * damage_multiplier)
 	fired.emit(data, angles.size())
 
 
@@ -137,7 +140,7 @@ func _throw(data: GrenadeData) -> void:
 
 
 func _start_swing(data: WeaponData) -> void:
-	_melee_hitbox.damage = data.damage
+	_melee_hitbox.damage = roundi(data.damage * damage_multiplier)
 	_melee_hitbox.knockback = data.knockback
 	_melee_hitbox.direction = facing
 	_melee_hitbox.position = Vector2(data.melee_offset * facing, 0.0)

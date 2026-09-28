@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scenes/characters/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/weapons/weapon_holder.gd" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ragdoll_on_death.tscn" id="6"]
 [ext_resource type="Script" path="res://scripts/hazards/fall_damage.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/powerups/power_up_receiver.gd" id="8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_stand"]
 resource_local_to_scene = true
@@ -65,3 +66,7 @@ script = ExtResource("5")
 
 [node name="FallDamage" type="Node" parent="."]
 script = ExtResource("7")
+
+[node name="PowerUpReceiver" type="Node2D" parent="."]
+position = Vector2(0, -15)
+script = ExtResource("8")
