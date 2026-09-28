@@ -196,6 +196,7 @@ config/icon="res://icon.svg"
 
 GameManager="*res://scripts/autoload/game_manager.gd"
 AudioManager="*res://scripts/audio/audio_manager.gd"
+GameFeel="*res://scenes/effects/game_feel.gd"
 
 [display]
 
