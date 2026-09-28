@@ -4,11 +4,25 @@ extends Node2D
 ## Builds a grid of DestructibleBlock tiles from a text layout and routes area
 ## damage (explosions, TASK-006) to the tiles it overlaps.
 ##
-## Layout legend: `#` destructible block, `X` indestructible block, anything
-## else is empty. Row 0 is the top; cell (0, 0) starts at this node's origin.
+## Layout legend (see LEGEND), anything else is empty:
+##   `#` wood (crates, doors): bullets, melee and explosions break it
+##   `=` wooden plank: one-way platform, breaks like wood
+##   `B` brick: only explosions break it
+##   `X` metal: indestructible
+## Row 0 is the top; cell (0, 0) starts at this node's origin.
 
 const TILE_SIZE := 16
 const BLOCK_SCENE := preload("res://scenes/maps/destructible_block.tscn")
+const WOOD := preload("res://scenes/maps/materials/wood.tres")
+const BRICK := preload("res://scenes/maps/materials/brick.tres")
+const METAL := preload("res://scenes/maps/materials/metal.tres")
+## Layout character -> [material, one-way].
+const LEGEND := {
+	"#": [WOOD, false],
+	"=": [WOOD, true],
+	"B": [BRICK, false],
+	"X": [METAL, false],
+}
 
 @export var layout := PackedStringArray()
 
@@ -19,11 +33,9 @@ func _ready() -> void:
 	for row in layout.size():
 		var line: String = layout[row]
 		for column in line.length():
-			match line[column]:
-				"#":
-					_spawn_block(Vector2i(column, row), false)
-				"X":
-					_spawn_block(Vector2i(column, row), true)
+			var tile: Array = LEGEND.get(line[column], [])
+			if not tile.is_empty():
+				_spawn_block(Vector2i(column, row), tile[0], tile[1])
 
 
 func get_block(cell: Vector2i) -> DestructibleBlock:
@@ -44,7 +56,8 @@ func world_to_cell(global_point: Vector2) -> Vector2i:
 	return Vector2i((to_local(global_point) / TILE_SIZE).floor())
 
 
-## Damages every block whose tile overlaps the circle (global coordinates).
+## Blasts every block whose tile overlaps the circle (global coordinates);
+## each material decides whether explosions break it.
 func damage_area(global_center: Vector2, radius: float, amount: int, source: Node = null) -> void:
 	var center := to_local(global_center)
 	var half := Vector2(TILE_SIZE, TILE_SIZE) / 2.0
@@ -52,13 +65,13 @@ func damage_area(global_center: Vector2, radius: float, amount: int, source: Nod
 	for block: DestructibleBlock in _blocks.values():
 		var closest := center.clamp(block.position - half, block.position + half)
 		if closest.distance_to(center) <= radius:
-			var hurtbox: Hurtbox = block.get_node("Hurtbox")
-			hurtbox.receive_hit(amount, Vector2.ZERO, source)
+			block.take_blast(amount, source)
 
 
-func _spawn_block(cell: Vector2i, indestructible: bool) -> void:
+func _spawn_block(cell: Vector2i, block_material: BlockMaterial, one_way: bool) -> void:
 	var block: DestructibleBlock = BLOCK_SCENE.instantiate()
-	block.indestructible = indestructible
+	block.block_material = block_material
+	block.one_way = one_way
 	block.position = cell_to_world(cell)
 	block.destroyed.connect(func(_b): _blocks.erase(cell))
 	_blocks[cell] = block

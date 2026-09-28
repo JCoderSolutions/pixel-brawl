@@ -1,39 +1,58 @@
 class_name DestructibleBlock
 extends StaticBody2D
 
-## One 16 px map tile that soaks damage through the shared Hurtbox /
-## HealthComponent pipeline and disappears when its health runs out.
-## Indestructible blocks keep the collider but never take damage.
+## One 16 px map tile. Its BlockMaterial decides what can break it: bullets
+## and melee arrive through the shared Hurtbox / HealthComponent pipeline,
+## explosions through take_blast(). It darkens as it loses health and
+## disappears when the health runs out.
 
 signal destroyed(block: DestructibleBlock)
 
-@export var indestructible := false
-## Shade the tile fades towards as it loses health.
-@export var damaged_color := Color("733e39")
-@export var indestructible_color := Color("5a6988")
+const WOOD := preload("res://scenes/maps/materials/wood.tres")
+## Visible thickness of a one-way plank; fighters stand on its top edge.
+const PLANK_HEIGHT := 6.0
+
+@export var block_material: BlockMaterial = WOOD
+## Fighters jump up through it and land on top (platform planks).
+@export var one_way := false
+
+## True when nothing can break this tile (metal).
+var indestructible: bool:
+	get:
+		return block_material.is_indestructible()
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var _visual: ColorRect = $Visual
 @onready var _hurtbox: Hurtbox = $Hurtbox
-@onready var _base_color: Color = _visual.color
 
 
 func _ready() -> void:
-	if indestructible:
-		_base_color = indestructible_color
-		_visual.color = indestructible_color
-		# Hits pass through untouched: no hurtbox means no damage and no hit
-		# registered against the swing.
+	health.max_health = block_material.max_health
+	health.current_health = block_material.max_health
+	_visual.color = block_material.color
+	# Our _draw() paints the pattern over the base colour.
+	_visual.show_behind_parent = true
+	if one_way:
+		$CollisionShape2D.one_way_collision = true
+		_visual.offset_bottom = _visual.offset_top + PLANK_HEIGHT
+	if not block_material.breaks_from_hits:
+		# Bullets and swings pass untouched: with no monitorable hurtbox the
+		# hit never registers (bullets still stop on the tile's body).
 		_hurtbox.health = null
 		_hurtbox.monitorable = false
-		return
 	health.health_changed.connect(_on_health_changed)
 	health.died.connect(_on_died)
 
 
+## Explosion damage, routed here by DestructibleMap.damage_area().
+func take_blast(amount: int, source: Node = null) -> void:
+	if block_material.breaks_from_blasts:
+		health.take_damage(amount, source)
+
+
 func _on_health_changed(current: int, maximum: int) -> void:
 	var lost := 1.0 - float(current) / float(maximum)
-	_visual.color = _base_color.lerp(damaged_color, lost)
+	_visual.color = block_material.color.lerp(block_material.damaged_color, lost)
 
 
 func _on_died(_source: Node) -> void:
@@ -42,3 +61,26 @@ func _on_died(_source: Node) -> void:
 	_hurtbox.set_deferred("monitorable", false)
 	destroyed.emit(self)
 	queue_free()
+
+
+## Placeholder texture until the art pass: plank seams, brick mortar or
+## rivets, so each material reads at a glance.
+func _draw() -> void:
+	var detail := block_material.detail_color
+	match block_material.pattern:
+		BlockMaterial.Pattern.PLANKS:
+			if one_way:
+				draw_line(Vector2(-8, -8 + PLANK_HEIGHT - 0.5), Vector2(8, -8 + PLANK_HEIGHT - 0.5), detail)
+				draw_rect(Rect2(-1, -8, 1, PLANK_HEIGHT), detail)
+			else:
+				draw_rect(Rect2(-8, -8, 16, 16), detail, false, 1.0)
+				draw_line(Vector2(-8, -8), Vector2(8, 8), detail)
+		BlockMaterial.Pattern.BRICKS:
+			draw_rect(Rect2(-8, -1, 16, 1), detail)
+			draw_rect(Rect2(-8, 7, 16, 1), detail)
+			draw_rect(Rect2(-3, -8, 1, 7), detail)
+			draw_rect(Rect2(3, 0, 1, 7), detail)
+		BlockMaterial.Pattern.RIVETS:
+			draw_rect(Rect2(-8, -8, 16, 16), detail, false, 1.0)
+			for corner in [Vector2(-6, -6), Vector2(4, -6), Vector2(-6, 4), Vector2(4, 4)]:
+				draw_rect(Rect2(corner, Vector2(2, 2)), detail)

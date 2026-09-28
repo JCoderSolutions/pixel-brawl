@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BlockMaterial" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/maps/block_material.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Madera"
+max_health = 30
+breaks_from_hits = true
+breaks_from_blasts = true
+color = Color(0.722, 0.435, 0.314, 1)
+damaged_color = Color(0.451, 0.243, 0.224, 1)
+detail_color = Color(0.451, 0.243, 0.224, 1)
+pattern = 0
