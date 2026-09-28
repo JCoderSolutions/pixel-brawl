@@ -2,7 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-28"
-last_updated_notes: "TASK-019 materiales de bloque en progreso"
+last_updated_notes: "TASK-020 bots en progreso"
 ---
 
 # Status Registry — Pixel Brawl
@@ -41,6 +41,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-011-rounds-hud-winner|TASK-011 — HUD + rondas + ganador]] | `in-progress` | high | PHASE-3 |
 | [[project/tasks/TASK-012-sfx-game-feel|TASK-012 — SFX + game feel]] | `in-progress` | high | PHASE-3 |
 | [[project/tasks/TASK-019-block-materials|TASK-019 — Materiales de bloque + arena destructible]] | `in-progress` | high | PHASE-2 |
+| [[project/tasks/TASK-020-bots|TASK-020 — Bots (IA) con 3 dificultades]] | `in-progress` | high | PHASE-3 |
 
 ## Tareas por desglosar (backlog)
 
