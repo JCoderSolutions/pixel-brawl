@@ -22,3 +22,5 @@ desktop.ini
 # Logs / scratch
 *.log
 node_modules/
+# CI
+.godot-bin/
