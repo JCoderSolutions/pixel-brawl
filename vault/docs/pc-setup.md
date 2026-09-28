@@ -20,7 +20,7 @@ estado visible para trabajar con cualquier agente.
 - [Obsidian](https://obsidian.md/) (abrir el vault: `pixel-brawl/vault/`)
 - [Godot 4.4+](https://godotengine.org) (motor del juego)
 - VS Code (editor)
-- Cliente MCP de Engram configurado en el agente que uses (opencode, Claude…)
+- Al menos un agente configurado con Engram MCP (ver [[docs/multi-agent-setup]])
 
 ## Pasos
 
@@ -40,9 +40,17 @@ estado visible para trabajar con cualquier agente.
 ## Checklist de "estoy listo para trabajar"
 
 - [ ] Vault visible con notas cargadas
-- [ ] `mem_context` devuelve contexto del proyecto
+- [ ] `mem_context` devuelve contexto del proyecto (verificar con tu agente)
 - [ ] `Status-Registry.md` leíble y actualizado
 - [ ] Godot abre el proyecto sin errores (cuando exista)
+
+### Agentes disponibles
+
+| Agente | Cómo verificar |
+|--------|---------------|
+| OpenCode | `opencode.jsonc` tiene Engram en `mcp` |
+| Claude Code | `~/.claude/settings.json` tiene `engram@engram: true` |
+| Kiro | `~/.kiro/settings/mcp.json` tiene server `engram` |
 
 ## Sincronización entre PCs
 

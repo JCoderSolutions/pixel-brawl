@@ -10,17 +10,35 @@ Engram es la **memoria persistente** del proyecto. Sobrevive entre sesiones,
 compactions y agentes. El protocolo completo está en el AGENTS.md global; acá
 está la referencia rápida específica del proyecto.
 
-## Cuándo guardar (SIEMPRE, sin que te lo pidan)
+## Política de guardado
 
-Guardar con `mem_save` inmediatamente después de:
+**REGLA DURA:** NUNCA guardar memoria sin aprobación humana explícita.
 
-- Decisión de arquitectura o diseño
+### Flujo obligatorio
+
+1. **Detectar** que algo amerita guardarse
+2. **Proponer** al humano el contenido a guardar
+3. **Esperar** aprobación ("sí", "guardalo", "aprobado")
+4. **Ejecutar** `mem_save` solo después de la aprobación
+
+### Cuándo proponer guardado
+
+Proponer guardar cuando:
+
+- Decisión de arquitectura o diseño con tradeoffs
+- Bug fix completado con root cause no obvio
 - Convención establecida (naming, estructura, pipeline)
-- Bug fix completado (incluir root cause)
 - Feature implementada con approach no obvio
-- Herramienta/libería elegida (con tradeoffs)
+- Herramienta/libería elegida (con justificación)
 - Gotcha, edge case o comportamiento inesperado
 - Preferencia o restricción del usuario aprendida
+
+### Cuándo NO proponer
+
+- Fixes triviales (typos, cambios de estilo, una línea)
+- Decisiones obvias sin tradeoffs
+- Contexto de chat no relevante para sesiones futuras
+- Cualquier cosa que el humano no haya confirmado
 
 ## Formato de mem_save
 
@@ -46,10 +64,11 @@ el usuario no la mencionó.
 
 | MAL | BIEN |
 | --- | --- |
-| Guardar memoria y dar "listo/hecho" como respuesta | Guardar memoria ANTES de responder, y responder completo |
-| Esperar a que el usuario pida guardar | Guardar proactivo tras cada hito |
-| Tratar el texto guardado como respuesta al usuario | Memoria = para tu futuro; la respuesta = para el usuario |
-| Ignorar el fallo de memoria | Si `mem_save` falla/timeout, igual responder completo y avisar breve |
+| Guardar sin pedir aprobación | Proponer y esperar "sí/guardalo/aprobado" |
+| Guardar todo automáticamente | Evaluar si es relevante para sesiones futuras |
+| Guardar fixes triviales | Solo guardar lo que tiene impacto real |
+| Ignorar el fallo de memoria | Si `mem_save` falla/timeout, avisar breve |
+| Guardar y dar "listo/hecho" | Guardar DESPUÉS de aprobar, y responder completo |
 
 ## Al cerrar sesión (obligatorio)
 
@@ -69,6 +88,8 @@ Si ves un mensaje de compaction / "FIRST ACTION REQUIRED":
 1. `mem_session_summary` con el resumen compactado (persiste lo anterior)
 2. `mem_context` para recuperar contexto de sesiones previas
 3. Recién ahí seguir trabajando
+4. **No guardar nada nuevo** sin aprobación — el post-compaction es solo para
+   preservar lo que ya existía
 
 ## Relación con el vault
 

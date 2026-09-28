@@ -26,11 +26,13 @@ proyecto. Funciona desde cualquier PC y con cualquier agente de IA.
 | [[project/tasks|Tareas]] | Tickets de trabajo individuales |
 | [[System/Status-Registry]] | Estado actual del proyecto de un vistazo |
 | [[Templates]] | Plantillas para crear notas nuevas |
+| [[docs/multi-agent-setup]] | Config multiagente (OpenCode, Claude, Kiro) |
+| [[docs/engram-hooks-behavior]] | Qué hacen los hooks automáticos de Engram |
 | Engram (memoria) | `engram/` — export de memoria persistente (opcional) |
 
 ## Estado del proyecto
 
-Estado global: **`in-progress`** — Fase 1 (core mechanics).
+Estado global: **`planned`** — Fase 1 (core mechanics).
 
 Resumen rápido en [[System/Status-Registry]]. Las fases se siguen en `project/phases/`.
 

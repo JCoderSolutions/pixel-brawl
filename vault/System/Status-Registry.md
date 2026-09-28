@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-28"
+last_updated_notes: "Política de aprobación Engram documentada"
 ---
 
 # Status Registry — Pixel Brawl
@@ -11,7 +12,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 
 ## Estado global del proyecto
 
-**`in-progress`** — Fase 1 (core mechanics).
+**`planned`** — Fase 1 (core mechanics).
 
 ## Fases
 
@@ -59,6 +60,8 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | Decisión | Status |
 | --- | --- |
 | Stack: Godot 4 + Endesga 32 + pipeline AI | `approved` (ver [[PLAN-pixel-brawl|PLAN]]) |
+| Multiagente: OpenCode + Claude Code + Kiro | `approved` (ver [[docs/multi-agent-setup]]) |
+| Engram: guardado solo con aprobación humana | `approved` (ver [[docs/engram-quick-reference]]) |
 
 ## Descartadas
 

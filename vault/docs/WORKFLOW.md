@@ -41,7 +41,7 @@ Reglas duras del status:
 2. **Tomar** la siguiente tarea `todo` de [[System/Status-Registry]].
 3. **Marcar** `in-progress` en la nota y en el registry.
 4. **Implementar** + testear.
-5. **Guardar memoria** en Engram si hubo decisión/fix/descubrimiento (ver [[docs/engram-quick-reference]]).
+5. **Proponer guardado** en Engram si hubo decisión/fix/descubrimiento (ver [[docs/engram-quick-reference]]). Guardar SOLO con aprobación humana.
 6. **Commit** por unidad de trabajo (ver [[docs/commit-conventions]]).
 7. **Marcar** `done` (o `discarded` + razón) en la nota y en el registry.
 8. Refrescar [[System/Status-Registry]] siempre que cambie cualquier estado.
@@ -63,6 +63,40 @@ Reglas duras del status:
   vincularla con `[[wiki-link]]` desde la memoria o referencia (Engram → doc).
 - La carpeta `engram/` del vault es un export **opcional** de la base de Engram
   para consulta offline/visual. Nunca es fuente de verdad de escritura.
+
+## Política de guardado en Engram
+
+**Regla dura:** El agente NUNCA guarda memoria automáticamente. Todo guardado
+pasa por aprobación humana explícita.
+
+### Flujo de aprobación
+
+1. **Identificar**: el agente detecta que algo amerita guardarse (decisión, fix, discovery)
+2. **Proponer**: el agente dice al humano "¿Guardo esto en memoria?" con el contenido
+3. **Aprobar**: el humano dice "sí" / "guardalo" / "aprobado"
+4. **Guardar**: el agente ejecuta `mem_save`
+
+### Qué NO guardar sin aprobación
+
+- Fixes triviales (typos, cambios de estilo, una línea)
+- Decisiones obvias que no tienen tradeoffs
+- Contexto de chat que no es relevante para sesiones futuras
+- Cualquier cosa que el humano no haya confirmado explícitamente
+
+### Qué SÍ guardar (con aprobación)
+
+- Decisiones de arquitectura con tradeoffs
+- Bugs con root cause no obvio
+- Convenciones establecidas (naming, estructura, pipeline)
+- Herramientas/librerías elegidas con justificación
+- Gotchas o edge cases encontrados
+- Preferencias del usuario aprendidas
+
+### Excepción: mem_session_summary
+
+Al cerrar sesión, el agente SÍ ejecuta `mem_session_summary` automáticamente
+(solo si hubo trabajo significativo). Esto es un resumen, no un guardado
+individual — el humano puede revisarlo después.
 
 ## Multi-PC y multi-agente
 
