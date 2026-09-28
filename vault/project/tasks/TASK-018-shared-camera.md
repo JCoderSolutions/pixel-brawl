@@ -63,6 +63,14 @@ SharedCamera.shake(self, 0.8)
   nunca sale del mapa aunque eso deje jugadores fuera.
 - Con sprites de 32x32 conviene `focus_offset` ≈ (0, -16) (pecho) y `margin` ≥ 1.5 sprites.
 - En tests headless no hay ventana real: usar `screen_scale_override` para simular una.
+- **Suavidad (estilo Superfighters):** pan y zoom van sobre un resorte críticamente
+  amortiguado (`follow_time`, `follow_time_vertical`, `zoom_out_time`, `zoom_in_time`,
+  en segundos): arranca suave y frena sin pasarse. Abre el zoom al instante y solo lo
+  cierra si los jugadores siguen juntos `zoom_in_delay` (0.5 s), para que saltos y
+  esquives no bombeen la cámara. El zoom pixel-perfect solo se aplica al valor de
+  reposo; entre pasos se desliza. La posición se redondea a píxeles de pantalla, no
+  del mundo. Medido en la demo (1200 ticks, 2x): antes el zoom saltaba 0.5 en un frame
+  y el pan tenía tirones de 275 px/frame²; ahora 0.025 y 4 px/frame².
 - No usa los `limit_*` nativos de Camera2D porque se comerían el shake.
 
 ## Evidencia
