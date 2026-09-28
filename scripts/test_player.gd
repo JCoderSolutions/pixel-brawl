@@ -24,10 +24,10 @@ func _run_test() -> void:
 		push_error("FAIL: collision shape")
 		_ok = false
 
-	Input.action_press("move_right")
+	Input.action_press("p1_move_right")
 	for i in range(30):
 		_player._physics_process(1.0 / 60.0)
-	Input.action_release("move_right")
+	Input.action_release("p1_move_right")
 
 	if _player.velocity.x <= 0.0:
 		push_error("FAIL: player did not accelerate right")
@@ -40,10 +40,10 @@ func _run_test() -> void:
 		push_error("FAIL: expected facing right after moving right")
 		_ok = false
 
-	Input.action_press("move_left")
+	Input.action_press("p1_move_left")
 	for i in range(30):
 		_player._physics_process(1.0 / 60.0)
-	Input.action_release("move_left")
+	Input.action_release("p1_move_left")
 
 	if _player._visual.scale.x > 0.0:
 		push_error("FAIL: expected flip to face left after moving left")

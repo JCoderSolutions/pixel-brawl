@@ -16,4 +16,4 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
 - [x] Script `player.gd` con `move_and_slide` + gravedad ajustable
 - [x] Cuelga del mapa: colisiones con las plataformas
 - [x] Flip horizontal según dirección
-- [ ] Rápido test manual: moverse con flechas/WASD se siente responsivo
+- [ ] Rápido test manual: moverse con WASD (P1) se siente responsivo (las flechas son de P2 desde TASK-008)
