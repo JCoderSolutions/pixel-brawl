@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BlockMaterial" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/maps/block_material.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Metal"
+max_health = 30
+breaks_from_hits = false
+breaks_from_blasts = false
+color = Color(0.353, 0.412, 0.533, 1)
+damaged_color = Color(0.227, 0.267, 0.4, 1)
+detail_color = Color(0.545, 0.608, 0.706, 1)
+pattern = 2

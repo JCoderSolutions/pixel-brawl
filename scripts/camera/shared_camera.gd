@@ -5,6 +5,11 @@ extends Camera2D
 ## targets: centres on them, zooms out just enough to fit them (between
 ## min_zoom and max_zoom) and never shows anything outside `bounds`.
 ##
+## Feel, Superfighters-style: pan and zoom ride a critically damped spring
+## (they ease in and land without overshoot), the view widens at once when
+## fighters spread but only tightens after they stay close for a moment, so
+## jumps and dodges don't make the zoom pump.
+##
 ## Screen shake uses a "trauma" value in [0, 1]: hits and explosions add
 ## trauma, it decays over time and the offset grows with trauma squared, so
 ## small hits wiggle and big blasts punch. Anything can shake the view with
@@ -37,14 +42,21 @@ const GROUP := &"shared_cameras"
 @export var margin := Vector2(48, 40)
 @export var min_zoom := 0.5
 @export var max_zoom := 1.5
-## How fast the view catches up (1/s). 0 snaps every tick.
-@export var follow_smoothing := 6.0
-@export var zoom_smoothing := 4.0
-## Rounds the view to whole world pixels so the pixel art doesn't swim.
+## Roughly how long (s) the view takes to catch a fighter. 0 snaps.
+@export var follow_time := 0.3
+## Vertical follow is lazier so jumps don't bob the whole screen.
+@export var follow_time_vertical := 0.45
+## How long (s) widening takes: short, so nobody runs off screen.
+@export var zoom_out_time := 0.25
+## How long (s) tightening takes once it starts: long and gentle.
+@export var zoom_in_time := 0.9
+## Fighters must stay close this long (s) before the view tightens.
+@export var zoom_in_delay := 0.5
+## Rounds the view to whole screen pixels so the pixel art doesn't swim.
 @export var pixel_snap := true
-## Only use zooms where one world pixel covers a whole number of screen
+## Rest on zooms where one world pixel covers a whole number of screen
 ## pixels, so sprites never get uneven rows/columns at any window size.
-## Eased zoom then moves in visible steps instead of gliding.
+## Between two such zooms the view glides; only the resting zoom is snapped.
 @export var pixel_perfect_zoom := true
 ## Screen pixels per viewport pixel; 0 reads it from the window stretch.
 ## Tests set it to simulate a given screen.
@@ -66,6 +78,11 @@ var trauma := 0.0
 var _targets: Array = []
 var _center := Vector2.ZERO
 var _zoom := 1.0
+var _center_velocity := Vector2.ZERO
+var _zoom_velocity := 0.0
+## Zoom the spring is heading to; lags the ideal one when tightening.
+var _zoom_goal := 1.0
+var _zoom_in_timer := 0.0
 var _shake_time := 0.0
 var _noise := FastNoiseLite.new()
 
@@ -95,6 +112,7 @@ func _enter_tree() -> void:
 	if _center == Vector2.ZERO:
 		_center = global_position
 	_zoom = zoom.x
+	_zoom_goal = _zoom
 
 
 func _physics_process(delta: float) -> void:
@@ -133,8 +151,12 @@ func add_trauma(amount: float) -> void:
 func snap() -> void:
 	_refresh_targets()
 	var goal := _goal()
-	_zoom = goal.z
-	_center = Vector2(goal.x, goal.y)
+	_zoom = _resting_zoom(goal.z)
+	_zoom_goal = _zoom
+	_zoom_in_timer = 0.0
+	_zoom_velocity = 0.0
+	_center = _clamp_center(Vector2(goal.x, goal.y), _zoom)
+	_center_velocity = Vector2.ZERO
 	_apply(Vector2.ZERO)
 
 
@@ -142,10 +164,17 @@ func snap() -> void:
 func advance(delta: float) -> void:
 	_refresh_targets()
 	var goal := _goal()
-	_zoom = _approach(_zoom, goal.z, zoom_smoothing, delta)
-	_center = Vector2(
-		_approach(_center.x, goal.x, follow_smoothing, delta),
-		_approach(_center.y, goal.y, follow_smoothing, delta))
+	_update_zoom_goal(_resting_zoom(goal.z), delta)
+	var zoom_time := zoom_out_time if _zoom_goal < _zoom else zoom_in_time
+	var zoom_step := _smooth_damp(_zoom, _zoom_goal, _zoom_velocity, zoom_time, delta)
+	_zoom = zoom_step.x
+	_zoom_velocity = zoom_step.y
+	# Aim for where the goal sits at the zoom we'll actually show.
+	var aim := _clamp_center(Vector2(goal.x, goal.y), _final_zoom(_zoom))
+	var step_x := _smooth_damp(_center.x, aim.x, _center_velocity.x, follow_time, delta)
+	var step_y := _smooth_damp(_center.y, aim.y, _center_velocity.y, follow_time_vertical, delta)
+	_center = Vector2(step_x.x, step_y.x)
+	_center_velocity = Vector2(step_x.y, step_y.y)
 	trauma = maxf(trauma - trauma_decay * delta, 0.0)
 	_shake_time += delta
 	_apply(_shake_offset())
@@ -203,16 +232,36 @@ func _apply(shake_offset: Vector2) -> void:
 		if not is_equal_approx(center[axis], base[axis] + shake_offset[axis]):
 			center[axis] = base[axis] - shake_offset[axis]
 	if pixel_snap:
-		center = center.round()
+		var pixels_per_unit := z * _screen_scale()
+		center = (center * pixels_per_unit).round() / pixels_per_unit
 	zoom = Vector2(z, z)
 	global_position = _clamp_center(center, z)
 
 
-## The zoom actually shown: never bigger than the map and, with
-## pixel_perfect_zoom, snapped to whole screen pixels per world pixel.
+## Widening happens now; tightening waits until the fighters have stayed
+## close for zoom_in_delay, so short clinches and jumps don't pump the zoom.
+func _update_zoom_goal(wanted: float, delta: float) -> void:
+	if wanted <= _zoom_goal:
+		_zoom_goal = wanted
+		_zoom_in_timer = 0.0
+		return
+	_zoom_in_timer += delta
+	if _zoom_in_timer >= zoom_in_delay:
+		_zoom_goal = wanted
+		_zoom_in_timer = 0.0
+
+
+## The zoom actually shown: never bigger than the map. It may sit between
+## pixel-perfect steps while gliding; the goal it rests on is snapped.
 func _final_zoom(eased: float) -> float:
+	return maxf(eased, _min_zoom_for_bounds())
+
+
+## Where the zoom comes to rest: with pixel_perfect_zoom, a whole number of
+## screen pixels per world pixel.
+func _resting_zoom(ideal: float) -> float:
 	var lowest := _min_zoom_for_bounds()
-	var z := maxf(eased, lowest)
+	var z := maxf(ideal, lowest)
 	if not pixel_perfect_zoom:
 		return z
 	var screen := _screen_scale()
@@ -274,7 +323,20 @@ func _on_target_damaged(amount: int, _source: Node) -> void:
 	add_trauma(amount * trauma_per_damage)
 
 
-static func _approach(from: float, to: float, rate: float, delta: float) -> float:
-	if rate <= 0.0:
-		return to
-	return lerpf(from, to, 1.0 - exp(-rate * delta))
+## Critically damped spring (Game Programming Gems 4, "SmoothDamp"): eases
+## in from rest, never overshoots. Returns (new value, new velocity).
+static func _smooth_damp(current: float, target: float, velocity: float,
+		smooth_time: float, delta: float) -> Vector2:
+	if smooth_time <= 0.0:
+		return Vector2(target, 0.0)
+	var omega := 2.0 / smooth_time
+	var x := omega * delta
+	var decay := 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
+	var change := current - target
+	var temp := (velocity + omega * change) * delta
+	var new_velocity := (velocity - omega * temp) * decay
+	var result := target + (change + temp) * decay
+	# Landed past the target: stop there instead of swinging back.
+	if (target - current > 0.0) == (result > target):
+		return Vector2(target, 0.0)
+	return Vector2(result, new_velocity)

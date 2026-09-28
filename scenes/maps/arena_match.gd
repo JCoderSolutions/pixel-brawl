@@ -27,10 +27,19 @@ func _ready() -> void:
 	GameManager.start_match()
 
 
-## Top edge of the indestructible bridge (the layout row holding `X`).
+## Top edge of the metal-capped bridge (the first layout row holding `X`).
 func bridge_top() -> float:
+	return _row_top("X")
+
+
+## Top edge of the side plank platforms (the layout row holding `=`).
+func platform_top() -> float:
+	return _row_top("=")
+
+
+func _row_top(code: String) -> float:
 	for row in _map.layout.size():
-		if "X" in _map.layout[row]:
+		if code in _map.layout[row]:
 			return _map.global_position.y + row * DestructibleMap.TILE_SIZE
 	return INF
 

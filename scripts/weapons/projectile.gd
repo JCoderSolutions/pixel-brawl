@@ -55,6 +55,10 @@ func _physics_process(delta: float) -> void:
 func _impact(hit: Dictionary) -> void:
 	global_position = hit.position
 	var hurtbox := hit.collider as Hurtbox
+	if hurtbox == null and hit.collider is DestructibleBlock:
+		# Tile body and hurtbox share one square, so the ray may report
+		# either; the tile's material decides through its hurtbox.
+		hurtbox = hit.collider.get_node("Hurtbox")
 	if hurtbox != null:
 		hurtbox.receive_hit(damage, knockback, shooter)
 	impacted.emit(hit.position, hit.collider)

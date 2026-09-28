@@ -32,13 +32,14 @@ daño en área para las explosiones de TASK-006.
 - Capas: el bloque es `StaticBody2D` en layer 1 (`world`) y su `Hurtbox` en
   layer 4 (`hurtboxes`), así el `Hitbox` del player lo golpea sin cambios en
   `player.gd`.
-- Layout: `#` destructible (30 de vida = 3 golpes), `X` indestructible, otro
-  carácter = vacío. La fila 0 es la de arriba; la celda (0, 0) empieza en el
+- Layout: `#` madera (30 de vida = 3 golpes), `X` metal indestructible, otro
+  carácter = vacío. Desde TASK-019 también `=` tablón one-way y `B` ladrillo
+  (ver [[project/tasks/TASK-019-block-materials|TASK-019]]). La fila 0 es la de arriba; la celda (0, 0) empieza en el
   origen del nodo.
 - Al morir, el bloque apaga su capa de colisión en el mismo paso de física,
   para que lo que esté encima caiga enseguida, y luego se libera.
-- `damage_area` pasa el daño por el `Hurtbox` de cada bloque que toca el
-  círculo, así explosiones y golpes comparten el mismo camino.
+- `damage_area` pasa el daño por `take_blast()` de cada bloque que toca el
+  círculo; el material decide si la explosión lo rompe (TASK-019).
 - Un cuerpo por tile es suficiente para mapas de pantalla única (~500 tiles).
   Si un mapa crece mucho, migrar a `TileMap` con una capa de vida por celda.
 - `test_arena` tiene paredes invisibles (`Bounds`) justo fuera de la vista
