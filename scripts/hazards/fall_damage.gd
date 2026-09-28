@@ -3,14 +3,15 @@ extends Node
 
 ## Drop-in child for a CharacterBody2D fighter: landing faster than
 ## `safe_speed` hurts through the body's HealthComponent, harder the faster
-## the fall. A normal jump (~320 px/s) never hurts; dropping about six tiles
+## the fall. A normal jump (~380 px/s on landing) never hurts; dropping about six tiles
 ## starts to. Needs no code in the owner, like RagdollOnDeath.
 
 signal hard_landing(impact_speed: float, damage: int)
 
 ## Falling speed (px/s) a landing can take without harm. Falling from rest
-## reaches sqrt(2 * gravity * height): 420 px/s is ~98 px (6 tiles) at 900.
-@export var safe_speed := 420.0
+## reaches sqrt(2 * gravity * height): 500 px/s is ~99 px (6 tiles) with the
+## player's falling gravity (900 x 1.4 = 1260).
+@export var safe_speed := 500.0
 ## Hit points lost per px/s above `safe_speed`.
 @export var damage_per_speed := 0.2
 ## Defaults to the parent's "HealthComponent" child.

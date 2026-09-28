@@ -4,6 +4,11 @@ extends CharacterBody2D
 @export var crouch_speed_multiplier := 0.4
 @export var jump_velocity := -320.0
 @export var gravity := 900.0
+## Gravity is multiplied by this while falling: quick drops, floaty-free arcs.
+@export var fall_gravity_multiplier := 1.4
+## Letting go of jump while still rising caps the upward speed at this share
+## of `jump_velocity`: tap for a hop, hold for the full jump.
+@export_range(0.0, 1.0) var jump_cut := 0.45
 @export var acceleration := 1800.0
 @export var air_acceleration := 1200.0
 @export var friction := 2000.0
@@ -31,6 +36,9 @@ var _attack_timer := 0.0
 var _hitstun_timer := 0.0
 var _invulnerable_timer := 0.0
 var _prev_buttons := 0
+## True from a jump until its rise ends or is cut; knockback launches never
+## set it, so letting go of jump only shortens real jumps.
+var _jump_rising := false
 
 ## Swap in a ScriptedInputSource, a bot or a network source to drive this
 ## player; by default a controlled player reads its slot's device actions.
@@ -96,6 +104,7 @@ func _physics_process(delta: float) -> void:
 	if _hitstun_timer == 0.0:
 		_apply_horizontal(input_dir, delta)
 	_perform_jump(input_dir)
+	_cut_jump(frame.is_held(InputFrame.JUMP))
 
 	move_and_slide()
 
@@ -173,6 +182,8 @@ func _apply_gravity(delta: float, want_crouch: bool) -> void:
 	var current_gravity := gravity
 	if want_crouch and is_on_floor():
 		current_gravity = gravity * 1.5
+	elif velocity.y > 0.0:
+		current_gravity = gravity * fall_gravity_multiplier
 	velocity.y += current_gravity * delta
 
 
@@ -199,6 +210,18 @@ func _perform_jump(input_dir: float) -> void:
 			velocity.y = jump_velocity
 			_coyote_timer = 0.0
 			_jump_buffer_timer = 0.0
+			_jump_rising = true
+
+
+## Variable height: releasing jump mid-rise trims the upward speed once.
+func _cut_jump(jump_held: bool) -> void:
+	if not _jump_rising:
+		return
+	if velocity.y >= 0.0:
+		_jump_rising = false
+	elif not jump_held:
+		velocity.y = maxf(velocity.y, jump_velocity * jump_cut)
+		_jump_rising = false
 
 
 func _set_crouching(pressed: bool) -> void:
