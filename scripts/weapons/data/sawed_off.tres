@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sawed_off"
+display_name = "Escopeta recortada"
+kind = 0
+damage = 9
+knockback = Vector2(230, -130)
+cooldown = 0.5
+max_ammo = 2
+automatic = false
+color = Color(0.451, 0.243, 0.224, 1)
+projectiles_per_shot = 8
+spread_degrees = 36.0
+projectile_speed = 550.0
+projectile_range = 110.0
+muzzle_offset = 10.0

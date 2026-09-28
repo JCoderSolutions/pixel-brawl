@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="GrenadeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/grenade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+fuse_time = 2.0
+throw_velocity = Vector2(420, 0)
+bounce = 0.0
+explode_on_contact = true
+gravity_scale = 0.0
+explosion_radius = 52.0
+min_damage_ratio = 0.35
+explosion_knockback = 380.0
+explosion_lift = 140.0
+block_damage = 60
+id = &"bazooka"
+display_name = "Bazuca"
+kind = 0
+damage = 55
+knockback = Vector2(0, 0)
+cooldown = 1.0
+max_ammo = 2
+automatic = false
+color = Color(0.149, 0.361, 0.259, 1)
+muzzle_offset = 14.0

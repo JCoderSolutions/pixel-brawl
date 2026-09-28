@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"assault_rifle"
+display_name = "Rifle de asalto"
+kind = 0
+damage = 7
+knockback = Vector2(60, -25)
+cooldown = 0.1
+max_ammo = 30
+automatic = true
+color = Color(0.227, 0.267, 0.4, 1)
+projectiles_per_shot = 1
+spread_degrees = 0.0
+projectile_speed = 800.0
+projectile_range = 520.0
+muzzle_offset = 16.0
