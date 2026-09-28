@@ -40,6 +40,7 @@ func _ready() -> void:
 		# hit never registers (bullets still stop on the tile's body).
 		_hurtbox.health = null
 		_hurtbox.monitorable = false
+	_hurtbox.melee_proof = not block_material.breaks_from_melee
 	health.health_changed.connect(_on_health_changed)
 	health.died.connect(_on_died)
 

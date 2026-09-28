@@ -41,5 +41,6 @@ func _on_area_entered(area: Area2D) -> void:
 	if hurtbox in _hit_this_window:
 		return
 	_hit_this_window.append(hurtbox)
-	hurtbox.receive_hit(damage, Vector2(knockback.x * direction, knockback.y), owner)
+	if not hurtbox.melee_proof:
+		hurtbox.receive_hit(damage, Vector2(knockback.x * direction, knockback.y), owner)
 	hit_landed.emit(hurtbox)

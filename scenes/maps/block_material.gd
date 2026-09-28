@@ -6,6 +6,8 @@ extends Resource
 ##
 ## Hits are bullets and melee swings (they arrive through the tile's Hurtbox);
 ## blasts are explosions (they arrive through DestructibleMap.damage_area).
+## Melee only counts with `breaks_from_melee`: fists and blades don't dig
+## through the map, like in Superfighters.
 
 enum Pattern { PLANKS, BRICKS, RIVETS }
 
@@ -13,6 +15,7 @@ enum Pattern { PLANKS, BRICKS, RIVETS }
 @export var max_health := 30
 @export var breaks_from_hits := true
 @export var breaks_from_blasts := true
+@export var breaks_from_melee := false
 @export var color := Color.WHITE
 ## Shade the tile fades towards as it loses health.
 @export var damaged_color := Color.BLACK

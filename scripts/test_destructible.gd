@@ -12,9 +12,9 @@ func _run_tests() -> void:
 	await _test_indestructible_block()
 	await _test_map_builds_grid()
 	await _test_area_damage()
-	await _test_melee_breaks_block()
+	await _test_melee_leaves_blocks()
 	await _test_player_falls_through_hole()
-	print("OK: block health, shading, breaking, indestructible cells, grid layout, area damage, melee breaks blocks and holes open the floor" if _ok else "FAILED")
+	print("OK: block health, shading, breaking, indestructible cells, grid layout, area damage, melee leaves blocks standing and holes open the floor" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -107,8 +107,9 @@ func _test_area_damage() -> void:
 	await _frames(1)
 
 
-## A player standing next to a block breaks it with melee swings.
-func _test_melee_breaks_block() -> void:
+## Fists and blades don't dig through the map (Superfighters): a player
+## punching a wood block leaves it standing; bullets still chip it.
+func _test_melee_leaves_blocks() -> void:
 	var map := _spawn_map(PackedStringArray([
 		"...#",
 		"XXXX",
@@ -121,13 +122,15 @@ func _test_melee_breaks_block() -> void:
 	await _frames(10)
 	var block := map.get_block(Vector2i(3, 0))
 	var hp: int = block.health.max_health
-	var swings := 0
-	while is_instance_valid(block) and not block.is_queued_for_deletion() and swings < 10:
+	var thuds := [0]
+	player.get_node("Hitbox").hit_landed.connect(func(_t): thuds[0] += 1)
+	for swing in 5:
 		player.start_attack()
 		await _frames(30)
-		swings += 1
-	_check(swings > 1, "block survives the first swing")
-	_check(map.get_block(Vector2i(3, 0)) == null, "melee breaks the block after %d swings (hp %d)" % [swings, hp])
+	_check(thuds[0] >= 1, "the punches still land on the block (a thud)")
+	_check(is_instance_valid(block) and block.health.current_health == hp, "melee doesn't damage map blocks (hp %d/%d)" % [block.health.current_health, hp])
+	block.get_node("Hurtbox").receive_hit(5, Vector2.ZERO, null)
+	_check(block.health.current_health == hp - 5, "bullets and blasts still do")
 	_check(player.health.current_health == player.health.max_health, "player is not hurt by hitting blocks")
 	player.queue_free()
 	map.queue_free()
