@@ -12,7 +12,7 @@ extends Control
 ## limb forward (towards +x, the facing side).
 
 ## VICTORY is never picked from a fighter's state: screens set it.
-enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY }
+enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE }
 
 ## Seconds for a full stride (two steps) at run speed.
 const RUN_PERIOD := 0.5
@@ -90,6 +90,7 @@ static func read_state(fighter: Node) -> Dictionary:
 		"crouching": fighter.has_method("is_crouching") and fighter.is_crouching(),
 		"attacking": fighter.has_method("is_attacking") and fighter.is_attacking(),
 		"hurt": fighter.has_method("is_in_hitstun") and fighter.is_in_hitstun(),
+		"diving": fighter.has_method("is_diving") and fighter.is_diving(),
 		"armed": weapons != null and weapons.has_weapon(),
 	}
 
@@ -97,6 +98,8 @@ static func read_state(fighter: Node) -> Dictionary:
 static func choose_anim(state: Dictionary) -> Anim:
 	if state.hurt:
 		return Anim.HURT
+	if state.get("diving", false):
+		return Anim.DIVE
 	if state.attacking:
 		return Anim.ATTACK
 	if not state.on_floor:
@@ -111,7 +114,7 @@ static func choose_anim(state: Dictionary) -> Anim:
 ## Joint angles and offsets for `anim` at `t` seconds into it. `armed`
 ## keeps the front arm pointing the weapon forward on the move.
 static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
-	var p := {"hip_y": -LEG_LENGTH, "bob": 0.0, "lean": 0.0,
+	var p := {"hip_y": -LEG_LENGTH, "hip_x": 0.0, "bob": 0.0, "lean": 0.0,
 			"leg_front": 0.08, "leg_back": -0.08, "knee_front": 0.0, "knee_back": 0.0,
 			"arm_front": -0.1, "arm_back": 0.15, "shoulder_spread": 0.0}
 	match anim:
@@ -159,6 +162,15 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 			p.lean = 0.2
 			p.leg_front = -0.3
 			p.leg_back = 0.3
+		Anim.DIVE:
+			# Flat out, arms first, legs trailing.
+			p.hip_x = -3.0
+			p.hip_y = -6.0
+			p.lean = 1.1
+			p.arm_front = -1.3
+			p.arm_back = -1.5
+			p.leg_front = 1.0
+			p.leg_back = 1.3
 		Anim.VICTORY:
 			var pump := sin(t * 10.0)
 			# Arms up in a V from spread shoulders, beside the head.
@@ -181,7 +193,7 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 ## +x), back to front. `team` tints torso, sleeves and headband.
 static func parts(p: Dictionary, team: Color, flashing := false) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var hip := Vector2(0.0, p.hip_y + p.bob)
+	var hip := Vector2(p.hip_x, p.hip_y + p.bob)
 	var up := Vector2.UP.rotated(p.lean)
 	var shoulder := hip + up * (TORSO_HEIGHT - 1.0)
 	var back := team.darkened(0.3)

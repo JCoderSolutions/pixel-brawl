@@ -15,6 +15,17 @@ extends CharacterBody2D
 @export var coyote_time := 0.1
 @export var jump_buffer := 0.12
 @export var crouch_height := 14.0
+
+@export_group("Dive")
+## Crouching while running this fast (share of run_speed) dives forward.
+@export var dive_min_speed := 0.8
+@export var dive_speed := 250.0
+@export var dive_lift := -150.0
+## Seconds before a dive can end (it lasts until the fighter lands).
+@export var dive_time := 0.4
+## Seconds a dive can't be hit, from its start.
+@export var dive_dodge_time := 0.3
+@export var dive_cooldown := 0.4
 ## Only the controlled player reads input; others (dummies) don't.
 @export var is_controlled := true
 ## Local slot whose `p<slot>_*` actions drive this player when no other
@@ -36,6 +47,9 @@ var _attack_timer := 0.0
 var _hitstun_timer := 0.0
 var _invulnerable_timer := 0.0
 var _prev_buttons := 0
+var _diving := false
+var _dive_timer := 0.0
+var _dive_cooldown_timer := 0.0
 ## True from a jump until its rise ends or is cut; knockback launches never
 ## set it, so letting go of jump only shortens real jumps.
 var _jump_rising := false
@@ -89,6 +103,8 @@ func _physics_process(delta: float) -> void:
 	var input_dir := frame.move_x()
 	var want_crouch := frame.is_held(InputFrame.CROUCH)
 
+	_update_dive(delta, input_dir, just_pressed, can_act)
+
 	if just_pressed & InputFrame.JUMP:
 		_jump_buffer_timer = jump_buffer
 	else:
@@ -101,9 +117,10 @@ func _physics_process(delta: float) -> void:
 
 	_set_crouching(want_crouch)
 	_apply_gravity(delta, want_crouch)
-	if _hitstun_timer == 0.0:
+	if _hitstun_timer == 0.0 and not _diving:
 		_apply_horizontal(input_dir, delta)
-	_perform_jump(input_dir)
+	if not _diving:
+		_perform_jump(input_dir)
 	_cut_jump(frame.is_held(InputFrame.JUMP))
 
 	move_and_slide()
@@ -135,6 +152,11 @@ func is_crouching() -> bool:
 
 func is_in_hitstun() -> bool:
 	return _hitstun_timer > 0.0
+
+
+## Mid-dive: low, fast and (at first) untouchable. FallDamage skips it.
+func is_diving() -> bool:
+	return _diving
 
 
 func is_attacking() -> bool:
@@ -235,11 +257,31 @@ func _cut_jump(jump_held: bool) -> void:
 
 
 func _set_crouching(pressed: bool) -> void:
-	var want_crouch := pressed and is_on_floor()
+	var want_crouch := (pressed and is_on_floor()) or _diving
 	if want_crouch == _is_crouching:
 		return
 	_is_crouching = want_crouch
 	_set_body_height(crouch_height if _is_crouching else _stand_height)
+
+
+## Superfighters dive: crouch while running to throw yourself forward. It
+## keeps its momentum (no steering, no jumping) until it lands.
+func _update_dive(delta: float, input_dir: float, just_pressed: int, can_act: bool) -> void:
+	_dive_cooldown_timer = maxf(_dive_cooldown_timer - delta, 0.0)
+	if _diving:
+		_dive_timer = maxf(_dive_timer - delta, 0.0)
+		if _dive_timer == 0.0 and is_on_floor():
+			_diving = false
+			_dive_cooldown_timer = dive_cooldown
+		return
+	var running := absf(velocity.x) >= run_speed * dive_min_speed and input_dir != 0.0
+	if can_act and just_pressed & InputFrame.CROUCH and running and is_on_floor() \
+			and _dive_cooldown_timer == 0.0 and not is_attacking():
+		_diving = true
+		_dive_timer = dive_time
+		velocity = Vector2(signf(velocity.x) * dive_speed, dive_lift)
+		_invulnerable_timer = maxf(_invulnerable_timer, dive_dodge_time)
+		$Hurtbox.set_deferred("monitorable", false)
 
 
 ## Origin sits at the feet, so shapes grow upward from y = 0 and the body
