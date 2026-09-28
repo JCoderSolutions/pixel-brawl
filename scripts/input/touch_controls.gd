@@ -30,6 +30,9 @@ const RUNTIME_ACTIONS := ["fire", "pickup"]
 ## AUTO shows the controls on touch screens, or as soon as a finger touches.
 @export var visibility := Visibility.AUTO
 
+## `visibility`, or the player's option (GameSettings) when that is AUTO.
+var _mode := Visibility.AUTO
+
 @onready var joystick: TouchStick = $Joystick
 @onready var buttons := {
 	"Attack": $Attack as TouchActionButton,
@@ -48,7 +51,9 @@ func _ready() -> void:
 		buttons[name].action = prefix + name.to_lower()
 	get_viewport().size_changed.connect(_relayout)
 	_relayout()
-	set_shown(should_show(visibility, DisplayServer.is_touchscreen_available()))
+	# A scene that forces a mode wins; otherwise the player's option decides.
+	_mode = visibility if visibility != Visibility.AUTO else GameSettings.touch_mode
+	set_shown(should_show(_mode, DisplayServer.is_touchscreen_available()))
 
 
 static func should_show(mode: Visibility, has_touchscreen: bool) -> bool:
@@ -102,7 +107,7 @@ func _input(event: InputEvent) -> void:
 	# AUTO on a device that did not report a touch screen: the first touch
 	# reveals the controls. Re-dispatch it (already in viewport coordinates) so
 	# that touch also presses whatever is under it.
-	if visible or visibility != Visibility.AUTO or not (event is InputEventScreenTouch and event.pressed):
+	if visible or _mode != Visibility.AUTO or not (event is InputEventScreenTouch and event.pressed):
 		return
 	set_shown(true)
 	get_viewport().set_input_as_handled()
