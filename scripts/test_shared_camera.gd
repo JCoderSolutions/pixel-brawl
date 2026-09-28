@@ -11,6 +11,10 @@ func _init() -> void:
 
 
 func _run_tests() -> void:
+	# Headless opens a 64x64 window; with aspect "expand" that would give a
+	# square view. Use the project's default 960x540 window (480x270 at 2x).
+	root.size = Vector2i(960, 540)
+	await process_frame
 	await _test_centers_on_living_targets()
 	await _test_ignores_dead_and_freed_targets()
 	await _test_zooms_out_to_fit_everyone()

@@ -25,7 +25,7 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
 - [x] Pantalla de ganador con Revancha y Menú; menú principal con Jugar / Salir
 - [x] Partida en `scenes/maps/test_arena.tscn` (`arena_match.gd`); `match_sandbox` se retiró
 - [x] Test headless `scripts/test_game_manager.gd`
-- [ ] Test manual: jugar una partida entera y ajustar tiempos de las pausas
+- [x] Test manual: Jose jugó una partida entera con armas y menú (2026-09-28); tiempos de pausa sin cambios por ahora
 - [x] `run/main_scene` es el menú; Jugar abre la arena
 
 ## Detalles

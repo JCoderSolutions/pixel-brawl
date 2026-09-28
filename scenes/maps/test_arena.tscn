@@ -1,10 +1,16 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/items/weapon_spawner.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/winner_screen.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/camera/shared_camera.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch/touch_controls.tscn" id="7"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/pistol.tres" id="8"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
 
 [sub_resource type="RectangleShape2D" id="floor_shape"]
 size = Vector2(480, 20)
@@ -21,7 +27,7 @@ size = Vector2(120, 12)
 [node name="TestArena" type="Node2D"]
 script = ExtResource("1")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="SharedCamera" parent="." instance=ExtResource("6")]
 position = Vector2(240, 135)
 
 [node name="Background" type="ColorRect" parent="."]
@@ -98,6 +104,7 @@ position = Vector2(80, 250)
 position = Vector2(400, 250)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
 spawn_interval = 6.0
 
 [node name="Middle" type="Marker2D" parent="WeaponSpawner"]
@@ -117,3 +124,5 @@ position = Vector2(240, 110)
 [node name="HUD" parent="." instance=ExtResource("4")]
 
 [node name="WinnerScreen" parent="." instance=ExtResource("5")]
+
+[node name="TouchControls" parent="." instance=ExtResource("7")]

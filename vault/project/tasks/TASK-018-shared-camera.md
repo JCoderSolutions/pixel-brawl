@@ -27,7 +27,7 @@ golpes y explosiones.
 - [x] Responsive: toma el tamaño de vista cada tick (teléfono vertical/horizontal, PC)
 - [x] Zoom pixel-perfect: cada píxel del mundo ocupa un número entero de píxeles de pantalla
 - [x] Escena demo `scenes/camera/camera_demo.tscn` (mapa 960x544, P1 + 3 bots)
-- [ ] Integrar en `test_arena` / flujo de partida (lo hace el hilo de integración)
+- [x] Integrar en `test_arena`: `arena_match.gd` suma cada jugador que aparece y hace `snap()` al empezar la ronda
 - [ ] Test manual de sensación (suavizado, fuerza del shake)
 
 ## Uso

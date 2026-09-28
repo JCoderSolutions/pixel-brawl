@@ -33,7 +33,9 @@ func _run_tests() -> void:
 	_test_display_is_pixel_perfect_and_responsive()
 	_test_body_fits_32px_sprite()
 	await _test_arena_camera_centres_the_map()
-	print("OK: weapon buttons per slot, pick up/fire/drop, semi-auto, facing, death drop + ragdoll, jump height, reachable platforms, menu boot, 2P arena match, pixel-perfect responsive display and 32x32 body verified" if _ok else "FAILED")
+	await _test_arena_spawns_grenades()
+	await _test_arena_has_touch_controls()
+	print("OK: weapon buttons per slot, pick up/fire/drop, semi-auto, facing, death drop + ragdoll, jump height, reachable platforms, menu boot, 2P arena match, pixel-perfect responsive display, 32x32 body, shared camera, grenades and touch controls verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -301,7 +303,9 @@ func _test_arena_runs_two_player_match() -> void:
 ## black bars.
 func _test_display_is_pixel_perfect_and_responsive() -> void:
 	var setting := func(key: String): return ProjectSettings.get_setting(key)
-	_check(setting.call("display/window/stretch/mode") == "viewport", "renders at base resolution, then upscales")
+	# canvas_items draws at screen resolution, so the shared camera can zoom
+	# out in whole screen-pixel steps; "viewport" would lock it at zoom >= 1.
+	_check(setting.call("display/window/stretch/mode") == "canvas_items", "draws at screen resolution so the camera can zoom out")
 	_check(setting.call("display/window/stretch/aspect") == "expand", "extra screen space extends the view")
 	_check(setting.call("display/window/stretch/scale_mode") == 1, "upscale by whole numbers only")
 	_check(setting.call("rendering/2d/snap/snap_2d_transforms_to_pixel") == true, "sprites snap to whole pixels")
@@ -325,15 +329,54 @@ func _test_body_fits_32px_sprite() -> void:
 
 
 func _test_arena_camera_centres_the_map() -> void:
+	var manager = root.get_node("GameManager")
 	var arena: Node2D = load(ARENA_PATH).instantiate()
-	arena.autostart = false
 	root.add_child(arena)
-	var camera := arena.get_node_or_null("Camera2D") as Camera2D
-	_check(camera != null and camera.anchor_mode == Camera2D.ANCHOR_MODE_DRAG_CENTER, "arena has a centred camera")
+	await process_frame
+	var camera := arena.get_node_or_null("SharedCamera") as SharedCamera
+	_check(camera != null, "arena uses the shared camera")
 	if camera != null:
-		_check(camera.position == Vector2(240, 135), "camera centres the 480x270 map, so extra space splits evenly")
+		_check(camera.bounds == Rect2(0, 0, 480, 270), "camera stays inside the 480x270 map")
+		var targets := camera.get_targets()
+		_check(targets.has(manager.get_player(0)) and targets.has(manager.get_player(1)),
+			"camera follows both spawned players")
+		# Players are re-spawned every round; the camera must follow the new ones.
+		manager._start_round()
+		await process_frame
+		targets = camera.get_targets()
+		_check(targets.has(manager.get_player(0)) and targets.has(manager.get_player(1)),
+			"camera follows the players of the next round")
+		_check(targets.size() == 2, "freed players leave the camera (got %d targets)" % targets.size())
+		# Blasts rattle the view.
+		camera.trauma = 0.0
+		var explosion: Explosion = preload("res://scenes/items/explosion.tscn").instantiate()
+		arena.add_child(explosion)
+		explosion.global_position = Vector2(240, 60)
+		explosion.detonate()
+		_check(camera.trauma >= 0.5, "an explosion shakes the camera (trauma %.2f)" % camera.trauma)
 	var background: ColorRect = arena.get_node("Background")
 	_check(ProjectSettings.get_setting("rendering/environment/defaults/default_clear_color") == background.color,
 		"space beyond the map uses the arena background colour")
+	arena.queue_free()
+	await process_frame
+
+
+func _test_arena_spawns_grenades() -> void:
+	var arena: Node2D = load(ARENA_PATH).instantiate()
+	arena.autostart = false
+	var spawner: WeaponSpawner = arena.get_node("WeaponSpawner")
+	_check(spawner.weapons.any(func(w): return w is GrenadeData), "grenades are in the arena's weapon pool")
+	arena.free()
+	await process_frame
+
+
+func _test_arena_has_touch_controls() -> void:
+	var arena: Node2D = load(ARENA_PATH).instantiate()
+	arena.autostart = false
+	root.add_child(arena)
+	var touch := arena.get_node_or_null("TouchControls") as TouchControls
+	_check(touch != null and touch.slot == 1, "arena has touch controls for P1")
+	if touch != null:
+		_check(touch.visibility == TouchControls.Visibility.AUTO, "touch controls show only on touch screens")
 	arena.queue_free()
 	await process_frame

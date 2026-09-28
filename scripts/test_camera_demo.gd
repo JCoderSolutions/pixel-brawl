@@ -13,6 +13,10 @@ func _init() -> void:
 
 
 func _run_tests() -> void:
+	# Headless opens a 64x64 window; with aspect "expand" that would give a
+	# square view. Use the project's default 960x540 window (480x270 at 2x).
+	root.size = Vector2i(960, 540)
+	await process_frame
 	var demo: Node2D = load("res://scenes/camera/camera_demo.tscn").instantiate()
 	demo.human_player_one = false
 	root.add_child(demo)
