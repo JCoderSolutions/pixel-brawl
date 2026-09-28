@@ -219,8 +219,7 @@ func _test_arena_platforms_reachable() -> void:
 		var arena: Node2D = load(ARENA_PATH).instantiate()
 		arena.autostart = false
 		root.add_child(arena)
-		var platform: Node2D = arena.get_node("Platform" if side < 0 else "Platform2")
-		var platform_top := platform.global_position.y - 6.0
+		var platform_top: float = arena.platform_top()
 		var bridge_top: float = arena.bridge_top()
 		# Start on the floor just inside the arena centre, facing the platform.
 		var frames: Array[InputFrame] = []
