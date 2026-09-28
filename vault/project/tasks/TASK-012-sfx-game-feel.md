@@ -29,7 +29,7 @@ gratuitos CC0.
       `AudioManager.play_track()` no reinicia la pista que ya suena; el menú pone
       `menu` y cada partida `battle`. Los `.import` de `assets/audio/music/` se
       versionan (excepción en `.gitignore`). Test `scripts/audio/test_music.gd`
-- [ ] Test manual de la música (volumen frente a los SFX, que el loop no se note)
+- [x] Test manual de la música: Jose la probó y está correcta (2026-09-28)
 - [ ] Menú de opciones con sliders de volumen (la API ya está)
 - [ ] Test manual de sensación (volúmenes, duración del hit-stop)
 
