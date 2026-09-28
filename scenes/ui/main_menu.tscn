@@ -28,9 +28,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -120.0
-offset_top = -110.0
+offset_top = -129.0
 offset_right = 120.0
-offset_bottom = 110.0
+offset_bottom = 129.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
@@ -47,6 +47,12 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 text = "Jugar"
+
+[node name="Map" type="OptionButton" parent="Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+alignment = 1
 
 [node name="Rivals" type="OptionButton" parent="Box"]
 unique_name_in_owner = true

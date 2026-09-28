@@ -1,0 +1,185 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/items/weapon_spawner.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/winner_screen.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/camera/shared_camera.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch/touch_controls.tscn" id="7"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/pistol.tres" id="8"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/void_zone.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
+
+[sub_resource type="RectangleShape2D" id="bound_shape"]
+size = Vector2(32, 1200)
+
+[node name="Rooftop" type="Node2D"]
+script = ExtResource("1")
+kill_zone_y = 600
+
+[node name="SharedCamera" parent="." instance=ExtResource("6")]
+position = Vector2(480, 272)
+bounds = Rect2(0, 0, 960, 544)
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 960.0
+offset_bottom = 544.0
+color = Color(0, 0.6, 0.859, 1)
+
+[node name="Decor" type="Node2D" parent="."]
+
+[node name="D1" type="ColorRect" parent="Decor"]
+offset_left = 0
+offset_top = 360
+offset_right = 960
+offset_bottom = 544
+mouse_filter = 2
+color = Color(0.0706, 0.306, 0.537, 1)
+
+[node name="D2" type="ColorRect" parent="Decor"]
+offset_left = 32
+offset_top = 432
+offset_right = 384
+offset_bottom = 544
+mouse_filter = 2
+color = Color(0.451, 0.243, 0.224, 1)
+
+[node name="D3" type="ColorRect" parent="Decor"]
+offset_left = 576
+offset_top = 432
+offset_right = 928
+offset_bottom = 544
+mouse_filter = 2
+color = Color(0.451, 0.243, 0.224, 1)
+
+[node name="D4" type="ColorRect" parent="Decor"]
+offset_left = 48
+offset_top = 448
+offset_right = 80
+offset_bottom = 480
+mouse_filter = 2
+color = Color(0.996, 0.682, 0.204, 1)
+
+[node name="D5" type="ColorRect" parent="Decor"]
+offset_left = 144
+offset_top = 448
+offset_right = 176
+offset_bottom = 480
+mouse_filter = 2
+color = Color(0.996, 0.682, 0.204, 1)
+
+[node name="D6" type="ColorRect" parent="Decor"]
+offset_left = 272
+offset_top = 448
+offset_right = 304
+offset_bottom = 480
+mouse_filter = 2
+color = Color(0.0941, 0.0784, 0.145, 1)
+
+[node name="D7" type="ColorRect" parent="Decor"]
+offset_left = 640
+offset_top = 448
+offset_right = 672
+offset_bottom = 480
+mouse_filter = 2
+color = Color(0.996, 0.682, 0.204, 1)
+
+[node name="D8" type="ColorRect" parent="Decor"]
+offset_left = 768
+offset_top = 448
+offset_right = 800
+offset_bottom = 480
+mouse_filter = 2
+color = Color(0.0941, 0.0784, 0.145, 1)
+
+[node name="D9" type="ColorRect" parent="Decor"]
+offset_left = 864
+offset_top = 448
+offset_right = 896
+offset_bottom = 480
+mouse_filter = 2
+color = Color(0.996, 0.682, 0.204, 1)
+
+[node name="D10" type="ColorRect" parent="Decor"]
+offset_left = 640
+offset_top = 128
+offset_right = 656
+offset_bottom = 416
+mouse_filter = 2
+color = Color(0.996, 0.682, 0.204, 1)
+
+[node name="DestructibleMap" type="Node2D" parent="."]
+script = ExtResource("2")
+layout = PackedStringArray("", "", "", "", "", "", "......................XXXXXXXXXXXXXXXXXXX", "........................................X", "", "", "", "", "", "", "", "", "", "", ".........====..................................====", "", ".........====..................................====", "", ".......========..............................========", "", ".....============..#.......................============", "...................##", "..BBBBBBBBBBBBBBBBBBBBBB============BBBBBBBBBBBBBBBBBBBBBB", "..XXXXXXXXXXXXXXXXXXXXXX............XXXXXXXXXXXXXXXXXXXXXX", "", "", "", "", "", "")
+
+[node name="Hazards" type="Node2D" parent="."]
+
+[node name="Drop" parent="Hazards" instance=ExtResource("14")]
+position = Vector2(384, 464)
+size = Vector2(192, 64)
+
+[node name="EdgeLeft" parent="Hazards" instance=ExtResource("14")]
+position = Vector2(-64, 464)
+size = Vector2(96, 64)
+
+[node name="EdgeRight" parent="Hazards" instance=ExtResource("14")]
+position = Vector2(928, 464)
+size = Vector2(96, 64)
+
+[node name="SteelBeam" parent="Hazards" instance=ExtResource("17")]
+position = Vector2(416, 112)
+size = Vector2(128, 16)
+color = Color(0.761, 0.522, 0.412, 1)
+detail_color = Color(0.451, 0.243, 0.224, 1)
+
+[node name="BeamSwitch" parent="Hazards" instance=ExtResource("18")]
+position = Vector2(664, 400)
+targets = Array[NodePath]([NodePath("../SteelBeam")])
+one_shot = true
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="Spawns"]
+position = Vector2(64, 416)
+
+[node name="P2" type="Marker2D" parent="Spawns"]
+position = Vector2(880, 416)
+
+[node name="P3" type="Marker2D" parent="Spawns"]
+position = Vector2(168, 320)
+
+[node name="P4" type="Marker2D" parent="Spawns"]
+position = Vector2(776, 320)
+
+[node name="WeaponSpawner" parent="." instance=ExtResource("3")]
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
+spawn_interval = 5
+max_active = 4
+
+[node name="W1" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(480, 406)
+
+[node name="W2" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(168, 278)
+
+[node name="W3" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(776, 278)
+
+[node name="W4" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(352, 406)
+
+[node name="W5" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(608, 406)
+
+[node name="Players" type="Node2D" parent="."]
+
+[node name="HUD" parent="." instance=ExtResource("4")]
+
+[node name="WinnerScreen" parent="." instance=ExtResource("5")]
+
+[node name="TouchControls" parent="." instance=ExtResource("7")]

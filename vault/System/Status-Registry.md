@@ -4,6 +4,7 @@ project: "pixel-brawl"
 last_updated: "2026-09-28"
 last_updated_notes: "TASK-020 trampas y peligros en progreso"
 last_updated_notes: "TASK-020 bots en progreso"
+last_updated_notes: "TASK-009 set de mapas en progreso"
 ---
 
 # Status Registry — Pixel Brawl
@@ -44,6 +45,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-019-block-materials|TASK-019 — Materiales de bloque + arena destructible]] | `in-progress` | high | PHASE-2 |
 | [[project/tasks/TASK-020-hazards-traps|TASK-020 — Trampas y peligros del mapa]] | `in-progress` | high | PHASE-2 |
 | [[project/tasks/TASK-020-bots|TASK-020 — Bots (IA) con 3 dificultades]] | `in-progress` | high | PHASE-3 |
+| [[project/tasks/TASK-009-map-set|TASK-009 — Set de mapas temáticos]] | `in-progress` | high | PHASE-3 |
 
 ## Tareas por desglosar (backlog)
 
@@ -53,7 +55,6 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | TASK-006 — Grenade + explosion destroys tiles | PHASE-2 |
 | TASK-008 — Local 2-player split keyboard | PHASE-2 |
 | TASK-007 — Ragdoll death | PHASE-2 |
-| TASK-009 — Map set (4+ maps) | PHASE-3 |
 | TASK-010 — Power-up system | PHASE-3 |
 | TASK-013 — WebRTC host/join | PHASE-4 |
 | TASK-014 — Lobby con código de sala | PHASE-4 |

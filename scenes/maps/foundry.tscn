@@ -1,0 +1,173 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/items/weapon_spawner.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/winner_screen.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/camera/shared_camera.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch/touch_controls.tscn" id="7"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/pistol.tres" id="8"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/fire_pit.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
+
+[sub_resource type="RectangleShape2D" id="bound_shape"]
+size = Vector2(32, 1200)
+
+[node name="Foundry" type="Node2D"]
+script = ExtResource("1")
+kill_zone_y = 600
+
+[node name="SharedCamera" parent="." instance=ExtResource("6")]
+position = Vector2(480, 272)
+bounds = Rect2(0, 0, 960, 544)
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 960.0
+offset_bottom = 544.0
+color = Color(0.243, 0.153, 0.192, 1)
+
+[node name="Decor" type="Node2D" parent="."]
+
+[node name="D1" type="ColorRect" parent="Decor"]
+offset_left = 0
+offset_top = 400
+offset_right = 960
+offset_bottom = 480
+mouse_filter = 2
+color = Color(0.451, 0.243, 0.224, 1)
+
+[node name="D2" type="ColorRect" parent="Decor"]
+offset_left = 48
+offset_top = 272
+offset_right = 128
+offset_bottom = 400
+mouse_filter = 2
+color = Color(0.0941, 0.0784, 0.145, 1)
+
+[node name="D3" type="ColorRect" parent="Decor"]
+offset_left = 832
+offset_top = 272
+offset_right = 912
+offset_bottom = 400
+mouse_filter = 2
+color = Color(0.0941, 0.0784, 0.145, 1)
+
+[node name="D4" type="ColorRect" parent="Decor"]
+offset_left = 64
+offset_top = 320
+offset_right = 112
+offset_bottom = 368
+mouse_filter = 2
+color = Color(0.969, 0.463, 0.133, 1)
+
+[node name="D5" type="ColorRect" parent="Decor"]
+offset_left = 848
+offset_top = 320
+offset_right = 896
+offset_bottom = 368
+mouse_filter = 2
+color = Color(0.969, 0.463, 0.133, 1)
+
+[node name="Bounds" type="Node2D" parent="."]
+
+[node name="LeftWall" type="StaticBody2D" parent="Bounds"]
+position = Vector2(-16, -60)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/LeftWall"]
+shape = SubResource("bound_shape")
+
+[node name="RightWall" type="StaticBody2D" parent="Bounds"]
+position = Vector2(976, -60)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/RightWall"]
+shape = SubResource("bound_shape")
+
+[node name="DestructibleMap" type="Node2D" parent="."]
+script = ExtResource("2")
+layout = PackedStringArray("", "", "", "", "", "", "", "", "................XXXXXXXXXXXXXXXXXXXXXXXXXXXX", "", "", "", "", "", "", "", "", "", "", "", "..................========================", "", "............=========..................=========", "", "......====........................................====", "", "....========....................................========", "", "..============......XXXX...XXXXXX...XXXX......============", ".#........................................................#", "BBBBBBBBBBBBBBBBBB........................BBBBBBBBBBBBBBBBBB", "XXXXXXXXXXXXXXXXXX........................XXXXXXXXXXXXXXXXXX", ".................XXXXXXXXXXXXXXXXXXXXXXXXXX", "")
+
+[node name="Hazards" type="Node2D" parent="."]
+
+[node name="LavaLake" parent="Hazards" instance=ExtResource("12")]
+position = Vector2(288, 484)
+size = Vector2(384, 28)
+damage_per_second = 70.0
+
+[node name="JetLeft" parent="Hazards" instance=ExtResource("16")]
+position = Vector2(400, 432)
+cycle_on = 1.0
+cycle_off = 2.5
+
+[node name="JetRight" parent="Hazards" instance=ExtResource("16")]
+position = Vector2(544, 432)
+cycle_on = 1.0
+cycle_off = 2.5
+active = true
+
+[node name="CrucibleLeft" parent="Hazards" instance=ExtResource("17")]
+position = Vector2(352, 144)
+size = Vector2(32, 32)
+color = Color(0.894, 0.231, 0.267, 1)
+detail_color = Color(0.996, 0.682, 0.204, 1)
+
+[node name="CrucibleRight" parent="Hazards" instance=ExtResource("17")]
+position = Vector2(576, 144)
+size = Vector2(32, 32)
+color = Color(0.894, 0.231, 0.267, 1)
+detail_color = Color(0.996, 0.682, 0.204, 1)
+
+[node name="HoistSwitch" parent="Hazards" instance=ExtResource("18")]
+position = Vector2(480, 304)
+targets = Array[NodePath]([NodePath("../CrucibleLeft"), NodePath("../CrucibleRight")])
+one_shot = true
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="Spawns"]
+position = Vector2(80, 480)
+
+[node name="P2" type="Marker2D" parent="Spawns"]
+position = Vector2(864, 480)
+
+[node name="P3" type="Marker2D" parent="Spawns"]
+position = Vector2(472, 448)
+
+[node name="P4" type="Marker2D" parent="Spawns"]
+position = Vector2(120, 384)
+
+[node name="WeaponSpawner" parent="." instance=ExtResource("3")]
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
+spawn_interval = 5
+max_active = 4
+
+[node name="W1" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(344, 438)
+
+[node name="W2" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(600, 438)
+
+[node name="W3" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(384, 310)
+
+[node name="W4" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(576, 310)
+
+[node name="W5" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(240, 470)
+
+[node name="W6" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(712, 470)
+
+[node name="Players" type="Node2D" parent="."]
+
+[node name="HUD" parent="." instance=ExtResource("4")]
+
+[node name="WinnerScreen" parent="." instance=ExtResource("5")]
+
+[node name="TouchControls" parent="." instance=ExtResource("7")]

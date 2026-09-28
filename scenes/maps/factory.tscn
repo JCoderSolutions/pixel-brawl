@@ -1,0 +1,165 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/items/weapon_spawner.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/winner_screen.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/camera/shared_camera.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch/touch_controls.tscn" id="7"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/pistol.tres" id="8"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/shotgun.tres" id="9"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/katana.tres" id="10"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/grenade.tres" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/spike_trap.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
+
+[sub_resource type="RectangleShape2D" id="bound_shape"]
+size = Vector2(32, 1200)
+
+[node name="Factory" type="Node2D"]
+script = ExtResource("1")
+kill_zone_y = 600
+
+[node name="SharedCamera" parent="." instance=ExtResource("6")]
+position = Vector2(480, 272)
+bounds = Rect2(0, 0, 960, 544)
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 960.0
+offset_bottom = 544.0
+color = Color(0.149, 0.169, 0.267, 1)
+
+[node name="Decor" type="Node2D" parent="."]
+
+[node name="D1" type="ColorRect" parent="Decor"]
+offset_left = 0
+offset_top = 400
+offset_right = 960
+offset_bottom = 480
+mouse_filter = 2
+color = Color(0.227, 0.267, 0.4, 1)
+
+[node name="D2" type="ColorRect" parent="Decor"]
+offset_left = 96
+offset_top = 64
+offset_right = 128
+offset_bottom = 400
+mouse_filter = 2
+color = Color(0.0941, 0.0784, 0.145, 1)
+
+[node name="D3" type="ColorRect" parent="Decor"]
+offset_left = 832
+offset_top = 64
+offset_right = 864
+offset_bottom = 400
+mouse_filter = 2
+color = Color(0.0941, 0.0784, 0.145, 1)
+
+[node name="D4" type="ColorRect" parent="Decor"]
+offset_left = 288
+offset_top = 144
+offset_right = 304
+offset_bottom = 288
+mouse_filter = 2
+color = Color(0.353, 0.412, 0.533, 1)
+
+[node name="D5" type="ColorRect" parent="Decor"]
+offset_left = 656
+offset_top = 144
+offset_right = 672
+offset_bottom = 288
+mouse_filter = 2
+color = Color(0.353, 0.412, 0.533, 1)
+
+[node name="Bounds" type="Node2D" parent="."]
+
+[node name="LeftWall" type="StaticBody2D" parent="Bounds"]
+position = Vector2(-16, -60)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/LeftWall"]
+shape = SubResource("bound_shape")
+
+[node name="RightWall" type="StaticBody2D" parent="Bounds"]
+position = Vector2(976, -60)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/RightWall"]
+shape = SubResource("bound_shape")
+
+[node name="DestructibleMap" type="Node2D" parent="."]
+script = ExtResource("2")
+layout = PackedStringArray("", "", "", "", "", "", "", "", "..................XXXXXXXXXXXXXXXXXXXXXXXX", "", "", "", "", "", "", "", "", "", "", "", "............===========....======....===========", "", ".........==......................................==", "", ".......======..................................======", "", ".....==========..............................==========", "", "...==============.....#....................==============", ".#....................#..............##...................#", "BBBBBBBBBBBBBBBBBBBBBBBBBBBB...BBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "XXXXXXXXXXXXXXXXXXXXXXXXXXXX...XXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "...........................XXXXX", "")
+
+[node name="Hazards" type="Node2D" parent="."]
+
+[node name="SpikePit" parent="Hazards" instance=ExtResource("15")]
+position = Vector2(448, 502)
+size = Vector2(48, 10)
+
+[node name="FlameJetLeft" parent="Hazards" instance=ExtResource("16")]
+position = Vector2(304, 432)
+cycle_on = 1.2
+cycle_off = 3.0
+
+[node name="FlameJetRight" parent="Hazards" instance=ExtResource("16")]
+position = Vector2(640, 432)
+cycle_on = 1.2
+cycle_off = 3.0
+active = true
+
+[node name="CrusherLeft" parent="Hazards" instance=ExtResource("17")]
+position = Vector2(368, 144)
+size = Vector2(48, 32)
+
+[node name="CrusherRight" parent="Hazards" instance=ExtResource("17")]
+position = Vector2(544, 144)
+size = Vector2(48, 32)
+
+[node name="CrusherSwitch" parent="Hazards" instance=ExtResource("18")]
+position = Vector2(480, 304)
+targets = Array[NodePath]([NodePath("../CrusherLeft"), NodePath("../CrusherRight")])
+one_shot = true
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="P1" type="Marker2D" parent="Spawns"]
+position = Vector2(96, 480)
+
+[node name="P2" type="Marker2D" parent="Spawns"]
+position = Vector2(864, 480)
+
+[node name="P3" type="Marker2D" parent="Spawns"]
+position = Vector2(152, 352)
+
+[node name="P4" type="Marker2D" parent="Spawns"]
+position = Vector2(808, 352)
+
+[node name="WeaponSpawner" parent="." instance=ExtResource("3")]
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
+spawn_interval = 5
+max_active = 4
+
+[node name="W1" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(448, 310)
+
+[node name="W2" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(160, 342)
+
+[node name="W3" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(800, 342)
+
+[node name="W4" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(400, 470)
+
+[node name="W5" type="Marker2D" parent="WeaponSpawner"]
+position = Vector2(552, 470)
+
+[node name="Players" type="Node2D" parent="."]
+
+[node name="HUD" parent="." instance=ExtResource("4")]
+
+[node name="WinnerScreen" parent="." instance=ExtResource("5")]
+
+[node name="TouchControls" parent="." instance=ExtResource("7")]
