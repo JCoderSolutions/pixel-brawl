@@ -29,6 +29,10 @@ tiran a los huecos, con 3 niveles de dificultad.
 - [x] Menú: "2 jugadores" o "Contra 1/2/3 bots" + dificultad
 - [x] Escena de prueba `scenes/ai/bot_arena.tscn` (bots solos, para mirar y tunear)
 - [x] Test headless `scripts/ai/test_bots.gd`
+- [x] Saltan huecos de hasta 3 tiles (buscan aterrizaje a 56-80 px, hasta
+      36 px más arriba) y bajan escalones de hasta 72 px (la caída duele desde
+      ~98 px); cada bot piensa en un tick distinto según su semilla, así dos
+      bots en espejo no se matan en el mismo frame (empates infinitos en fábrica)
 - [ ] Test manual: la dificultad se siente bien en PC y teléfono
 
 ## Detalles

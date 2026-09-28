@@ -47,6 +47,7 @@ func _run_tests() -> void:
 	await _test_bot_grabs_weapon_and_shoots()
 	await _test_bot_stops_at_ledge()
 	await _test_bot_jumps_small_gap()
+	await _test_bot_jumps_map_gaps()
 	await _test_bot_avoids_hazard()
 	await _test_grenade_awareness_by_difficulty()
 	await _test_same_seed_same_frames()
@@ -164,6 +165,55 @@ func _test_bot_jumps_small_gap() -> void:
 	await _frames(300)
 	_check(bot.position.x > 80.0 and absf(bot.position.y) < 1.0, "bot jumps across a narrow gap")
 	_check(dummy.health.current_health < dummy.health.max_health, "and reaches the opponent")
+	await _free(arena)
+
+
+## The gaps the themed maps use (TASK-009): 48 px acid pools the bot
+## reaches from a standstill at the edge, and islands up a step across lava.
+func _test_bot_jumps_map_gaps() -> void:
+	var arena := _make_arena([[-300, 40], [88, 500]])
+	_add_zone(arena, Rect2(40, -2, 48, 18), true)
+	var bot := _add_bot(arena, -60, HARD)
+	var dummy := _add_dummy(arena, 200)
+	await _frames(300)
+	_check(bot.position.x > 88.0 and absf(bot.position.y) < 1.0, "bot jumps a 48 px acid pool (x %.0f)" % bot.position.x)
+	_check(dummy.health.current_health < dummy.health.max_health, "and reaches the opponent across it")
+	await _free(arena)
+
+	# Floor ends at x 40; an island 32 px higher starts 48 px further, lava below.
+	arena = _make_arena([[-300, 40]])
+	var island := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	shape.shape = RectangleShape2D.new()
+	shape.shape.size = Vector2(112, 16)
+	island.add_child(shape)
+	island.position = Vector2(144, -24)
+	arena.add_child(island)
+	_add_zone(arena, Rect2(40, 20, 400, 30), true)
+	bot = _add_bot(arena, -60, HARD)
+	dummy = _add_dummy(arena, 160)
+	dummy.position.y = -32
+	await _frames(300)
+	_check(bot.position.x > 88.0 and bot.position.y < -16.0, "bot jumps up onto an island across lava (%s)" % bot.position)
+	_check(dummy.health.current_health < dummy.health.max_health, "and fights on the island")
+	await _free(arena)
+
+	# The lab pyramids: the next step down is 64 px lower, under fall damage.
+	arena = _make_arena([[40, 500]])
+	var ledge := StaticBody2D.new()
+	shape = CollisionShape2D.new()
+	shape.shape = RectangleShape2D.new()
+	shape.shape.size = Vector2(160, 16)
+	ledge.add_child(shape)
+	ledge.position = Vector2(-40, -56)
+	arena.add_child(ledge)
+	bot = _add_bot(arena, -60, HARD)
+	bot.position.y = -64
+	dummy = _add_dummy(arena, 200)
+	await _frames(300)
+	_check(absf(bot.position.y) < 1.0, "bot steps down a 64 px ledge (%s)" % bot.position)
+	_check(bot.health.current_health == bot.health.max_health, "without fall damage")
+	_check(dummy.health.current_health < dummy.health.max_health, "and reaches the opponent below")
 	await _free(arena)
 
 
