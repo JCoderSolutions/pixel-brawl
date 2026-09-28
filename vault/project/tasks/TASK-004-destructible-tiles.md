@@ -41,6 +41,9 @@ daño en área para las explosiones de TASK-006.
   círculo, así explosiones y golpes comparten el mismo camino.
 - Un cuerpo por tile es suficiente para mapas de pantalla única (~500 tiles).
   Si un mapa crece mucho, migrar a `TileMap` con una capa de vida por celda.
+- `test_arena` tiene paredes invisibles (`Bounds`) justo fuera de la vista
+  de 480 px, altas hasta y = -730, para que nadie salga de cámara
+  (`scripts/test_arena_bounds.gd`).
 - Visual: `ColorRect` dentro del nodo `Visual`, colores Endesga 32
   (`b86f50` caja, `733e39` dañada, `5a6988` indestructible).
 

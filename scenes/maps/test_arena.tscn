@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="1"]
 [ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
@@ -8,6 +8,9 @@ size = Vector2(480, 20)
 
 [sub_resource type="RectangleShape2D" id="platform_shape"]
 size = Vector2(120, 12)
+
+[sub_resource type="RectangleShape2D" id="bound_shape"]
+size = Vector2(32, 1000)
 
 [sub_resource type="RectangleShape2D" id="platform_shape2"]
 size = Vector2(120, 12)
@@ -57,6 +60,20 @@ color = Color(0.35, 0.36, 0.42, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2"]
 shape = SubResource("platform_shape2")
+
+[node name="Bounds" type="Node2D" parent="."]
+
+[node name="LeftWall" type="StaticBody2D" parent="Bounds"]
+position = Vector2(-16, -230)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/LeftWall"]
+shape = SubResource("bound_shape")
+
+[node name="RightWall" type="StaticBody2D" parent="Bounds"]
+position = Vector2(496, -230)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/RightWall"]
+shape = SubResource("bound_shape")
 
 [node name="DestructibleMap" type="Node2D" parent="."]
 position = Vector2(0, -6)
