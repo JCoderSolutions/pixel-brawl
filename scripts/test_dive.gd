@@ -1,9 +1,10 @@
 extends SceneTree
 
 ## Headless tests for the dive (Superfighters): crouching while running
-## throws the fighter forward, low and briefly untouchable; standing crouch
-## stays a crouch; a dive over a ledge lands without fall damage; the rig
-## shows it.
+## throws the fighter forward, low and briefly untouchable, and it lands into
+## a roll; crouching with a direction in the air dives once per jump;
+## standing crouch stays a crouch; a dive over a ledge lands without fall
+## damage; the rig shows it.
 ## Run: godot --headless --path . -s scripts/test_dive.gd
 
 const PLAYER_SCENE := preload("res://scenes/characters/player.tscn")
@@ -20,7 +21,9 @@ func _run_tests() -> void:
 	await _test_standing_crouch_does_not_dive()
 	await _test_dive_dodges_hits()
 	await _test_dive_skips_fall_damage()
-	print("OK: running dive, standing crouch, dodge window and no fall damage after a dive verified" if _ok else "FAILED")
+	await _test_dive_lands_into_roll()
+	await _test_air_dive_once_per_jump()
+	print("OK: running dive, roll on landing, air dive, standing crouch, dodge window and no fall damage after a dive verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -143,3 +146,51 @@ func _test_dive_skips_fall_damage() -> void:
 			_check(hurt, "walking off the same drop hurts (hp %d)" % player.health.current_health)
 		s[0].queue_free()
 		await process_frame
+
+
+func _test_dive_lands_into_roll() -> void:
+	var frames: Array[InputFrame] = []
+	_hold(frames, 10)
+	_hold(frames, 20, 1.0)
+	_hold(frames, 1, 1.0, InputFrame.CROUCH)
+	_hold(frames, 80)
+	var s := _stage(frames)
+	var player: CharacterBody2D = s[1]
+	var rig: FighterRig = player.get_node("Visual")
+	var rolled := false
+	var rolled_anim := false
+	var roll_speed := 0.0
+	for i in 110:
+		await physics_frame
+		if player.is_rolling():
+			rolled = true
+			roll_speed = maxf(roll_speed, absf(player.velocity.x))
+			await process_frame
+			rolled_anim = rolled_anim or rig.anim == FighterRig.Anim.ROLL
+	_check(rolled, "a dive that lands rolls on")
+	_check(roll_speed > player.run_speed, "the roll is faster than running (%.0f)" % roll_speed)
+	_check(rolled_anim, "the rig rolls")
+	_check(not player.is_rolling() and absf(player.velocity.x) < 1.0, "the roll ends and the fighter stops")
+	s[0].queue_free()
+	await process_frame
+
+
+func _test_air_dive_once_per_jump() -> void:
+	var frames: Array[InputFrame] = []
+	_hold(frames, 10)
+	_hold(frames, 6, 0.0, InputFrame.JUMP)
+	_hold(frames, 1, 1.0, InputFrame.CROUCH)
+	_hold(frames, 2, 1.0)
+	_hold(frames, 1, 1.0, InputFrame.CROUCH)
+	_hold(frames, 60)
+	var s := _stage(frames)
+	var player: CharacterBody2D = s[1]
+	await _frames(18)
+	_check(not player.is_on_floor(), "in the air")
+	_check(player.is_diving(), "crouch with a direction in the air dives")
+	_check(player.velocity.x >= player.dive_speed - 1.0, "forward at dive speed (%.0f)" % player.velocity.x)
+	var timer: float = player._dive_timer
+	await _frames(3)
+	_check(player._dive_timer < timer, "a second press in the same jump doesn't dive again")
+	s[0].queue_free()
+	await process_frame

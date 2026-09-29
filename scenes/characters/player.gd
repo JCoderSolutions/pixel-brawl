@@ -21,10 +21,23 @@ extends CharacterBody2D
 @export var block_parry_window := 0.25
 ## Push a blocked hit still gives the blocker (px/s, away from the hit).
 @export var block_push := 80.0
+## Share of a blocked hit's damage that still gets through the guard.
+@export_range(0.0, 1.0) var block_chip := 0.25
+## Guard energy (0-1, Superfighters' energy bar) spent per second held...
+@export var block_drain := 0.12
+## ...and per point of damage stopped.
+@export var block_hit_cost := 0.03
+## Guard energy recovered per second while not blocking.
+@export var block_regen := 0.35
+## Hitstun when a hit empties the guard; no blocking again until the energy
+## is back to `block_recover`.
+@export var guard_break_stun := 0.8
+@export_range(0.0, 1.0) var block_recover := 0.35
 
 @export_group("Dive")
-## Crouching while running this fast (share of run_speed) dives forward.
-@export var dive_min_speed := 0.8
+## Crouching while running this fast (share of run_speed) dives forward; in
+## the air, crouch with a direction dives once per jump.
+@export var dive_min_speed := 0.35
 @export var dive_speed := 250.0
 @export var dive_lift := -150.0
 ## Seconds before a dive can end (it lasts until the fighter lands).
@@ -32,6 +45,11 @@ extends CharacterBody2D
 ## Seconds a dive can't be hit, from its start.
 @export var dive_dodge_time := 0.3
 @export var dive_cooldown := 0.4
+## A dive that lands turns into a roll along the floor: low and fast.
+@export var roll_time := 0.3
+@export var roll_speed := 210.0
+## Seconds of the roll that can't be hit.
+@export var roll_dodge_time := 0.15
 ## Only the controlled player reads input; others (dummies) don't.
 @export var is_controlled := true
 ## Team from the match setup (0 = none). Bots leave teammates alone.
@@ -63,6 +81,12 @@ var _blocking := false
 var _block_time := 0.0
 var _dive_timer := 0.0
 var _dive_cooldown_timer := 0.0
+var _air_dive_used := false
+var _rolling := false
+var _roll_timer := 0.0
+var _roll_dir := 1.0
+var _guard := 1.0
+var _guard_broken := false
 ## True from a jump until its rise ends or is cut; knockback launches never
 ## set it, so letting go of jump only shortens real jumps.
 var _jump_rising := false
@@ -119,6 +143,7 @@ func _physics_process(delta: float) -> void:
 	if _ride(input_dir):
 		return
 	_update_dive(delta, input_dir, just_pressed, can_act)
+	_update_roll(delta)
 	_update_block(delta, frame)
 	if _blocking:
 		# Planted behind the guard: no walking, no attacks.
@@ -139,9 +164,9 @@ func _physics_process(delta: float) -> void:
 
 	_set_crouching(want_crouch)
 	_apply_gravity(delta, want_crouch)
-	if _hitstun_timer == 0.0 and not _diving:
+	if _hitstun_timer == 0.0 and not _diving and not _rolling:
 		_apply_horizontal(input_dir, delta)
-	if not _diving:
+	if not _diving and not _rolling:
 		_perform_jump(input_dir)
 	_cut_jump(frame.is_held(InputFrame.JUMP))
 
@@ -180,6 +205,7 @@ func is_in_hitstun() -> bool:
 func start_rocket_ride(rocket: Node) -> void:
 	_riding = rocket
 	_diving = false
+	_rolling = false
 	_blocking = false
 	_attack_timer = 0.0
 	_hitbox.deactivate()
@@ -221,11 +247,35 @@ func is_blocking() -> bool:
 
 ## Hurtbox asks before a hit lands: a guard stops melee (fists, blades,
 ## thrown weapons) coming from the front and pushes the blocker back a bit.
-func guard(kind: StringName, from: Vector2) -> bool:
+## Some damage still gets through (chip) and each hit spends guard energy;
+## the hit that empties it breaks the guard and stuns the blocker.
+func guard(kind: StringName, from: Vector2, damage := 0, source: Node = null) -> bool:
 	if not _blocking or kind != &"melee" or not _in_front(from):
 		return false
 	velocity.x = (-1.0 if _facing_right else 1.0) * block_push
+	_guard = maxf(_guard - damage * block_hit_cost, 0.0)
+	var chip := ceili(damage * block_chip)
+	if chip > 0:
+		health.take_damage(chip, source)
+	if _guard == 0.0:
+		_break_guard()
 	return true
+
+
+## Guard energy, 0-1: the rig shows it while it isn't full.
+func guard_energy() -> float:
+	return _guard
+
+
+func is_guard_broken() -> bool:
+	return _guard_broken
+
+
+func _break_guard() -> void:
+	_blocking = false
+	_guard_broken = true
+	_hitstun_timer = maxf(_hitstun_timer, guard_break_stun)
+	velocity.x *= 2.0
 
 
 ## A bullet from the front meets a fresh block with a metal blade: it goes
@@ -242,18 +292,32 @@ func _in_front(from: Vector2) -> bool:
 
 
 func _update_block(delta: float, frame: InputFrame) -> void:
+	if _guard_broken and _guard >= block_recover:
+		_guard_broken = false
 	var want := frame.is_held(InputFrame.BLOCK) and is_on_floor() and not _diving \
-			and not is_attacking() and _hitstun_timer == 0.0 and not health.is_dead()
+			and not _rolling and not _guard_broken and not is_attacking() \
+			and _hitstun_timer == 0.0 and not health.is_dead()
 	if want and not _blocking:
 		_block_time = 0.0
 	elif want:
 		_block_time += delta
 	_blocking = want
+	if _blocking:
+		_guard = maxf(_guard - block_drain * delta, 0.0)
+		if _guard == 0.0:
+			_break_guard()
+	else:
+		_guard = minf(_guard + block_regen * delta, 1.0)
 
 
 ## Mid-dive: low, fast and (at first) untouchable. FallDamage skips it.
 func is_diving() -> bool:
 	return _diving
+
+
+## Rolling along the floor after a dive lands.
+func is_rolling() -> bool:
+	return _rolling
 
 
 func is_attacking() -> bool:
@@ -354,31 +418,67 @@ func _cut_jump(jump_held: bool) -> void:
 
 
 func _set_crouching(pressed: bool) -> void:
-	var want_crouch := (pressed and is_on_floor()) or _diving
+	var want_crouch := (pressed and is_on_floor()) or _diving or _rolling
 	if want_crouch == _is_crouching:
 		return
 	_is_crouching = want_crouch
 	_set_body_height(crouch_height if _is_crouching else _stand_height)
 
 
-## Superfighters dive: crouch while running to throw yourself forward. It
-## keeps its momentum (no steering, no jumping) until it lands.
+## Superfighters dive: crouch while running to throw yourself forward (or
+## crouch with a direction in the air, once per jump). It keeps its momentum
+## (no steering, no jumping) until it lands, then rolls on along the floor.
 func _update_dive(delta: float, input_dir: float, just_pressed: int, can_act: bool) -> void:
 	_dive_cooldown_timer = maxf(_dive_cooldown_timer - delta, 0.0)
+	if is_on_floor() and not _diving:
+		_air_dive_used = false
 	if _diving:
 		_dive_timer = maxf(_dive_timer - delta, 0.0)
 		if _dive_timer == 0.0 and is_on_floor():
 			_diving = false
 			_dive_cooldown_timer = dive_cooldown
+			_start_roll(signf(velocity.x) if velocity.x != 0.0 else _roll_dir)
 		return
-	var running := absf(velocity.x) >= run_speed * dive_min_speed and input_dir != 0.0
-	if can_act and just_pressed & InputFrame.CROUCH and running and is_on_floor() \
-			and _dive_cooldown_timer == 0.0 and not is_attacking():
-		_diving = true
-		_dive_timer = dive_time
-		velocity = Vector2(signf(velocity.x) * dive_speed, dive_lift)
-		_invulnerable_timer = maxf(_invulnerable_timer, dive_dodge_time)
-		$Hurtbox.set_deferred("monitorable", false)
+	if not can_act or not just_pressed & InputFrame.CROUCH or input_dir == 0.0 \
+			or _dive_cooldown_timer > 0.0 or is_attacking() or _rolling:
+		return
+	if is_on_floor():
+		var running := absf(velocity.x) >= run_speed * dive_min_speed \
+				and signf(velocity.x) == signf(input_dir)
+		if running:
+			_start_dive(signf(input_dir), dive_lift)
+	elif not _air_dive_used:
+		_air_dive_used = true
+		_start_dive(signf(input_dir), minf(velocity.y, 0.0))
+
+
+func _start_dive(dir: float, lift: float) -> void:
+	_diving = true
+	_dive_timer = dive_time
+	_roll_dir = dir
+	velocity = Vector2(dir * dive_speed, lift)
+	_flip(dir > 0.0)
+	_invulnerable_timer = maxf(_invulnerable_timer, dive_dodge_time)
+	$Hurtbox.set_deferred("monitorable", false)
+
+
+func _start_roll(dir: float) -> void:
+	_rolling = true
+	_roll_timer = roll_time
+	_roll_dir = dir
+	_invulnerable_timer = maxf(_invulnerable_timer, roll_dodge_time)
+	$Hurtbox.set_deferred("monitorable", false)
+
+
+## The roll keeps its speed on the floor; rolling off a ledge just falls.
+func _update_roll(delta: float) -> void:
+	if not _rolling:
+		return
+	_roll_timer = maxf(_roll_timer - delta, 0.0)
+	if _roll_timer == 0.0 or not is_on_floor() or health.is_dead() or _hitstun_timer > 0.0:
+		_rolling = false
+		return
+	velocity.x = _roll_dir * roll_speed
 
 
 ## Origin sits at the feet, so shapes grow upward from y = 0 and the body
