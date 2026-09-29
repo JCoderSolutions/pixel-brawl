@@ -25,6 +25,12 @@ selector de mapa en el menú.
 - [x] `MapCatalog` (`scenes/maps/map_catalog.gd`) lista los mapas jugables
 - [x] Menú: opción de mapa (aleatorio o uno fijo; se recuerda al volver)
 - [x] Test headless `scripts/test_maps.gd`
+- [x] Fábrica y Fundición cargan sin errores: tenían ids repetidos en sus
+      `ext_resource` (restos de un merge) y el pool de armas recibía una
+      trampa en vez de la bazuca ("Attempted to assign an object into a
+      TypedArray"). Se sacaron los duplicados
+- [x] Barriles explosivos (2-3 por mapa) y cajas de
+      suministro cada 15 s en los 4 mapas grandes (ver TASK-020 trampas)
 - [ ] Test manual: jugar cada mapa en PC y teléfono (PC: Jose confirmó que el
       mapa se ve y funciona bien, 2026-09-28; falta teléfono)
 - [x] Todas las armas (PR #21) y los power-ups en los spawners de los mapas
