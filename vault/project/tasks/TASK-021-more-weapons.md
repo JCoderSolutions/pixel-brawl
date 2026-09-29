@@ -41,6 +41,15 @@ arma es un `.tres` en `scripts/weapons/data/`.
       `player.guard()`); las balas pasan. Con un arma de metal (katana,
       `WeaponData.metal`) un bloqueo de menos de 0.25 s devuelve la bala al
       que disparó (`Projectile._deflect`). Pose `BLOCK`. Test `scripts/test_block.gd`
+- [x] Montarse en el cohete (Superfighters, pedido de Jose 2026-09-29): si
+      el cohete de la bazuca le pega a un luchador (no al que disparó), lo
+      engancha y se lo lleva; el jinete lo dirige con izquierda/derecha
+      (derecha = horario, 3 rad/s, misma velocidad). Al tocar pared, suelo u
+      otro luchador explota: el jinete muere y la explosión daña a los
+      cercanos; tras 3 s sin chocar explota solo. Montado, el cohete ya puede
+      volver contra quien lo disparó. Los bots montados lo apuntan a su rival
+      (las vueltas en U, por arriba). Pose `RIDE`. Test
+      `scripts/weapons/test_rocket_ride.gd`
 - [ ] Test manual del balance en PC y teléfono
 
 ## Detalles

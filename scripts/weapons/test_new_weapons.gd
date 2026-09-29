@@ -152,9 +152,10 @@ func _test_bazooka_hits_fighter() -> void:
 			node.exploded.connect(func(_e): exploded.append(node.fuse_left)))
 	shooter.weapons.try_use()
 	await _frames(30)
-	_check(exploded.size() == 1, "rocket explodes")
-	_check(not exploded.is_empty() and exploded[0] > BAZOOKA.fuse_time - 0.6, "rocket blows up on impact, not on the fuse")
-	_check(target.health.current_health <= 100 - roundi(BAZOOKA.damage * BAZOOKA.min_damage_ratio), "rocket blast hurts the target (got %d)" % target.health.current_health)
+	# Superfighters: a direct hit carries the target away on the rocket
+	# (the ride itself is covered by test_rocket_ride.gd).
+	_check(exploded.is_empty(), "a direct hit doesn't explode yet")
+	_check(target.is_riding(), "the target rides the rocket")
 	_check(shooter.health.current_health == 100, "shooter out of the blast is fine")
 	arena.queue_free()
 	await _frames(1)
