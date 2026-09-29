@@ -59,11 +59,25 @@ func _impact(hit: Dictionary) -> void:
 		# Tile body and hurtbox share one square, so the ray may report
 		# either; the tile's material decides through its hurtbox.
 		hurtbox = hit.collider.get_node("Hurtbox")
+	if hurtbox != null and hurtbox.try_deflect(global_position):
+		_deflect(hurtbox)
+		return
 	if hurtbox != null:
 		hurtbox.receive_hit(damage, knockback, shooter)
 	impacted.emit(hit.position, hit.collider)
 	set_physics_process(false)
 	queue_free()
+
+
+## Parried by a metal blade: fly back at the old shooter, now owned by the
+## one who blocked it (and never hitting them).
+func _deflect(by: Hurtbox) -> void:
+	velocity = -velocity
+	knockback.x = -knockback.x
+	rotation = velocity.angle()
+	shooter = by.owner
+	_exclude = [by.get_rid()]
+	_travelled = 0.0
 
 
 func _draw() -> void:

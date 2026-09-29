@@ -26,6 +26,13 @@ arma es un `.tres` en `scripts/weapons/data/`.
 - [x] Test headless `scripts/weapons/test_new_weapons.gd`
 - [x] Agregarlas al pool de cada mapa (`test_arena` y los 4 mapas temáticos
       sobrescriben `weapons`)
+- [x] Cubrirse (Superfighters, pedido de Jose 2026-09-29): el botón "fire"
+      (Disparar) pasa a ser Cubrirse (`InputFrame.BLOCK`); disparar es con
+      Golpear. Cubierto, el luchador se planta y los golpes y armas lanzadas
+      de frente no hacen daño (`Hurtbox.receive_hit` pregunta a
+      `player.guard()`); las balas pasan. Con un arma de metal (katana,
+      `WeaponData.metal`) un bloqueo de menos de 0.25 s devuelve la bala al
+      que disparó (`Projectile._deflect`). Pose `BLOCK`. Test `scripts/test_block.gd`
 - [ ] Test manual del balance en PC y teléfono
 
 ## Detalles

@@ -8,6 +8,7 @@ id = &"katana"
 display_name = "Katana"
 kind = 1
 damage = 28
+metal = true
 knockback = Vector2(260, -140)
 cooldown = 0.4
 max_ammo = -1
