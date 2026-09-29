@@ -262,9 +262,14 @@ func _siblings() -> Array:
 		return found
 	for node in world.get_children():
 		if node != body and node is CharacterBody2D and node.get("health") is HealthComponent \
-				and not node.health.is_dead():
+				and not node.health.is_dead() and not _teammate(node):
 			found.append(node)
 	return found
+
+
+func _teammate(node: Node) -> bool:
+	var team = body.get("team")
+	return team is int and team > 0 and node.get("team") == team
 
 
 ## Jump when the destination sits on a platform above us, within reach.

@@ -81,7 +81,7 @@ func _make_panel(id: int) -> Dictionary:
 	var header := HBoxContainer.new()
 	var name_label := Label.new()
 	name_label.text = "P%d" % (id + 1)
-	name_label.add_theme_color_override("font_color", manager.PLAYER_COLORS[id % manager.PLAYER_COLORS.size()])
+	name_label.add_theme_color_override("font_color", manager.player_color(id))
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var score := Label.new()
 	score.text = "0"
@@ -91,7 +91,7 @@ func _make_panel(id: int) -> Dictionary:
 	bar.show_percentage = false
 	bar.custom_minimum_size = Vector2(0, 6)
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = manager.PLAYER_COLORS[id % manager.PLAYER_COLORS.size()]
+	fill.bg_color = manager.player_color(id)
 	bar.add_theme_stylebox_override("fill", fill)
 	var weapon := Label.new()
 	weapon.add_theme_font_size_override("font_size", 8)
@@ -131,7 +131,7 @@ func _on_round_ended(winner_id: int) -> void:
 	if winner_id == manager.NO_WINNER:
 		_show_banner("EMPATE")
 	else:
-		_show_banner("P%d GANA LA RONDA" % (winner_id + 1))
+		_show_banner("%s GANA LA RONDA" % manager.side_label(winner_id))
 
 
 ## The winner screen takes over when the match ends.

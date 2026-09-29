@@ -43,10 +43,10 @@ func back_to_menu() -> void:
 
 
 func _on_match_ended(winner_id: int) -> void:
-	_title.text = "¡P%d GANA!" % (winner_id + 1)
-	var color: Color = manager.PLAYER_COLORS[winner_id % manager.PLAYER_COLORS.size()]
-	_title.add_theme_color_override("font_color", color)
-	_winner_rig.color = color
+	_title.text = "¡%s GANA!" % manager.side_label(winner_id)
+	_title.add_theme_color_override("font_color", manager.side_color(winner_id))
+	_winner_rig.look = manager.look_of(winner_id)
+	_winner_rig.color = manager.player_color(winner_id)
 	_winner_rig.anim = FighterRig.Anim.VICTORY
 	_winner_rig.anim_time = 0.0
 	show()
