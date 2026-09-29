@@ -34,6 +34,12 @@ extends CharacterBody2D
 @export var guard_break_stun := 0.8
 @export_range(0.0, 1.0) var block_recover := 0.35
 
+@export_group("Aim")
+## Holding block with a gun, grenade or rocket aims instead (Superfighters):
+## the fighter plants, jump/crouch turn the aim up/down at this speed
+## (rad/s) and left/right picks the side.
+@export var aim_speed := 2.5
+
 @export_group("Sprint")
 ## Double-tap a direction (within this many seconds) to sprint while it's held.
 @export var sprint_tap_window := 0.25
@@ -156,6 +162,7 @@ var _guard_broken := false
 ## set it, so letting go of jump only shortens real jumps.
 var _jump_rising := false
 var _sprinting := false
+var _aiming := false
 ## Direction and time of the last move press, for the sprint double tap.
 var _last_tap_dir := 0.0
 var _since_tap := INF
@@ -237,6 +244,13 @@ func _physics_process(delta: float) -> void:
 		want_crouch = false
 	_update_dive(delta, input_dir, just_pressed, can_act)
 	_update_roll(delta)
+	_update_aim(delta, frame)
+	if _aiming:
+		# Planted while aiming: jump and crouch turn the aim instead.
+		input_dir = 0.0
+		want_crouch = false
+		just_pressed &= ~(InputFrame.JUMP | InputFrame.CROUCH | InputFrame.PICKUP)
+		frame = InputFrame.create(0.0, frame.buttons & ~(InputFrame.JUMP | InputFrame.CROUCH))
 	_update_block(delta, frame)
 	if _blocking:
 		# Planted behind the guard: no walking, no attacks.
@@ -396,7 +410,7 @@ func _update_block(delta: float, frame: InputFrame) -> void:
 	if _guard_broken and _guard >= block_recover:
 		_guard_broken = false
 	var want := frame.is_held(InputFrame.BLOCK) and is_on_floor() and not _diving \
-			and not _rolling and not _guard_broken and not is_attacking() \
+			and not _rolling and not _guard_broken and not _aiming and not is_attacking() \
 			and _hitstun_timer == 0.0 and not health.is_dead()
 	if want and not _blocking:
 		_block_time = 0.0
@@ -771,6 +785,36 @@ func _update_roll(delta: float) -> void:
 		_rolling = false
 		return
 	velocity.x = _roll_dir * roll_speed
+
+
+func is_aiming() -> bool:
+	return _aiming
+
+
+## Manual aim, radians off the facing side (negative = up); the rig reads it.
+func aim_angle() -> float:
+	return weapons.aim_angle
+
+
+func _can_aim() -> bool:
+	return weapons.has_weapon() and (weapons.weapon.is_ranged() or weapons.weapon is GrenadeData)
+
+
+func _update_aim(delta: float, frame: InputFrame) -> void:
+	var want := frame.is_held(InputFrame.BLOCK) and _can_aim() and is_on_floor() \
+			and not _diving and not _rolling and not is_grabbing() and not health.is_dead()
+	if want:
+		_aiming = true
+		var turn := (1.0 if frame.is_held(InputFrame.CROUCH) else 0.0) \
+				- (1.0 if frame.is_held(InputFrame.JUMP) else 0.0)
+		weapons.aim_angle += turn * aim_speed * delta
+		var dir := signf(frame.move_x())
+		if dir != 0.0 and (dir > 0.0) != _facing_right:
+			_flip(dir > 0.0)
+	elif _aiming:
+		_aiming = false
+		weapons.aim_angle = 0.0
+	weapons.aiming = _aiming
 
 
 func is_sprinting() -> bool:

@@ -85,15 +85,23 @@ func _test_block_plants_and_poses() -> void:
 	var stage := _stage()
 	var player := _fighter(stage, 0, _hold(40, 1.0, InputFrame.BLOCK))
 	await _frames(20)
-	player.weapons.equip(PISTOL)
-	var ammo: int = player.weapons.ammo
 	var x := player.position.x
 	await _frames(20)
 	_check(player.is_blocking(), "holding the block button blocks")
 	_check(absf(player.position.x - x) < 2.0, "a blocking fighter stands still (moved %.1f)" % (player.position.x - x))
-	_check(player.weapons.ammo == ammo, "the block button doesn't shoot any more")
 	await process_frame
 	_check(player.get_node("Visual").anim == FighterRig.Anim.BLOCK, "the rig raises its guard")
+	stage.queue_free()
+	await process_frame
+	# With a gun the same button aims instead (test_aim.gd), and never shoots.
+	stage = _stage()
+	player = _fighter(stage, 0, _hold(40, 1.0, InputFrame.BLOCK))
+	await _frames(20)
+	player.weapons.equip(PISTOL)
+	var ammo: int = player.weapons.ammo
+	await _frames(20)
+	_check(not player.is_blocking() and player.is_aiming(), "with a gun the block button aims")
+	_check(player.weapons.ammo == ammo, "the block button doesn't shoot")
 	stage.queue_free()
 	await process_frame
 

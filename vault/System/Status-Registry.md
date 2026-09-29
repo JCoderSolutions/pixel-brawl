@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-29"
+last_updated_notes: "TASK-005 apuntar a mano en 360° con Cubrirse + Saltar/Agacharse"
 last_updated_notes: "TASK-002 sprint con doble toque, cornisas y rodada de recuperación"
 last_updated_notes: "TASK-003 combo de 3 golpes con uppercut, patadas y agarrar/lanzar (Superfighters)"
 last_updated_notes: "Feedback de Jose: rodada al aterrizar la zambullida, cubrirse con energía y daño que pasa, partidas con bots terminan rápido; Pages activado"
