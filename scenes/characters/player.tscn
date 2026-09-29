@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scenes/characters/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/hazards/fall_damage.gd" id="7"]
 [ext_resource type="Script" path="res://scripts/powerups/power_up_receiver.gd" id="8"]
 [ext_resource type="Script" path="res://scenes/characters/fighter_rig.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/hazards/burning.gd" id="10"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_stand"]
 resource_local_to_scene = true
@@ -75,3 +76,8 @@ script = ExtResource("7")
 [node name="PowerUpReceiver" type="Node2D" parent="."]
 position = Vector2(0, -15)
 script = ExtResource("8")
+
+[node name="Burning" type="Node2D" parent="."]
+z_index = 1
+position = Vector2(0, -15)
+script = ExtResource("10")

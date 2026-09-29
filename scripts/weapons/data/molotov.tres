@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="GrenadeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/grenade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+fuse_time = 3.0
+throw_velocity = Vector2(240, -200)
+bounce = 0.0
+explode_on_contact = true
+gravity_scale = 1.0
+explosion_radius = 24.0
+min_damage_ratio = 0.5
+explosion_knockback = 60.0
+explosion_lift = 40.0
+block_damage = 0
+fire_width = 64.0
+fire_time = 5.0
+fire_damage_per_second = 20.0
+ignite_time = 3.0
+id = &"molotov"
+display_name = "Molotov"
+kind = 0
+damage = 10
+knockback = Vector2(0, 0)
+cooldown = 0.6
+max_ammo = 2
+automatic = false
+color = Color(0.353, 0.557, 0.286, 1)
+muzzle_offset = 8.0

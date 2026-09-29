@@ -52,6 +52,11 @@ static var art := {
 		[PackedVector2Array([Vector2(5, -2), Vector2(7, -3), Vector2(9, -2), Vector2(10, 0), Vector2(9, 2), Vector2(7, 3), Vector2(5, 2), Vector2(4, 0)]), null],
 		[Rect2(6, -5, 2, 2), LIGHT_STEEL],
 	],
+	&"molotov": [
+		[PackedVector2Array([Vector2(4, -1), Vector2(6, -3), Vector2(10, -3), Vector2(10, 3), Vector2(6, 3), Vector2(4, 1)]), null],
+		[Rect2(1, -1, 3, 2), WOOD],
+		[Rect2(0, -2, 1, 1), GOLD],
+	],
 	&"katana": [
 		[Rect2(4, -1, 4, 2), DARK],
 		[PackedVector2Array([Vector2(9, -1), Vector2(20, -1), Vector2(22, 0.5), Vector2(9, 1)]), null],

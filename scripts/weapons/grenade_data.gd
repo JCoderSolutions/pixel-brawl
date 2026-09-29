@@ -26,3 +26,19 @@ extends WeaponData
 @export var explosion_lift := 120.0
 ## Damage applied to each map block the blast touches (blocks have 30 hp).
 @export var block_damage := 30
+
+@export_group("Fire")
+## Width (px) of the burning puddle left on the floor below the blast
+## (molotov). 0 = no fire.
+@export var fire_width := 0.0
+## Seconds the puddle burns.
+@export var fire_time := 5.0
+@export var fire_damage_per_second := 20.0
+## Seconds fighters caught in the blast or the puddle stay on fire.
+@export var ignite_time := 3.0
+
+
+## A launched rocket (straight, blows up on contact): the tube stays in hand
+## when empty and a fighter it hits rides it.
+func is_rocket() -> bool:
+	return explode_on_contact and gravity_scale <= 0.0

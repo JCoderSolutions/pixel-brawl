@@ -87,7 +87,7 @@ func is_empty() -> bool:
 ## the ammo itself, so the last one leaves the hand empty.
 static func keeps_when_empty(data: WeaponData) -> bool:
 	if data is GrenadeData:
-		return data.explode_on_contact
+		return data.is_rocket()
 	return data.is_ranged()
 
 

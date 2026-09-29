@@ -22,6 +22,8 @@ var weapon_greed := 1.0
 var aim_tolerance := 12.0
 ## Chance that an empty-handed strike at fist range is a grab instead of a punch.
 var grab_chance := 0.15
+## Dives and rolls to put out flames when on fire.
+var puts_out_fire := true
 
 
 static func create(level: Difficulty) -> BotProfile:
@@ -35,6 +37,7 @@ static func create(level: Difficulty) -> BotProfile:
 			profile.weapon_greed = 0.5
 			profile.aim_tolerance = 20.0
 			profile.grab_chance = 0.0
+			profile.puts_out_fire = false
 		Difficulty.HARD:
 			profile.think_interval = 4
 			profile.aggression = 1.0

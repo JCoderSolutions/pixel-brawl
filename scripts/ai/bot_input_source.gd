@@ -45,6 +45,9 @@ const GRENADE_MAX_RANGE := 150.0
 const SHOOT_KEEP_DISTANCE := 90.0
 ## How close a bot gets before throwing an empty gun.
 const THROW_DISTANCE := 60.0
+## A dive plus the roll after it covers about this much floor (px): a burning
+## bot only dives to put the flames out where that much ground is safe.
+const FIRE_ROLL_REACH := 80.0
 ## Buttons the player reacts to on the press edge; the bot releases them for
 ## a tick between presses.
 const TAP_BUTTONS := InputFrame.JUMP | InputFrame.ATTACK | InputFrame.PICKUP
@@ -120,6 +123,11 @@ func _decide() -> InputFrame:
 			buttons |= _pending
 			_pending = 0
 
+	var on_fire := profile.puts_out_fire and _burning()
+	if on_fire and move == 0.0 and body.is_on_floor():
+		# Needs a run-up to dive: run where it faces.
+		move = float(body.weapons.facing)
+
 	if body.has_method("is_hanging") and body.is_hanging():
 		# Caught a ledge on the way: climb it.
 		buttons |= InputFrame.JUMP if not _last_buttons & InputFrame.JUMP else 0
@@ -135,6 +143,11 @@ func _decide() -> InputFrame:
 			buttons |= InputFrame.JUMP
 		elif _should_climb():
 			buttons |= InputFrame.JUMP
+		if on_fire and move != 0.0 and _safe_ground(signf(move) * FIRE_ROLL_REACH) \
+				and absf(body.velocity.x) >= body.run_speed * body.dive_min_speed \
+				and not _last_buttons & InputFrame.CROUCH:
+			# Dive and roll to smother the flames (Superfighters).
+			buttons |= InputFrame.CROUCH
 
 	# A tap only registers on its press edge: release before pressing again.
 	# Automatic weapons are the exception: they fire while FIRE stays held.
@@ -148,6 +161,11 @@ func _decide() -> InputFrame:
 	if _last_buttons & InputFrame.JUMP and not body.is_on_floor() and body.velocity.y < 0.0:
 		buttons |= InputFrame.JUMP
 	return InputFrame.create(move, buttons)
+
+
+func _burning() -> bool:
+	var burning := Burning.of(body)
+	return burning != null and burning.is_burning()
 
 
 ## Picks what to do next; runs every `think_interval` ticks.
