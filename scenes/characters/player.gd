@@ -135,10 +135,10 @@ func _sample_input() -> InputFrame:
 
 ## Attack (or the fire button) uses the weapon in hand. Automatic weapons
 ## fire while it is held; the rest need a fresh press per shot. Pickup grabs
-## the nearest weapon, or drops the current one when nothing is in reach.
+## the nearest weapon, or throws the current one when nothing is in reach.
 func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
 	if just_pressed & InputFrame.PICKUP and not weapons.try_pick_up():
-		weapons.drop()
+		weapons.throw_weapon()
 	if not weapons.has_weapon():
 		return
 	var trigger := frame.buttons if weapons.weapon.automatic else just_pressed

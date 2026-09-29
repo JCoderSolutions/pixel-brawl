@@ -43,6 +43,8 @@ const GRENADE_THREAT_RADIUS := 64.0
 const GRENADE_MIN_RANGE := 50.0
 const GRENADE_MAX_RANGE := 150.0
 const SHOOT_KEEP_DISTANCE := 90.0
+## How close a bot gets before throwing an empty gun.
+const THROW_DISTANCE := 60.0
 ## Buttons the player reacts to on the press edge; the bot releases them for
 ## a tick between presses.
 const TAP_BUTTONS := InputFrame.JUMP | InputFrame.ATTACK | InputFrame.FIRE | InputFrame.PICKUP
@@ -104,7 +106,7 @@ func _decide() -> InputFrame:
 	elif _pending != 0:
 		# Strikes come out of the facing side: turn first, strike next tick.
 		var side := _side_of(_target)
-		if side != 0 and side != body.weapons.facing and _pending & (InputFrame.ATTACK | InputFrame.FIRE):
+		if side != 0 and side != body.weapons.facing and _pending & (InputFrame.ATTACK | InputFrame.FIRE | InputFrame.PICKUP):
 			move = side * 0.1
 		else:
 			buttons |= _pending
@@ -169,6 +171,11 @@ func _think() -> void:
 		_goal_x = _target.global_position.x - side * PUNCH_STANDOFF
 		if absf(dx) <= PUNCH_RANGE and dy <= MELEE_HEIGHT:
 			strike = InputFrame.ATTACK
+	elif weapons.is_empty():
+		# Out of ammo: close in and throw the gun (Superfighters).
+		_goal_x = _target.global_position.x - side * THROW_DISTANCE
+		if absf(dx) <= THROW_DISTANCE * 2.0 and dy <= MELEE_HEIGHT:
+			strike = InputFrame.PICKUP
 	elif weapon is GrenadeData:
 		_goal_x = _target.global_position.x - side * (GRENADE_MIN_RANGE + GRENADE_MAX_RANGE) * 0.5
 		if absf(dx) >= GRENADE_MIN_RANGE and absf(dx) <= GRENADE_MAX_RANGE and dy <= MELEE_HEIGHT * 2.0:
@@ -196,7 +203,7 @@ func _in_shot(target: Node2D) -> bool:
 
 
 func _holds_automatic() -> bool:
-	return body.weapons.has_weapon() and body.weapons.weapon.automatic
+	return body.weapons.has_weapon() and body.weapons.weapon.automatic and not body.weapons.is_empty()
 
 
 ## The nearest grenade about to blow within reach, if this bot cares.

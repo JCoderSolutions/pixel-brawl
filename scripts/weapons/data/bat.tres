@@ -8,6 +8,7 @@ id = &"bat"
 display_name = "Bate"
 kind = 1
 damage = 18
+throw_damage = 18
 knockback = Vector2(360, -220)
 cooldown = 0.55
 max_ammo = -1

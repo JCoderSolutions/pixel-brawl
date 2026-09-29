@@ -26,6 +26,14 @@ arma es un `.tres` en `scripts/weapons/data/`.
 - [x] Test headless `scripts/weapons/test_new_weapons.gd`
 - [x] Agregarlas al pool de cada mapa (`test_arena` y los 4 mapas temáticos
       sobrescriben `weapons`)
+- [x] Armas sin munición y lanzar armas (Superfighters, pedido de Jose
+      2026-09-29): las armas de fuego y la bazuca quedan vacías en la mano
+      (`WeaponHolder.is_empty()`); el gatillo solo hace "clic" (`dry_fire`) y
+      muestra "SIN BALAS". El botón Agarrar lanza el arma si no hay nada que
+      agarrar: vuela recta y hace `throw_damage` (katana 22, bate 18, resto 12)
+      al primero que toca, nunca a quien la lanzó. Las vacías lanzadas
+      desaparecen al caer; las cargadas quedan en el piso. Los bots lanzan sus
+      armas vacías. Test `scripts/weapons/test_throw.gd`
 - [ ] Test manual del balance en PC y teléfono
 
 ## Detalles
