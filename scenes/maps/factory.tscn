@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://scenes/maps/arena_match.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/maps/destructible_map.gd" id="2"]
@@ -15,18 +15,12 @@
 [ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="13"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="14"]
 [ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="15"]
+[ext_resource type="Resource" path="res://scripts/weapons/data/molotov.tres" id="16"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/spike_trap.tscn" id="19"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="20"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="21"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="22"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/assault_rifle.tres" id="w_rifle"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/sawed_off.tres" id="w_sawed_off"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/bat.tres" id="w_bat"]
-[ext_resource type="Resource" path="res://scripts/weapons/data/bazooka.tres" id="w_bazooka"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/spike_trap.tscn" id="15"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/flame_jet.tscn" id="16"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/falling_block.tscn" id="17"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/trap_switch.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://scenes/props/explosive_barrel.tscn" id="barrel"]
 
 [sub_resource type="RectangleShape2D" id="bound_shape"]
 size = Vector2(32, 1200)
@@ -134,6 +128,17 @@ position = Vector2(480, 304)
 targets = Array[NodePath]([NodePath("../CrusherLeft"), NodePath("../CrusherRight")])
 one_shot = true
 
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Barrel1" parent="Props" instance=ExtResource("barrel")]
+position = Vector2(256, 480)
+
+[node name="Barrel2" parent="Props" instance=ExtResource("barrel")]
+position = Vector2(704, 480)
+
+[node name="Barrel3" parent="Props" instance=ExtResource("barrel")]
+position = Vector2(512, 320)
+
 [node name="Spawns" type="Node2D" parent="."]
 
 [node name="P1" type="Marker2D" parent="Spawns"]
@@ -149,10 +154,10 @@ position = Vector2(152, 352)
 position = Vector2(808, 352)
 
 [node name="WeaponSpawner" parent="." instance=ExtResource("3")]
-weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15")])
-weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("w_rifle"), ExtResource("w_sawed_off"), ExtResource("w_bat"), ExtResource("w_bazooka")])
+weapons = Array[Resource("res://scripts/weapons/weapon_data.gd")]([ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15"), ExtResource("16")])
 spawn_interval = 5
 max_active = 4
+crate_interval = 15.0
 
 [node name="W1" type="Marker2D" parent="WeaponSpawner"]
 position = Vector2(448, 310)

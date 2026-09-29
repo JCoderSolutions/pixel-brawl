@@ -47,6 +47,19 @@ aparecen al azar en el mapa y hacen daño por el mismo pipeline de TASK-003.
 - En la escena de prueba las acciones `fire` (K/X) y `pickup` (L/E) se crean
   en runtime para no tocar `project.godot` mientras otras tareas lo editan.
 
+## Apuntar a mano (2026-09-29)
+
+- [x] Punto 3 del análisis de dinamismo: con pistola, rifle, escopeta,
+      granada o bazuca en la mano, mantener Cubrirse apunta en vez de cubrir
+      (Superfighters). El luchador se planta: Saltar gira la mira hacia
+      arriba, Agacharse hacia abajo (2.5 rad/s, hasta ±81°) e
+      izquierda/derecha eligen el lado. Balas, granadas y cohetes salen por
+      la mira (`WeaponHolder.aim_angle`, `aim_direction()`), el arma se dibuja
+      girada y aparece una mira láser punteada. Al soltar vuelve a 0. Con
+      armas cuerpo a cuerpo el botón sigue cubriendo. Test
+      `scripts/weapons/test_aim.gd`
+- [ ] Los bots todavía no apuntan a mano: disparan en horizontal
+
 ## Evidencia
 
 - Commit: `feat(weapons): add data-driven weapons, projectiles, pickup and random spawn`

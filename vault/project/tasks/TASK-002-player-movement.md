@@ -35,5 +35,13 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
       0.15 s sin recibir golpes) y en el aire agacharse con dirección se
       zambulle una vez por salto. Pose `ROLL` (el cuerpo gira). Test
       `scripts/test_dive.gd`
+- [x] Movilidad de Superfighters (punto 2 del análisis de dinamismo, Jose
+      2026-09-29): doble toque de dirección (en 0.25 s) corre a sprint (x1.45)
+      mientras se mantiene; caer empujando contra una pared cuyo borde queda a
+      la altura de las manos agarra la cornisa (pose `HANG`): Saltar trepa
+      (90 % del salto), Agacharse o empujar al otro lado suelta; agacharse
+      hasta 0.25 s antes de aterrizar hace una rodada de recuperación sin daño
+      por caída (`FallDamage` ignora rodadas). Los bots trepan si quedan
+      colgados. Test `scripts/test_mobility.gd`
 - [ ] Test manual de la zambullida en PC y teléfono
 - [ ] Rápido test manual: moverse con WASD (P1) se siente responsivo (las flechas son de P2 desde TASK-008)

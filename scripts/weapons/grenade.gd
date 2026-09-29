@@ -8,6 +8,8 @@ extends RigidBody2D
 ## their shooter and blow up on the first thing they touch, except that a
 ## fighter hit head-on gets carried away riding it (Superfighters): the rider
 ## steers with left/right and dies in the blast when the ride ends.
+## A molotov (`fire_width`) shatters on contact, sets fighters in the blast on
+## fire and leaves a burning puddle on the floor below.
 
 signal exploded(explosion: Explosion)
 
@@ -16,6 +18,10 @@ const EXPLOSION_SCENE := preload("res://scenes/items/explosion.tscn")
 const RIDE_TIME := 3.0
 ## How fast a rider turns the rocket (radians per second at full stick).
 const STEER_RATE := 3.0
+## How far below the blast (px) a molotov looks for floor to spill onto.
+const SPILL_REACH := 160.0
+## Height of the burning puddle (px): tall enough to catch feet.
+const FIRE_HEIGHT := 10.0
 
 var data: GrenadeData
 var thrower: Node
@@ -68,7 +74,7 @@ func _physics_process(delta: float) -> void:
 			var steer: float = rider.rocket_steer()
 			_flight = _flight.rotated(steer * STEER_RATE * delta)
 			linear_velocity = _flight
-	elif data.explode_on_contact and linear_velocity.length() > _speed * 0.9:
+	elif data.is_rocket() and linear_velocity.length() > _speed * 0.9:
 		_flight = linear_velocity
 	queue_redraw()
 	if fuse_left <= 0.0:
@@ -88,6 +94,9 @@ func explode() -> Explosion:
 	get_parent().add_child(explosion)
 	explosion.global_position = global_position
 	explosion.detonate(thrower)
+	if data.fire_width > 0.0:
+		_ignite_around()
+		_spill_fire()
 	exploded.emit(explosion)
 	queue_free()
 	return explosion
@@ -97,7 +106,8 @@ func explode() -> Explosion:
 func _on_contact(body: Node) -> void:
 	if _exploded:
 		return
-	if rider == null and body != thrower and body.has_method("start_rocket_ride") and not body.health.is_dead():
+	if data.is_rocket() and rider == null and body != thrower and body.has_method("start_rocket_ride") \
+			and not body.health.is_dead():
 		_mount.call_deferred(body)
 		return
 	if body == rider:
@@ -119,10 +129,51 @@ func _mount(body: Node) -> void:
 	body.start_rocket_ride(self)
 
 
+## Fighters caught in a molotov's blast catch fire.
+func _ignite_around() -> void:
+	var circle := CircleShape2D.new()
+	circle.radius = data.explosion_radius
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = circle
+	query.transform = Transform2D(0.0, global_position)
+	query.collision_mask = Burning.FIGHTER_MASK
+	for result in get_world_2d().direct_space_state.intersect_shape(query, 16):
+		var burning := Burning.of(result.collider)
+		if burning != null:
+			burning.ignite(data.ignite_time, thrower)
+
+
+## Leaves a burning puddle on the first floor below the blast, if any.
+func _spill_fire() -> Node:
+	var query := PhysicsRayQueryParameters2D.create(
+			global_position + Vector2(0, -2), global_position + Vector2(0, SPILL_REACH), 1)
+	query.exclude = [get_rid()]
+	var hit := get_world_2d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return null
+	var fire := HazardZone.new()
+	fire.kind = HazardZone.Kind.FIRE
+	fire.size = Vector2(data.fire_width, FIRE_HEIGHT)
+	fire.damage_per_second = data.fire_damage_per_second
+	fire.ignite_time = data.ignite_time
+	fire.lifetime = data.fire_time
+	fire.source = thrower
+	get_parent().add_child(fire)
+	fire.global_position = hit.position - Vector2(data.fire_width / 2.0, FIRE_HEIGHT)
+	return fire
+
+
 ## Placeholder look until sprites land: a green ball whose fuse light blinks
 ## faster in the last second; rockets are a body with a flame at the back.
 func _draw() -> void:
-	if data != null and data.explode_on_contact:
+	if data != null and data.fire_width > 0.0:
+		# A spinning bottle with a lit rag.
+		draw_set_transform(Vector2.ZERO, fuse_left * 12.0)
+		draw_rect(Rect2(-2.5, -2, 5, 5), data.color)
+		draw_rect(Rect2(-1, -4, 2, 2), Color("b86f50"))
+		draw_circle(Vector2(0, -5), 1.5 + fmod(fuse_left * 20.0, 1.0), Color("feae34"))
+		return
+	if data != null and data.is_rocket():
 		# Drawn along its flight, so a steered rocket points where it goes.
 		draw_set_transform(Vector2.ZERO, linear_velocity.angle() if linear_velocity.length() > 1.0 else 0.0)
 		draw_rect(Rect2(-4, -1.5, 8, 3), data.color)

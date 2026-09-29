@@ -39,6 +39,25 @@ rondas y sonido reaccionan sin saber que existen los peligros.
       objetivos
 - [x] Arena de prueba `scenes/hazards/hazards_test_arena.tscn`
 - [x] Test headless `scripts/hazards/test_hazards.gd`
+- [x] Fuego que se propaga (Superfighters, orden acordado con Jose
+      2026-09-29, punto 4): componente `Burning` (hijo de cada luchador).
+      Encendido pierde 8 de vida por segundo, contagia a quien lo toca (75 %
+      del tiempo que le queda) y se apaga solo, rodando o zambulléndose. Los
+      pozos de fuego y chorros de llamas prenden fuego por 3 s
+      (`HazardZone.ignite_time`), así las llamas te siguen al salir. Zonas
+      temporales con `HazardZone.lifetime` (charcos de molotov). Los bots en
+      Normal y Difícil se zambullen para apagarse. Test
+      `scripts/hazards/test_fire.gd`
+- [x] Barriles explosivos y cajas de suministro (punto 4): `BreakableProp`
+      (CharacterBody2D con Hurtbox + vida, se empuja con los golpes y aterriza
+      en tablones como un luchador). `ExplosiveBarrel` (25 de vida) explota
+      con r 56 y 50 de daño, rompe ladrillo como una granada, prende fuego a
+      los más cercanos, encadena otros barriles y la muerte es para quien lo
+      golpeó. `SupplyCrate` cae del cielo (el `WeaponSpawner` con
+      `crate_interval`), hace 20 de daño al que le cae encima y al romperla
+      suelta su arma. Barriles en los 4 mapas grandes (piso y tablones) y
+      cajas cada 15 s; cada ronda vuelven los barriles y se limpian las cajas
+      (`arena_match.reset_props`). Test `scripts/props/test_props.gd`
 - [ ] Test manual: abrir la arena de peligros y probar cada trampa
 
 ## Detalles

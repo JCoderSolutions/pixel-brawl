@@ -39,8 +39,10 @@ func _physics_process(_delta: float) -> void:
 	if _body == null:
 		return
 	var on_floor := _body.is_on_floor()
-	# A dive lands rolling (Superfighters): no fall damage.
-	var diving: bool = _body.has_method("is_diving") and _body.is_diving()
+	# A dive lands rolling, and so does a recovery roll (Superfighters): no
+	# fall damage.
+	var diving: bool = (_body.has_method("is_diving") and _body.is_diving()) \
+			or (_body.has_method("is_rolling") and _body.is_rolling())
 	if on_floor and not _was_on_floor and not diving:
 		_land(_fall_speed)
 	# Landing zeroes velocity, so remember the last airborne speed.

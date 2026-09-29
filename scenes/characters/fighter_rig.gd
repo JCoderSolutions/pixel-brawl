@@ -13,7 +13,7 @@ extends Control
 
 ## VICTORY is never picked from a fighter's state: screens set it.
 enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE, RIDE, BLOCK, ROLL,
-		UPPERCUT, KICK, AIR_KICK, GRAB, HELD }
+		UPPERCUT, KICK, AIR_KICK, GRAB, HELD, HANG }
 
 ## Seconds for one full turn of a roll.
 const ROLL_PERIOD := 0.3
@@ -66,6 +66,8 @@ var anim := Anim.IDLE
 ## Holding a weapon: the gun arm stays up while moving.
 var armed := false
 var anim_time := 0.0
+## Manual aim of the gun arm (radians, negative = up).
+var aim := 0.0
 ## Guard energy (0-1) from the fighter; the bar hides when it is full.
 var guard := 1.0
 
@@ -85,6 +87,7 @@ func _process(delta: float) -> void:
 		return
 	var state := read_state(fighter)
 	armed = state.armed
+	aim = state.get("aim", 0.0)
 	guard = state.get("guard", 1.0)
 	var next := choose_anim(state)
 	if next != anim:
@@ -102,7 +105,7 @@ func _draw() -> void:
 	if frame != null:
 		_draw_sprite(frame)
 	else:
-		for part in parts(pose(anim, anim_time, armed), color, flash, look, team_color):
+		for part in parts(pose(anim, anim_time, armed, aim), color, flash, look, team_color):
 			draw_colored_polygon(part.points, part.color)
 	_draw_guard_bar()
 
@@ -161,6 +164,9 @@ static func read_state(fighter: Node) -> Dictionary:
 		"rolling": fighter.has_method("is_rolling") and fighter.is_rolling(),
 		"grabbing": fighter.has_method("is_grabbing") and fighter.is_grabbing(),
 		"held": fighter.has_method("is_held") and fighter.is_held(),
+		"hanging": fighter.has_method("is_hanging") and fighter.is_hanging(),
+		"aiming": fighter.has_method("is_aiming") and fighter.is_aiming(),
+		"aim": fighter.aim_angle() if fighter.has_method("aim_angle") else 0.0,
 		"move": fighter.attack_move() if fighter.has_method("attack_move") else &"jab",
 		"guard": fighter.guard_energy() if fighter.has_method("guard_energy") else 1.0,
 		"riding": fighter.has_method("is_riding") and fighter.is_riding(),
@@ -174,6 +180,8 @@ static func choose_anim(state: Dictionary) -> Anim:
 		return Anim.RIDE
 	if state.get("held", false):
 		return Anim.HELD
+	if state.get("hanging", false):
+		return Anim.HANG
 	if state.hurt:
 		return Anim.HURT
 	if state.get("rolling", false):
@@ -184,6 +192,8 @@ static func choose_anim(state: Dictionary) -> Anim:
 		return Anim.BLOCK
 	if state.get("grabbing", false):
 		return Anim.GRAB
+	if state.get("aiming", false):
+		return Anim.AIM
 	if state.attacking:
 		match state.get("move", &"jab"):
 			&"uppercut":
@@ -204,7 +214,7 @@ static func choose_anim(state: Dictionary) -> Anim:
 
 ## Joint angles and offsets for `anim` at `t` seconds into it. `armed`
 ## keeps the front arm pointing the weapon forward on the move.
-static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
+static func pose(anim: Anim, t: float, armed := false, aim := 0.0) -> Dictionary:
 	var p := {"hip_y": -LEG_LENGTH, "hip_x": 0.0, "bob": 0.0, "lean": 0.0,
 			"leg_front": 0.08, "leg_back": -0.08, "knee_front": 0.0, "knee_back": 0.0,
 			"arm_front": -0.1, "arm_back": 0.15, "shoulder_spread": 0.0, "spin": 0.0}
@@ -313,6 +323,14 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 			p.arm_back = 2.8
 			p.leg_front = 0.2 + kick
 			p.leg_back = -0.2 - kick
+		Anim.HANG:
+			# Both hands up on the ledge, body against the wall, legs dangling.
+			var sway := 0.12 * sin(t * 4.0)
+			p.arm_front = -2.95
+			p.arm_back = -2.8
+			p.lean = -0.05
+			p.leg_front = 0.15 + sway
+			p.leg_back = -0.1 + sway
 		Anim.RIDE:
 			# Crouched on the rocket, arms out for balance.
 			var sway := 0.2 * sin(t * 12.0)
@@ -345,7 +363,7 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 			p.leg_front = 0.3
 			p.leg_back = -0.2
 	if armed and anim in [Anim.IDLE, Anim.AIM, Anim.RUN, Anim.JUMP, Anim.FALL]:
-		p.arm_front = -PI / 2.0
+		p.arm_front = -PI / 2.0 + aim
 	return p
 
 

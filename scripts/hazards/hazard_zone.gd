@@ -58,12 +58,21 @@ const GROUP := &"hazards"
 ## Periodic trap: seconds on, then `cycle_off` seconds off. 0 disables.
 @export var cycle_on := 0.0
 @export var cycle_off := 0.0
+## Fire zones set fighters inside on fire for this many seconds (Burning),
+## so the flames follow them out of the pit. 0 = no lingering burn.
+@export var ignite_time := 3.0
+## Seconds before the zone burns out and frees itself (molotov puddles).
+## 0 keeps it forever.
+@export var lifetime := 0.0
 
 ## body -> damage accumulated below 1 hp, so low rates still add up.
 var _victims := {}
 var _on_timer := 0.0
 var _cycle_timer := 0.0
 var _collider: CollisionShape2D
+var _age := 0.0
+## Who gets the kill (the molotov's thrower); the zone itself when null.
+var source: Node
 
 
 func _ready() -> void:
@@ -88,6 +97,13 @@ func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	_tick_timers(delta)
+	if lifetime > 0.0:
+		_age += delta
+		if kind == Kind.FIRE:
+			queue_redraw()
+		if _age >= lifetime:
+			queue_free()
+			return
 	if active:
 		for body in get_overlapping_bodies():
 			_hurt(body, delta)
@@ -109,6 +125,10 @@ func _hurt(body: Node2D, delta: float) -> void:
 	var health := health_of(body)
 	if health == null or health.is_dead():
 		return
+	if kind == Kind.FIRE and ignite_time > 0.0:
+		var burning := Burning.of(body)
+		if burning != null:
+			burning.ignite(ignite_time, self if source == null else source)
 	if not _victims.has(body):
 		_victims[body] = 0.0
 		if launch != Vector2.ZERO and "velocity" in body:
@@ -121,7 +141,7 @@ func _hurt(body: Node2D, delta: float) -> void:
 		amount = floori(pending)
 		_victims[body] = pending - amount
 	if amount > 0:
-		health.take_damage(amount, self)
+		health.take_damage(amount, self if source == null else source)
 		hurt.emit(body, amount)
 
 
@@ -154,6 +174,9 @@ func _draw() -> void:
 		# Dormant trap: only the vent shows.
 		draw_rect(Rect2(0, size.y - 3, size.x, 3), base.darkened(0.4))
 		return
+	if kind == Kind.FIRE and lifetime > 0.0:
+		_draw_spilled_fire(base, top)
+		return
 	draw_rect(Rect2(Vector2.ZERO, size), base)
 	match kind:
 		Kind.VOID:
@@ -170,3 +193,16 @@ func _draw() -> void:
 			while x < size.x - 2:
 				draw_rect(Rect2(x, 3 + fmod(x * 7.0, 5.0), 2, 2), top)
 				x += 7.0
+
+
+## Spilled fuel (molotov): a thin burning film with flames that die down.
+func _draw_spilled_fire(base: Color, top: Color) -> void:
+	var left := clampf(1.0 - _age / lifetime, 0.0, 1.0)
+	draw_rect(Rect2(0, size.y - 2, size.x, 2), base)
+	var x := 2.0
+	while x < size.x - 1:
+		var height := (5.0 + 6.0 * absf(sin(_age * 12.0 + x * 0.6))) * (0.4 + 0.6 * left)
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(x - 2, size.y), Vector2(x, size.y - height), Vector2(x + 2, size.y)]),
+			top if int(x) % 8 == 2 else Color("f77622"))
+		x += 4.0

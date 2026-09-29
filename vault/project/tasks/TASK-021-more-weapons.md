@@ -56,6 +56,15 @@ arma es un `.tres` en `scripts/weapons/data/`.
       volver contra quien lo disparó. Los bots montados lo apuntan a su rival
       (las vueltas en U, por arriba). Pose `RIDE`. Test
       `scripts/weapons/test_rocket_ride.gd`
+- [x] Molotov (punto 4 del orden acordado con Jose 2026-09-29): botella que
+      se rompe al tocar pared, piso o luchador, prende fuego a los que agarra
+      y deja un charco de fuego de 64 px por 5 s (20 de daño por segundo) en
+      el piso de abajo. 2 por recogida. `GrenadeData.fire_width`,
+      `fire_time`, `fire_damage_per_second`, `ignite_time`; solo los cohetes
+      (`is_rocket()`) se montan y quedan en la mano vacíos. En el pool de
+      todos los mapas. Test `scripts/hazards/test_fire.gd`
+- [x] Las balas le pegan a cualquier cuerpo con Hurtbox (barriles, cajas),
+      no solo a los bloques del mapa
 - [ ] Test manual del balance en PC y teléfono
 
 ## Detalles

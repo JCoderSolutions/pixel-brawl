@@ -31,12 +31,29 @@ const GRENADE_SCENE := preload("res://scenes/items/grenade.tscn")
 var facing := 1:
 	set(value):
 		facing = 1 if value >= 0 else -1
+		rotation = aim_angle * facing
 		queue_redraw()
 
 var weapon: WeaponData
 var ammo := -1
 ## Scales bullet and blade damage (strength power-up); 1 = normal.
 var damage_multiplier := 1.0
+## Manual aim (Superfighters): radians off the facing side, negative = up.
+## Guns, grenades and rockets leave along it and the weapon is drawn
+## turned to it.
+var aim_angle := 0.0:
+	set(value):
+		aim_angle = clampf(value, -MAX_AIM, MAX_AIM)
+		rotation = aim_angle * facing
+		queue_redraw()
+## Draws a laser sight along the aim while the owner is aiming.
+var aiming := false:
+	set(value):
+		aiming = value
+		queue_redraw()
+
+const MAX_AIM := PI * 0.45
+const SIGHT_LENGTH := 90.0
 
 var _cooldown := 0.0
 var _swing_timer := 0.0
@@ -70,7 +87,7 @@ func is_empty() -> bool:
 ## the ammo itself, so the last one leaves the hand empty.
 static func keeps_when_empty(data: WeaponData) -> bool:
 	if data is GrenadeData:
-		return data.explode_on_contact
+		return data.is_rocket()
 	return data.is_ranged()
 
 
@@ -157,9 +174,14 @@ func throw_weapon() -> WeaponPickup:
 	return pickup
 
 
+## Where the weapon points, in world space.
+func aim_direction() -> Vector2:
+	return Vector2(facing * cos(aim_angle), sin(aim_angle))
+
+
 func _fire(data: WeaponData) -> void:
-	var muzzle := global_position + Vector2(data.muzzle_offset * facing, 0.0)
-	var forward := Vector2(facing, 0.0)
+	var forward := aim_direction()
+	var muzzle := global_position + forward * data.muzzle_offset
 	var exclude := _own_hurtbox_rids()
 	var angles := data.spread_angles()
 	for angle in angles:
@@ -173,8 +195,9 @@ func _fire(data: WeaponData) -> void:
 func _throw(data: GrenadeData) -> void:
 	var grenade: Grenade = GRENADE_SCENE.instantiate()
 	_world().add_child(grenade)
-	var from := global_position + Vector2(data.muzzle_offset * facing, 0.0)
-	var launch := Vector2(data.throw_velocity.x * facing, data.throw_velocity.y)
+	var from := global_position + aim_direction() * data.muzzle_offset
+	var launch := data.throw_velocity.rotated(aim_angle)
+	launch.x *= facing
 	grenade.setup(data, from, launch, _wielder())
 	fired.emit(data, 1)
 
@@ -267,3 +290,10 @@ func _draw() -> void:
 	if weapon == null:
 		return
 	WeaponArt.draw(self, weapon, facing)
+	if aiming:
+		# Laser sight, dashed, in local space: the node is already rotated.
+		var step := 6.0
+		var from := weapon.muzzle_offset
+		while from < SIGHT_LENGTH:
+			draw_line(Vector2(from * facing, 0.0), Vector2(minf(from + step / 2.0, SIGHT_LENGTH) * facing, 0.0), Color(1, 0.2, 0.2, 0.7), 1.0)
+			from += step
