@@ -12,7 +12,8 @@ extends Control
 ## limb forward (towards +x, the facing side).
 
 ## VICTORY is never picked from a fighter's state: screens set it.
-enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE, RIDE, BLOCK, ROLL }
+enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE, RIDE, BLOCK, ROLL,
+		UPPERCUT, KICK, AIR_KICK, GRAB, HELD }
 
 ## Seconds for one full turn of a roll.
 const ROLL_PERIOD := 0.3
@@ -158,6 +159,9 @@ static func read_state(fighter: Node) -> Dictionary:
 		"hurt": fighter.has_method("is_in_hitstun") and fighter.is_in_hitstun(),
 		"diving": fighter.has_method("is_diving") and fighter.is_diving(),
 		"rolling": fighter.has_method("is_rolling") and fighter.is_rolling(),
+		"grabbing": fighter.has_method("is_grabbing") and fighter.is_grabbing(),
+		"held": fighter.has_method("is_held") and fighter.is_held(),
+		"move": fighter.attack_move() if fighter.has_method("attack_move") else &"jab",
 		"guard": fighter.guard_energy() if fighter.has_method("guard_energy") else 1.0,
 		"riding": fighter.has_method("is_riding") and fighter.is_riding(),
 		"blocking": fighter.has_method("is_blocking") and fighter.is_blocking(),
@@ -168,6 +172,8 @@ static func read_state(fighter: Node) -> Dictionary:
 static func choose_anim(state: Dictionary) -> Anim:
 	if state.get("riding", false):
 		return Anim.RIDE
+	if state.get("held", false):
+		return Anim.HELD
 	if state.hurt:
 		return Anim.HURT
 	if state.get("rolling", false):
@@ -176,7 +182,16 @@ static func choose_anim(state: Dictionary) -> Anim:
 		return Anim.DIVE
 	if state.get("blocking", false):
 		return Anim.BLOCK
+	if state.get("grabbing", false):
+		return Anim.GRAB
 	if state.attacking:
+		match state.get("move", &"jab"):
+			&"uppercut":
+				return Anim.UPPERCUT
+			&"kick":
+				return Anim.KICK
+			&"air_kick":
+				return Anim.AIR_KICK
 		return Anim.ATTACK
 	if not state.on_floor:
 		return Anim.JUMP if state.velocity.y < 0.0 else Anim.FALL
@@ -258,6 +273,46 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 			p.arm_front = -2.4
 			p.arm_back = -2.2
 			p.spin = fmod(t, ROLL_PERIOD) / ROLL_PERIOD * TAU
+		Anim.UPPERCUT:
+			# Rising fist straight up, body stretched into it.
+			p.arm_front = -2.9
+			p.arm_back = 0.8
+			p.lean = -0.15
+			p.leg_front = -0.35
+			p.leg_back = 0.35
+			p.bob = -1.0
+		Anim.KICK:
+			# Low side kick: front leg straight out, body leaning away.
+			p.hip_y = -8.0
+			p.leg_front = -1.55
+			p.leg_back = 0.1
+			p.knee_back = 0.5
+			p.lean = -0.45
+			p.arm_front = 1.2
+			p.arm_back = -0.8
+		Anim.AIR_KICK:
+			# Drop kick: front leg aimed down and forward, the other tucked.
+			p.leg_front = -1.1
+			p.leg_back = 0.5
+			p.knee_back = 1.3
+			p.lean = -0.5
+			p.arm_front = -2.3
+			p.arm_back = 2.2
+		Anim.GRAB:
+			# Both hands forward, holding the rival up.
+			p.arm_front = -1.4
+			p.arm_back = -1.25
+			p.lean = -0.1
+			p.leg_front = -0.3
+			p.leg_back = 0.3
+		Anim.HELD:
+			# Hanging from the grabber's hands, legs kicking.
+			var kick := 0.35 * sin(t * 18.0)
+			p.lean = -0.4
+			p.arm_front = 2.5
+			p.arm_back = 2.8
+			p.leg_front = 0.2 + kick
+			p.leg_back = -0.2 - kick
 		Anim.RIDE:
 			# Crouched on the rocket, arms out for balance.
 			var sway := 0.2 * sin(t * 12.0)

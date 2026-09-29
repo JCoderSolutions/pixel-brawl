@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-29"
+last_updated_notes: "TASK-003 combo de 3 golpes con uppercut, patadas y agarrar/lanzar (Superfighters)"
 last_updated_notes: "Feedback de Jose: rodada al aterrizar la zambullida, cubrirse con energía y daño que pasa, partidas con bots terminan rápido; Pages activado"
 last_updated_notes: "TASK-008 control por jugador (teclado o cualquier mando) desde el menú"
 last_updated_notes: "TASK-023 enganches para tilesets y sprites en progreso"

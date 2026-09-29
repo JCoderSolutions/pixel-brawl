@@ -9,6 +9,11 @@ signal hit_landed(target: Hurtbox)
 @export var damage := 10
 ## Knockback applied along +X; flipped by `direction` when the swing lands.
 @export var knockback := Vector2(220.0, -120.0)
+## The move being thrown scales `damage` (combo finishers, kicks); power-ups
+## change `damage` itself.
+var damage_scale := 1.0
+## A knockout blow launches at least this hard, even a light jab.
+const KNOCKOUT_KNOCKBACK := Vector2(220.0, -160.0)
 
 var direction := 1.0
 ## Never hits this node's hurtboxes either (a thrown weapon's thrower).
@@ -44,5 +49,9 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	_hit_this_window.append(hurtbox)
 	if not hurtbox.melee_proof:
-		hurtbox.receive_hit(damage, Vector2(knockback.x * direction, knockback.y), owner, &"melee", global_position)
+		var dealt := roundi(damage * damage_scale)
+		var push := knockback
+		if hurtbox.health != null and dealt >= hurtbox.health.current_health:
+			push = Vector2(maxf(absf(push.x), KNOCKOUT_KNOCKBACK.x), minf(push.y, KNOCKOUT_KNOCKBACK.y))
+		hurtbox.receive_hit(dealt, Vector2(push.x * direction, push.y), owner, &"melee", global_position)
 	hit_landed.emit(hurtbox)

@@ -25,8 +25,10 @@ const JUMP_ROWS := 3
 const JUMP_COLS := 3
 const LEAP_COLS := 5
 ## Frames a bots-only match gets to crown a winner (one round wins it); the
-## maps take 500-1600, and the whole file must fit tools/run_tests.sh's 120 s.
-const MATCH_FRAMES := 60 * 40
+## maps take 650-2700 (a round can end in a draw and be replayed: factory
+## draws twice with the seeded drops), and the whole file must fit
+## tools/run_tests.sh's 120 s.
+const MATCH_FRAMES := 60 * 55
 ## Bots are seeded by id; seeding the weapon drops too makes each match replay
 ## the same way, so a rare stand-off can't make the test flaky.
 const SPAWNER_SEED := 1
