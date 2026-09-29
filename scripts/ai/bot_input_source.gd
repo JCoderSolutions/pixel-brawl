@@ -94,6 +94,10 @@ func _decide() -> InputFrame:
 	if _tick % profile.think_interval == 0:
 		_think()
 
+	var rocket := _rocket()
+	if rocket != null:
+		return InputFrame.create(_steer_towards(rocket, _target), 0)
+
 	var buttons := 0
 	var move := 0.0
 	if not is_nan(_goal_x) and absf(_goal_x - body.global_position.x) > ARRIVE_DISTANCE:
@@ -204,6 +208,24 @@ func _in_shot(target: Node2D) -> bool:
 
 func _holds_automatic() -> bool:
 	return body.weapons.has_weapon() and body.weapons.weapon.automatic and not body.weapons.is_empty()
+
+
+func _rocket() -> Node2D:
+	return body.riding_rocket() if body.has_method("riding_rocket") else null
+
+
+## Riding a rocket: turn it towards `target` (+1 turns clockwise).
+func _steer_towards(rocket: Node2D, target: Node2D) -> float:
+	if target == null or not is_instance_valid(target):
+		return 0.0
+	var heading: float = rocket.linear_velocity.angle()
+	var wanted := (target.global_position + Vector2(0, -12) - rocket.global_position).angle()
+	var turn := wrapf(wanted - heading, -PI, PI)
+	if absf(turn) > 2.0 and sin(heading) > -0.5:
+		# A U-turn loops over the top: turning down would hit the floor.
+		# Once climbing, the shortest turn takes it round towards the target.
+		return -signf(cos(heading)) if cos(heading) != 0.0 else 1.0
+	return 0.0 if absf(turn) < 0.05 else signf(turn)
 
 
 ## The nearest grenade about to blow within reach, if this bot cares.

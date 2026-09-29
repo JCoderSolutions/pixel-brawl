@@ -48,6 +48,9 @@ var _hitstun_timer := 0.0
 var _invulnerable_timer := 0.0
 var _prev_buttons := 0
 var _diving := false
+## The rocket this fighter is riding (Grenade), if any.
+var _riding: Node
+var _ride_steer := 0.0
 var _dive_timer := 0.0
 var _dive_cooldown_timer := 0.0
 ## True from a jump until its rise ends or is cut; knockback launches never
@@ -103,6 +106,8 @@ func _physics_process(delta: float) -> void:
 	var input_dir := frame.move_x()
 	var want_crouch := frame.is_held(InputFrame.CROUCH)
 
+	if _ride(input_dir):
+		return
 	_update_dive(delta, input_dir, just_pressed, can_act)
 
 	if just_pressed & InputFrame.JUMP:
@@ -153,6 +158,44 @@ func is_crouching() -> bool:
 
 func is_in_hitstun() -> bool:
 	return _hitstun_timer > 0.0
+
+
+## Carried away by a bazooka rocket that hit this fighter (Grenade calls it).
+func start_rocket_ride(rocket: Node) -> void:
+	_riding = rocket
+	_diving = false
+	_attack_timer = 0.0
+	_hitbox.deactivate()
+	velocity = Vector2.ZERO
+
+
+func end_rocket_ride() -> void:
+	_riding = null
+
+
+func is_riding() -> bool:
+	return _riding != null and is_instance_valid(_riding)
+
+
+func riding_rocket() -> Node:
+	return _riding if is_riding() else null
+
+
+## Left/right steering the rider gives the rocket: -1..1, + is clockwise.
+func rocket_steer() -> float:
+	return _ride_steer
+
+
+## While riding, the fighter sits on the rocket and only steers it.
+func _ride(input_dir: float) -> bool:
+	if _riding != null and not is_instance_valid(_riding):
+		_riding = null
+	if _riding == null:
+		return false
+	_ride_steer = input_dir
+	velocity = Vector2.ZERO
+	global_position = _riding.global_position + Vector2(0.0, 3.0)
+	return true
 
 
 ## Mid-dive: low, fast and (at first) untouchable. FallDamage skips it.
