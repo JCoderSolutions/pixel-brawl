@@ -20,6 +20,11 @@ signal player_spawned(id: int, player: Node)
 signal player_died(id: int, lives_left: int)
 signal scores_changed(scores: Array)
 signal sudden_death_started
+## The death that decides the round (no rival side left standing): the arena
+## plays it in slow motion. `at` is where the victim fell.
+signal final_blow(victim_id: int, killer_id: int, at: Vector2)
+## Kills or deaths changed (see `kills`, `deaths`, `environment_kills`).
+signal stats_changed
 
 enum State { IDLE, ROUND_STARTING, FIGHTING, ROUND_OVER, MATCH_OVER }
 
@@ -85,6 +90,12 @@ var state := State.IDLE
 var current_round := 0
 var scores: Array[int] = []
 var lives: Array[int] = []
+## Per player id, over the whole match: rivals they killed and times they died.
+var kills: Array[int] = []
+var deaths: Array[int] = []
+## Deaths nobody else caused (pits, fire, falls, crates, sudden death, own
+## grenade): Superfighters' "killed by the map".
+var environment_kills := 0
 
 var _arena: Node
 var _spawn_points: Array[Vector2] = []
@@ -131,6 +142,11 @@ func start_match() -> void:
 	scores.clear()
 	scores.resize(_spawn_points.size())
 	scores.fill(0)
+	for stat: Array[int] in [kills, deaths]:
+		stat.clear()
+		stat.resize(_spawn_points.size())
+		stat.fill(0)
+	environment_kills = 0
 	current_round = 0
 	match_started.emit()
 	scores_changed.emit(scores)
@@ -252,15 +268,41 @@ func _spawn(id: int) -> void:
 	player_spawned.emit(id, player)
 
 
-func _on_player_died(_source: Node, id: int) -> void:
+func _on_player_died(source: Node, id: int) -> void:
 	if state != State.FIGHTING:
 		return
 	lives[id] = max(lives[id] - 1, 0)
+	var killer := id_of(source)
+	_count_death(id, killer)
 	player_died.emit(id, lives[id])
 	if lives[id] > 0:
 		_respawn_timers[id] = respawn_delay
 	elif _grace_timer < 0.0 and _sides_in_play().size() <= 1:
 		_grace_timer = round_end_grace
+		var victim = _players.get(id)
+		var at: Vector2 = victim.global_position if is_instance_valid(victim) else Vector2.ZERO
+		final_blow.emit(id, killer, at)
+
+
+## The player id behind `source` (a fighter node), or NO_WINNER when the map,
+## a trap or nobody did it.
+func id_of(source: Node) -> int:
+	if source == null:
+		return NO_WINNER
+	for id in _players:
+		if _players[id] == source:
+			return id
+	return NO_WINNER
+
+
+func _count_death(victim: int, killer: int) -> void:
+	if victim < deaths.size():
+		deaths[victim] += 1
+	if killer >= 0 and killer != victim and killer < kills.size():
+		kills[killer] += 1
+	elif killer < 0 or killer == victim:
+		environment_kills += 1
+	stats_changed.emit()
 
 
 func _tick_respawns(delta: float) -> void:

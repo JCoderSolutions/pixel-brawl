@@ -85,6 +85,13 @@ var _zoom_goal := 1.0
 var _zoom_in_timer := 0.0
 var _shake_time := 0.0
 var _noise := FastNoiseLite.new()
+## Close-up on one point (final blow): its centre, zoom factor and time left.
+var _focus_point := Vector2.ZERO
+var _focus_boost := 1.0
+var _focus_left := 0.0
+
+## How fast a close-up closes in (seconds of game time, which runs slow then).
+const FOCUS_TIME := 0.05
 
 
 ## Adds trauma to every SharedCamera in `context`'s viewport.
@@ -143,6 +150,18 @@ func get_targets() -> Array[Node2D]:
 	return result
 
 
+## Frames `point` for `seconds` (game time), zoomed in `boost` times over
+## the usual framing, then goes back to following everyone.
+func focus_on(point: Vector2, boost := 1.6, seconds := 0.3) -> void:
+	_focus_point = point + focus_offset
+	_focus_boost = boost
+	_focus_left = seconds
+
+
+func is_focusing() -> bool:
+	return _focus_left > 0.0
+
+
 func add_trauma(amount: float) -> void:
 	trauma = clampf(trauma + amount, 0.0, 1.0)
 
@@ -164,15 +183,27 @@ func snap() -> void:
 func advance(delta: float) -> void:
 	_refresh_targets()
 	var goal := _goal()
-	_update_zoom_goal(_resting_zoom(goal.z), delta)
-	var zoom_time := zoom_out_time if _zoom_goal < _zoom else zoom_in_time
+	var zoom_time: float
+	var center_time := Vector2(follow_time, follow_time_vertical)
+	var focusing := _focus_left > 0.0
+	if focusing:
+		_focus_left -= delta
+		goal = Vector3(_focus_point.x, _focus_point.y, minf(goal.z * _focus_boost, max_zoom * _focus_boost))
+		_zoom_goal = goal.z
+		_zoom_in_timer = 0.0
+		zoom_time = FOCUS_TIME
+		center_time = Vector2(FOCUS_TIME, FOCUS_TIME)
+	else:
+		_update_zoom_goal(_resting_zoom(goal.z), delta)
+		zoom_time = zoom_out_time if _zoom_goal < _zoom else zoom_in_time
 	var zoom_step := _smooth_damp(_zoom, _zoom_goal, _zoom_velocity, zoom_time, delta)
 	_zoom = zoom_step.x
 	_zoom_velocity = zoom_step.y
-	# Aim for where the goal sits at the zoom we'll actually show.
-	var aim := _clamp_center(Vector2(goal.x, goal.y), _final_zoom(_zoom))
-	var step_x := _smooth_damp(_center.x, aim.x, _center_velocity.x, follow_time, delta)
-	var step_y := _smooth_damp(_center.y, aim.y, _center_velocity.y, follow_time_vertical, delta)
+	# Aim for where the goal sits at the zoom we'll actually show (a close-up
+	# heads straight for its final framing, the map edge allowing).
+	var aim := _clamp_center(Vector2(goal.x, goal.y), _final_zoom(_zoom_goal if focusing else _zoom))
+	var step_x := _smooth_damp(_center.x, aim.x, _center_velocity.x, center_time.x, delta)
+	var step_y := _smooth_damp(_center.y, aim.y, _center_velocity.y, center_time.y, delta)
 	_center = Vector2(step_x.x, step_y.x)
 	_center_velocity = Vector2(step_x.y, step_y.y)
 	trauma = maxf(trauma - trauma_decay * delta, 0.0)

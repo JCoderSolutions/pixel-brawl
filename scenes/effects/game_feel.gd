@@ -17,6 +17,7 @@ extends Node
 ##   Hurtbox.blocked            -> guard clank (or ricochet for a parry), sparks
 ##   HealthComponent.died       -> death jingle (not for map tiles)
 ##   fighters (CharacterBody2D with `jump_velocity`) -> jump / landing + dust
+##   GameManager.final_blow     -> slow motion and a close-up on the victim
 ##
 ## Hit-stop dips Engine.time_scale for a few real-time milliseconds. Headless
 ## runs (tests, a future dedicated server) skip wiring entirely because they
@@ -29,6 +30,11 @@ const WIRED_META := &"_game_feel_wired"
 @export var explosion_hit_stop := 0.09
 ## Engine.time_scale during a hit-stop.
 @export var hit_stop_scale := 0.05
+## The round-deciding death plays at this Engine.time_scale...
+@export var final_blow_scale := 0.25
+## ...for this many real seconds, with the cameras zoomed in this much.
+@export var final_blow_time := 1.2
+@export var final_blow_zoom := 1.6
 ## Falling speed (px/s) a landing needs to raise dust and make a sound.
 @export var land_speed := 260.0
 ## Wire nodes automatically as they enter the tree. Off in headless.
@@ -42,6 +48,8 @@ var audio: Node
 ## body -> { on_floor, vy, hit_frame }
 var _fighters := {}
 var _hit_stop_left := 0.0
+var _slow_left := 0.0
+var _slow_scale := 1.0
 
 
 func _ready() -> void:
@@ -55,11 +63,41 @@ func _ready() -> void:
 	if auto_wire:
 		get_tree().node_added.connect(wire)
 		wire_tree(get_tree().root)
+		var manager := get_node_or_null(^"/root/GameManager")
+		if manager != null and manager.has_signal(&"final_blow"):
+			manager.final_blow.connect(func(_victim, _killer, at: Vector2) -> void: final_blow(at))
 
 
 func _exit_tree() -> void:
-	if _hit_stop_left > 0.0:
-		_end_hit_stop()
+	_hit_stop_left = 0.0
+	_slow_left = 0.0
+	Engine.time_scale = 1.0
+
+
+## Slow motion for the blow that decides the round (Superfighters, and most
+## of the genre): time crawls and every camera closes in on `at`.
+func final_blow(at: Vector2) -> void:
+	slow_motion(final_blow_time, final_blow_scale)
+	if not is_inside_tree():
+		return
+	for camera in get_tree().get_nodes_in_group(SharedCamera.GROUP):
+		# The close-up runs on game time, which crawls meanwhile; it holds a
+		# little past the slow motion so it has time to settle.
+		camera.focus_on(at, final_blow_zoom, final_blow_time * final_blow_scale * 1.5)
+
+
+## Runs the game at `scale` for `duration` real seconds. A hit-stop inside it
+## still freezes harder; it hands back to the slow motion when it ends.
+func slow_motion(duration: float, scale: float) -> void:
+	if not hit_stop_enabled or duration <= 0.0:
+		return
+	_slow_left = maxf(_slow_left, duration)
+	_slow_scale = scale
+	_apply_time_scale()
+
+
+func is_slow_motion() -> bool:
+	return _slow_left > 0.0
 
 
 ## Wires `node` and all of its descendants.
@@ -105,7 +143,7 @@ func hit_stop(duration: float) -> void:
 	if not hit_stop_enabled or duration <= 0.0:
 		return
 	_hit_stop_left = maxf(_hit_stop_left, duration)
-	Engine.time_scale = hit_stop_scale
+	_apply_time_scale()
 
 
 func is_hit_stopped() -> bool:
@@ -114,6 +152,11 @@ func is_hit_stopped() -> bool:
 
 ## Counts the hit-stop down in real time (unscaled seconds).
 func advance_real(real_delta: float) -> void:
+	if _slow_left > 0.0:
+		_slow_left -= real_delta
+		if _slow_left <= 0.0:
+			_slow_left = 0.0
+			_apply_time_scale()
 	if _hit_stop_left <= 0.0:
 		return
 	_hit_stop_left -= real_delta
@@ -161,7 +204,17 @@ func _play(sfx_name: StringName, volume_db := 0.0) -> void:
 
 func _end_hit_stop() -> void:
 	_hit_stop_left = 0.0
-	Engine.time_scale = 1.0
+	_apply_time_scale()
+
+
+## The slowest effect running wins; none restores normal speed.
+func _apply_time_scale() -> void:
+	if _hit_stop_left > 0.0:
+		Engine.time_scale = hit_stop_scale
+	elif _slow_left > 0.0:
+		Engine.time_scale = _slow_scale
+	else:
+		Engine.time_scale = 1.0
 
 
 func _is_fighter(node: Node) -> bool:

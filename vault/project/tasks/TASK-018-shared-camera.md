@@ -28,6 +28,9 @@ golpes y explosiones.
 - [x] Zoom pixel-perfect: cada píxel del mundo ocupa un número entero de píxeles de pantalla
 - [x] Escena demo `scenes/camera/camera_demo.tscn` (mapa 960x544, P1 + 3 bots)
 - [x] Integrar en `test_arena`: `arena_match.gd` suma cada jugador que aparece y hace `snap()` al empezar la ronda
+- [x] Primer plano: `focus_on(punto, zoom, segundos)` encuadra un punto con
+      más zoom y después vuelve a seguir a todos (golpe final). Test
+      `scripts/test_spectacle.gd`
 - [ ] Test manual de sensación (suavizado, fuerza del shake)
 
 ## Uso

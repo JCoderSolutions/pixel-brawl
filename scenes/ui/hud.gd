@@ -1,7 +1,8 @@
 extends CanvasLayer
 
 ## In-match HUD: one health bar and round score per player, plus a banner for
-## round announcements. Reads everything from the GameManager signals.
+## round announcements and the standings (Scoreboard) between rounds. Reads
+## everything from the GameManager signals.
 
 const FIGHT_BANNER_TIME := 0.8
 
@@ -9,12 +10,21 @@ const FIGHT_BANNER_TIME := 0.8
 var manager: Node
 
 var _panels := {}
+var scoreboard: Scoreboard
 
 @onready var _bars_row: HBoxContainer = %Bars
 @onready var _banner: Label = %Banner
 
 
 func _ready() -> void:
+	scoreboard = Scoreboard.new()
+	scoreboard.hide()
+	var holder := CenterContainer.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	holder.offset_top = 40.0
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(scoreboard)
+	add_child(holder)
 	if manager == null:
 		manager = get_node_or_null("/root/GameManager")
 	if manager == null:
@@ -108,6 +118,7 @@ func _on_scores_changed(scores: Array) -> void:
 
 
 func _on_round_started(round_number: int) -> void:
+	scoreboard.hide()
 	_show_banner("RONDA %d" % round_number)
 
 
@@ -132,11 +143,14 @@ func _on_round_ended(winner_id: int) -> void:
 		_show_banner("EMPATE")
 	else:
 		_show_banner("%s GANA LA RONDA" % manager.side_label(winner_id))
+	scoreboard.refresh(manager)
+	scoreboard.show()
 
 
 ## The winner screen takes over when the match ends.
 func _on_match_ended(_winner_id: int) -> void:
 	_banner.hide()
+	scoreboard.hide()
 
 
 func _show_banner(text: String) -> void:
