@@ -88,8 +88,43 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	# Pose space has its origin at the feet, the Control's bottom centre.
 	draw_set_transform(Vector2(size.x / 2.0, size.y))
+	var frame := sprite_frame()
+	if frame != null:
+		_draw_sprite(frame)
+		return
 	for part in parts(pose(anim, anim_time, armed), color, flash, look, team_color):
 		draw_colored_polygon(part.points, part.color)
+
+
+## The character's sprite for the current animation and time, or null to
+## draw native shapes (no SpriteFrames on the look, or not this animation).
+func sprite_frame() -> Texture2D:
+	if look == null or look.frames == null:
+		return null
+	var frames := look.frames
+	var sprite_anim := anim_name(anim)
+	if not frames.has_animation(sprite_anim) or frames.get_frame_count(sprite_anim) == 0:
+		return null
+	var count := frames.get_frame_count(sprite_anim)
+	var index := floori(anim_time * frames.get_animation_speed(sprite_anim))
+	index = posmod(index, count) if frames.get_animation_loop(sprite_anim) else mini(index, count - 1)
+	return frames.get_frame_texture(sprite_anim, index)
+
+
+## SpriteFrames animation name for `which`: "idle", "run", "jump"...
+static func anim_name(which: Anim) -> StringName:
+	return StringName(Anim.keys()[which].to_lower())
+
+
+## A sprite frame stands on the feet line, centred; the hit flash washes it
+## out and the team marker floats over it like over the shapes.
+func _draw_sprite(frame: Texture2D) -> void:
+	var frame_size := frame.get_size()
+	var tint := Color(4, 4, 4) if flash else Color.WHITE
+	draw_texture(frame, Vector2(-frame_size.x / 2.0, -frame_size.y).round(), tint)
+	if team_color.a > 0.0:
+		var tip := Vector2(0.0, -frame_size.y - 1.0)
+		draw_colored_polygon(PackedVector2Array([tip + Vector2(-2, -3), tip + Vector2(2, -3), tip]), team_color)
 
 
 ## What the animation choice needs to know about a player fighter.

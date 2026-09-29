@@ -10,6 +10,15 @@ var shirt := Color.WHITE
 var pants := Color("3a4466")
 var skin := Color("e8b796")
 var band := Color.WHITE
+## Sprite sheet for this character: one SpriteFrames animation per
+## FighterRig.Anim ("idle", "run", "jump", "fall", "crouch", "attack", "hurt",
+## "aim", "victory", "dive", "ride", "block"), 32x32 frames with the feet on
+## the bottom edge. Missing animations fall back to native shapes.
+var frames: SpriteFrames
+
+## Where each character's sprite sheet goes: `<name in lowercase>.tres` (a
+## SpriteFrames), e.g. `bruno.tres`. Dropping one there is all it takes.
+const SPRITES_DIR := "res://assets/sprites/characters/"
 
 static var _presets: Array[FighterLook] = []
 
@@ -21,7 +30,14 @@ static func create(look_name: String, shirt_color: Color, pants_color: Color, sk
 	look.pants = pants_color
 	look.skin = skin_color
 	look.band = band_color
+	var sheet := sprite_path(look_name)
+	if ResourceLoader.exists(sheet):
+		look.frames = load(sheet) as SpriteFrames
 	return look
+
+
+static func sprite_path(look_name: String) -> String:
+	return SPRITES_DIR + look_name.to_lower() + ".tres"
 
 
 ## The roster, built once; index it with the ids the menu stores.

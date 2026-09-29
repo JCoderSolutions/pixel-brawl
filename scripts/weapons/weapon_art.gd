@@ -64,6 +64,19 @@ static var art := {
 }
 
 
+## Draws `weapon` on `canvas`: its sprite when it has one (grip on the
+## origin, mirrored for `facing` -1, centred for pickups), else its shapes.
+static func draw(canvas: CanvasItem, weapon: WeaponData, facing := 1, centered := false) -> void:
+	if weapon.sprite != null:
+		var corner := -weapon.sprite.get_size() / 2.0 if centered else -weapon.sprite_grip
+		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1))
+		canvas.draw_texture(weapon.sprite, corner)
+		canvas.draw_set_transform(Vector2.ZERO)
+		return
+	for part in shapes(weapon, facing, centered):
+		canvas.draw_colored_polygon(part.points, part.color)
+
+
 static func has_art(weapon_id: StringName) -> bool:
 	return art.has(weapon_id)
 

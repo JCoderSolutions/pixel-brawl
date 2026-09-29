@@ -262,9 +262,8 @@ func _world() -> Node:
 	return wielder.get_parent() if wielder.get_parent() != null else wielder
 
 
-## Native-shape weapon art (WeaponArt) until sprites land.
+## The weapon's sprite, or its native-shape art (WeaponArt) without one.
 func _draw() -> void:
 	if weapon == null:
 		return
-	for part in WeaponArt.shapes(weapon, facing):
-		draw_colored_polygon(part.points, part.color)
+	WeaponArt.draw(self, weapon, facing)

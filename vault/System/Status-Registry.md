@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-29"
+last_updated_notes: "TASK-023 enganches para tilesets y sprites en progreso"
 last_updated_notes: "TASK-011 menú en secuencia (modo, cantidad, personajes/equipos, mapa, dificultad, rondas) en progreso"
 last_updated_notes: "TASK-011 muerte súbita: las partidas contra bots siempre terminan"
 last_updated_notes: "TASK-022 festejo del ganador y efecto al agarrar power-ups"
@@ -58,6 +59,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-021-more-weapons|TASK-021 — Más armas (rifle, recortada, bate, bazuca)]] | `in-progress` | high | PHASE-2 |
 | [[project/tasks/TASK-010-power-ups|TASK-010 — Power-ups]] | `in-progress` | high | PHASE-3 |
 | [[project/tasks/TASK-022-fighter-animations|TASK-022 — Luchador animado (formas nativas)]] | `in-progress` | high | PHASE-3 |
+| [[project/tasks/TASK-023-art-hooks|TASK-023 — Enganches para el arte (tilesets y sprites)]] | `in-progress` | medium | PHASE-3 |
 
 ## Tareas por desglosar (backlog)
 
