@@ -97,5 +97,5 @@ func _refresh_visual() -> void:
 
 
 func _draw() -> void:
-	for part in art_shapes():
-		draw_colored_polygon(part.points, part.color)
+	if weapon != null:
+		WeaponArt.draw(self, weapon, 1, true)

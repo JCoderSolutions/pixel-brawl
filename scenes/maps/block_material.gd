@@ -23,6 +23,28 @@ enum Pattern { PLANKS, BRICKS, RIVETS }
 @export var detail_color := Color.BLACK
 @export var pattern := Pattern.PLANKS
 
+@export_group("Art")
+## Tileset art: a strip of 16x16 frames left to right, from intact to about
+## to break; the tile shows the frame for its damage. Empty keeps the
+## colour-and-pattern placeholder above.
+@export var texture: Texture2D
+## Same strip for one-way planks (only the top PLANK_HEIGHT px are shown);
+## empty uses `texture`.
+@export var plank_texture: Texture2D
+
+
+## Frames in a strip: its width over the tile size.
+static func frame_count(strip: Texture2D, tile := 16) -> int:
+	return maxi(1, strip.get_width() / tile) if strip != null else 0
+
+
+## The strip frame for a tile at `health_ratio` (1 = intact, 0 = gone).
+static func frame_for(strip: Texture2D, health_ratio: float, tile := 16) -> int:
+	var frames := frame_count(strip, tile)
+	if frames <= 1:
+		return 0
+	return clampi(floori((1.0 - health_ratio) * frames), 0, frames - 1)
+
 
 func is_indestructible() -> bool:
 	return not breaks_from_hits and not breaks_from_blasts

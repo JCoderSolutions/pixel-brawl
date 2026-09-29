@@ -40,6 +40,12 @@ enum Kind { RANGED, MELEE }
 @export var melee_startup := 0.05
 @export var melee_active := 0.12
 
+@export_group("Art")
+## Sprite drawn instead of the WeaponArt shapes, barrel pointing right.
+@export var sprite: Texture2D
+## Pixel of `sprite` that sits in the hand (the holder's origin).
+@export var sprite_grip := Vector2.ZERO
+
 
 func is_ranged() -> bool:
 	return kind == Kind.RANGED

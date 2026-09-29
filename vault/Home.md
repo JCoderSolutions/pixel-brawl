@@ -28,6 +28,7 @@ proyecto. Funciona desde cualquier PC y con cualquier agente de IA.
 | [[Templates]] | Plantillas para crear notas nuevas |
 | [[docs/multi-agent-setup]] | Config multiagente (OpenCode, Claude, Kiro) |
 | [[docs/engram-hooks-behavior]] | Qué hacen los hooks automáticos de Engram |
+| [[docs/art-swap-guide]] | Cómo reemplazar las formas nativas por tilesets y sprites |
 | Engram (memoria) | `engram/` — export de memoria persistente (opcional) |
 
 ## Estado del proyecto

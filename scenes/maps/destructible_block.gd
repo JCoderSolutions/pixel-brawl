@@ -32,6 +32,8 @@ func _ready() -> void:
 	_visual.color = block_material.color
 	# Our _draw() paints the pattern over the base colour.
 	_visual.show_behind_parent = true
+	# Tileset art replaces the placeholder rectangle and pattern.
+	_visual.visible = art() == null
 	if one_way:
 		$CollisionShape2D.one_way_collision = true
 		_visual.offset_bottom = _visual.offset_top + PLANK_HEIGHT
@@ -54,6 +56,19 @@ func take_blast(amount: int, source: Node = null) -> void:
 func _on_health_changed(current: int, maximum: int) -> void:
 	var lost := 1.0 - float(current) / float(maximum)
 	_visual.color = block_material.color.lerp(block_material.damaged_color, lost)
+	queue_redraw()
+
+
+## The tileset strip this tile draws from, or null for the placeholder.
+func art() -> Texture2D:
+	if one_way and block_material.plank_texture != null:
+		return block_material.plank_texture
+	return block_material.texture
+
+
+## Strip frame for the current damage (0 = intact).
+func art_frame() -> int:
+	return BlockMaterial.frame_for(art(), float(health.current_health) / float(health.max_health), DestructibleMap.TILE_SIZE)
 
 
 func _on_died(_source: Node) -> void:
@@ -64,9 +79,16 @@ func _on_died(_source: Node) -> void:
 	queue_free()
 
 
-## Placeholder texture until the art pass: plank seams, brick mortar or
-## rivets, so each material reads at a glance.
+## The material's tileset frame; until there is one, a placeholder: plank
+## seams, brick mortar or rivets, so each material reads at a glance.
 func _draw() -> void:
+	var strip := art()
+	if strip != null:
+		var tile := DestructibleMap.TILE_SIZE
+		var height := PLANK_HEIGHT if one_way else float(tile)
+		draw_texture_rect_region(strip, Rect2(-tile / 2.0, -tile / 2.0, tile, height),
+				Rect2(art_frame() * tile, 0, tile, height))
+		return
 	var detail := block_material.detail_color
 	match block_material.pattern:
 		BlockMaterial.Pattern.PLANKS:
