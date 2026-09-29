@@ -67,6 +67,9 @@ const PLAYER_COLORS: Array[Color] = [
 var bot_difficulties: Array[int] = []
 ## Local humans in a match with bots; 0 just watches the bots fight.
 var human_players := 1
+## Fighters in the next match (humans + bots), spread over the map's spawn
+## markers. 0 = one per marker, the first `controlled_ids` read their keys.
+var match_size := 0
 ## Team per player id (0 = no team). Missing ids play on their own.
 var teams: Array[int] = []
 ## FighterLook preset per player id. Missing ids get preset `id`.
@@ -99,10 +102,9 @@ func setup(arena: Node, spawn_points: Array[Vector2]) -> void:
 	teardown()
 	_arena = arena
 	_spawn_points = spawn_points
-	if not bot_difficulties.is_empty():
-		var count := human_players + bot_difficulties.size()
-		_spawn_points = spread_spawns(spawn_points, count)
-		controlled_ids.assign(range(count))
+	if match_size > 0:
+		_spawn_points = spread_spawns(spawn_points, match_size)
+		controlled_ids.assign(range(match_size))
 	if not arena.tree_exiting.is_connected(teardown):
 		arena.tree_exiting.connect(teardown)
 
@@ -131,7 +133,16 @@ func start_match() -> void:
 ## Sets up the next match against `bots` computer players of one difficulty;
 ## 0 bots goes back to local players only.
 func configure_bots(bots: int, difficulty: int, humans := 1) -> void:
+	configure_match(humans, bots, difficulty)
+	if bots == 0:
+		match_size = 0
+
+
+## Sets up the next match: `humans` local players (slots 1..n) and `bots`
+## computer players of one difficulty after them.
+func configure_match(humans: int, bots: int, difficulty := BotProfile.Difficulty.NORMAL) -> void:
 	human_players = humans
+	match_size = humans + bots
 	bot_difficulties.clear()
 	for i in bots:
 		bot_difficulties.append(difficulty)

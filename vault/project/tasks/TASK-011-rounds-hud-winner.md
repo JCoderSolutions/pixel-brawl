@@ -41,8 +41,18 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
       pantalla final dicen "EQUIPO ROJO GANA"; marcador de equipo sobre la
       cabeza; fuego amigo activo; los bots no atacan a sus compañeros. Test
       `scripts/test_teams.gd`
-- [ ] Menú en secuencia que elige modo, cantidad, personaje/equipo, mapa,
-      dificultad y rondas (siguiente PR)
+- [x] Menú en secuencia (pedido de Jose 2026-09-29, como la pantalla de
+      partida local de Superfighters): Jugar → ¿contra quién? (bots o
+      jugadores locales) → ¿cuántos? (2-4 jugadores, o 1-3 jugadores + 1-3
+      bots, máximo 4) → personaje y equipo de cada luchador (flechas y botón
+      de equipo, con vista previa del rig) → mapa (o aleatorio) → dificultad
+      (solo con bots) → rondas para ganar (1, 2, 3 o 5) → "¡A pelear!".
+      "Atrás"/cancelar vuelve un paso; no deja seguir si todos están en el
+      mismo equipo. Lo elegido se recuerda al volver al menú.
+      `GameManager.configure_match(humanos, bots, dificultad)` y `match_size`:
+      N jugadores locales repartidos en los spawns del mapa. Test
+      `scripts/test_main_menu.gd`; capturas en el PR
+- [ ] Test manual del menú en PC y teléfono
 
 ## Detalles
 
