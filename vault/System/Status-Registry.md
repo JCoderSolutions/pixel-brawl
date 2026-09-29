@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-29"
+last_updated_notes: "TASK-011/TASK-012 golpe final en cámara lenta y tabla de posiciones entre rondas"
 last_updated_notes: "TASK-020/TASK-021 fuego que se propaga, molotov, barriles explosivos y cajas de suministro"
 last_updated_notes: "TASK-005 apuntar a mano en 360° con Cubrirse + Saltar/Agacharse"
 last_updated_notes: "TASK-002 sprint con doble toque, cornisas y rodada de recuperación"

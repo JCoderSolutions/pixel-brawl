@@ -35,6 +35,12 @@ gratuitos CC0.
       teléfono) y controles táctiles automático/siempre/nunca. `GameSettings`
       (`scripts/autoload/game_settings.gd`) guarda en `user://settings.cfg` en
       cada cambio y el menú lo aplica al arrancar. Test `scripts/test_settings.gd`
+- [x] Golpe final en cámara lenta (punto 5 del orden acordado con Jose
+      2026-09-29): la muerte que decide la ronda (`GameManager.final_blow`)
+      pone el juego a 0.25x por 1.2 s reales y las cámaras hacen un primer
+      plano (x1.6) sobre la víctima (`GameFeel.final_blow`). Un hit-stop
+      dentro de la cámara lenta congela más y después le devuelve el control
+      (`GameFeel.slow_motion`). Test `scripts/test_spectacle.gd`
 - [ ] Test manual del menú de opciones en PC y teléfono
 - [ ] Test manual de sensación (volúmenes, duración del hit-stop)
 
