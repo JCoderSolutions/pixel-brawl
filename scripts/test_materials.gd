@@ -1,7 +1,7 @@
 extends SceneTree
 
-## Headless tests for block materials (TASK-019): wood breaks from bullets,
-## melee and blasts; brick only from blasts; metal never. Also checks the
+## Headless tests for block materials (TASK-019): wood breaks from bullets
+## and blasts; brick only from blasts; metal never; melee breaks none. Also checks the
 ## real match arena is built from tiles, so grenades crater its floor and
 ## platforms. Run: godot --headless --path . -s scripts/test_materials.gd
 
@@ -26,7 +26,7 @@ func _run_tests() -> void:
 	_test_material_data()
 	await _test_layout_legend()
 	await _test_bullets_break_wood_only()
-	await _test_melee_breaks_wood_only()
+	await _test_melee_leaves_the_map()
 	await _test_blasts_break_wood_and_brick()
 	await _test_planks_are_one_way()
 	await _test_arena_is_built_from_tiles()
@@ -84,6 +84,8 @@ func _blast(at: Vector2) -> void:
 func _test_material_data() -> void:
 	_check(WOOD.breaks_from_hits and WOOD.breaks_from_blasts, "wood breaks from hits and blasts")
 	_check(not BRICK.breaks_from_hits and BRICK.breaks_from_blasts, "brick only breaks from blasts")
+	for material in [WOOD, BRICK, METAL]:
+		_check(not material.breaks_from_melee, "%s shrugs off fists and blades" % material.display_name)
 	_check(METAL.is_indestructible(), "metal never breaks")
 	_check(WOOD.color != BRICK.color and BRICK.color != METAL.color and WOOD.color != METAL.color,
 		"each material has its own colour")
@@ -126,7 +128,8 @@ func _test_bullets_break_wood_only() -> void:
 	await _frames(1)
 
 
-func _test_melee_breaks_wood_only() -> void:
+## Fists don't dig through the map, whatever it is made of (Superfighters).
+func _test_melee_leaves_the_map() -> void:
 	for code in ["#", "B"]:
 		var map := _spawn_map(PackedStringArray(["...%s" % code, "XXXX"]))
 		await _frames(1)
@@ -138,10 +141,8 @@ func _test_melee_breaks_wood_only() -> void:
 		for i in 6:
 			player.start_attack()
 			await _frames(30)
-		if code == "#":
-			_check(not _alive(map, Vector2i(3, 0)), "punches break wood")
-		else:
-			_check(_alive(map, Vector2i(3, 0)) and not _hurt(map, Vector2i(3, 0)), "punches don't dent brick")
+		var name: String = "wood" if code == "#" else "brick"
+		_check(_alive(map, Vector2i(3, 0)) and not _hurt(map, Vector2i(3, 0)), "punches don't dent %s" % name)
 		player.queue_free()
 		map.queue_free()
 		await _frames(1)

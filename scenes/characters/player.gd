@@ -94,7 +94,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		_jump_buffer_timer = max(_jump_buffer_timer - delta, 0.0)
 
-	if just_pressed & InputFrame.ATTACK:
+	# Attack punches with empty hands; with a weapon it uses the weapon.
+	if just_pressed & InputFrame.ATTACK and not weapons.has_weapon():
 		start_attack()
 	_update_attack(delta)
 	_use_weapon(frame, just_pressed)
@@ -115,16 +116,16 @@ func _sample_input() -> InputFrame:
 	return input_source.sample()
 
 
-## Automatic weapons fire while the button is held; the rest need a fresh
-## press per shot. Pickup grabs the nearest weapon, or drops the current one
-## when nothing is in reach.
+## Attack (or the fire button) uses the weapon in hand. Automatic weapons
+## fire while it is held; the rest need a fresh press per shot. Pickup grabs
+## the nearest weapon, or drops the current one when nothing is in reach.
 func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
 	if just_pressed & InputFrame.PICKUP and not weapons.try_pick_up():
 		weapons.drop()
 	if not weapons.has_weapon():
 		return
 	var trigger := frame.buttons if weapons.weapon.automatic else just_pressed
-	if trigger & InputFrame.FIRE:
+	if trigger & (InputFrame.ATTACK | InputFrame.FIRE):
 		weapons.try_use()
 
 

@@ -7,6 +7,9 @@ extends Area2D
 signal hit_received(damage: int, knockback: Vector2, source: Node)
 
 @export var health: HealthComponent
+## Melee (Hitbox) swings land (hit_landed, sounds) but deal no damage: map
+## blocks that only bullets and blasts can break.
+@export var melee_proof := false
 
 
 func receive_hit(damage: int, knockback: Vector2, source: Node) -> void:

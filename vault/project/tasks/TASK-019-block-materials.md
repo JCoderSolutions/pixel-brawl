@@ -27,6 +27,12 @@ madera pero rebotan en el ladrillo, y el metal aguanta todo.
 - [x] Arena rehecha con tiles: suelo de ladrillo sobre cama de metal,
       plataformas de tablones, puente con extremos de metal
 - [x] Test headless `scripts/test_materials.gd`
+- [x] Los golpes (puños, katana, bate) no rompen ningún bloque, como en
+      Superfighters: pedido de Jose (2026-09-28). `BlockMaterial.breaks_from_melee`
+      (falso en madera, ladrillo y metal) y `Hurtbox.melee_proof`: el golpe
+      suena contra la pared pero no hace daño. Balas y explosiones siguen igual.
+      El metal (`X`) es indestructible: sirve para escenografía sólida (autos,
+      vigas) que no se puede romper
 - [ ] Test manual: granadas, balas y golpes contra cada material se sienten bien
 
 ## Detalles
