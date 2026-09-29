@@ -112,6 +112,10 @@ func _decide() -> InputFrame:
 		var side := _side_of(_target)
 		if side != 0 and side != body.weapons.facing and _pending & (InputFrame.ATTACK | InputFrame.PICKUP):
 			move = side * 0.1
+		elif not body.is_on_floor() and not body.weapons.has_weapon() and _pending & InputFrame.ATTACK:
+			# An empty-handed attack in the air is a drop kick that could
+			# carry the bot over a ledge: punch once it lands.
+			pass
 		else:
 			buttons |= _pending
 			_pending = 0
@@ -174,7 +178,10 @@ func _think() -> void:
 		# Fighters pass through each other: stop at fist range, not on top.
 		_goal_x = _target.global_position.x - side * PUNCH_STANDOFF
 		if absf(dx) <= PUNCH_RANGE and dy <= MELEE_HEIGHT:
-			strike = InputFrame.ATTACK
+			# Holding someone, attack knees; otherwise sometimes grab.
+			var holding: bool = body.has_method("is_grabbing") and body.is_grabbing()
+			var grab := not holding and _rng.randf() < profile.grab_chance
+			strike = InputFrame.PICKUP if grab else InputFrame.ATTACK
 	elif weapons.is_empty():
 		# Out of ammo: close in and throw the gun (Superfighters).
 		_goal_x = _target.global_position.x - side * THROW_DISTANCE

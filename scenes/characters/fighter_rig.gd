@@ -12,8 +12,15 @@ extends Control
 ## limb forward (towards +x, the facing side).
 
 ## VICTORY is never picked from a fighter's state: screens set it.
-enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE, RIDE, BLOCK }
+enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE, RIDE, BLOCK, ROLL,
+		UPPERCUT, KICK, AIR_KICK, GRAB, HELD }
 
+## Seconds for one full turn of a roll.
+const ROLL_PERIOD := 0.3
+## Guard energy bar over the head (shown while the guard isn't full).
+const GUARD_BAR := Vector2(12, 2)
+const GUARD_FULL := Color("63c74d")
+const GUARD_LOW := Color("e43b44")
 ## Seconds for a full stride (two steps) at run speed.
 const RUN_PERIOD := 0.5
 ## Below this horizontal speed (px/s) a grounded fighter idles.
@@ -59,6 +66,8 @@ var anim := Anim.IDLE
 ## Holding a weapon: the gun arm stays up while moving.
 var armed := false
 var anim_time := 0.0
+## Guard energy (0-1) from the fighter; the bar hides when it is full.
+var guard := 1.0
 
 
 func _init() -> void:
@@ -76,6 +85,7 @@ func _process(delta: float) -> void:
 		return
 	var state := read_state(fighter)
 	armed = state.armed
+	guard = state.get("guard", 1.0)
 	var next := choose_anim(state)
 	if next != anim:
 		anim = next
@@ -91,9 +101,20 @@ func _draw() -> void:
 	var frame := sprite_frame()
 	if frame != null:
 		_draw_sprite(frame)
+	else:
+		for part in parts(pose(anim, anim_time, armed), color, flash, look, team_color):
+			draw_colored_polygon(part.points, part.color)
+	_draw_guard_bar()
+
+
+## Superfighters-style energy bar: how much block the fighter has left.
+func _draw_guard_bar() -> void:
+	if guard >= 1.0:
 		return
-	for part in parts(pose(anim, anim_time, armed), color, flash, look, team_color):
-		draw_colored_polygon(part.points, part.color)
+	var corner := Vector2(-GUARD_BAR.x / 2.0, -size.y - 4.0)
+	draw_rect(Rect2(corner - Vector2.ONE, GUARD_BAR + Vector2(2, 2)), DARK)
+	var fill := Vector2(GUARD_BAR.x * clampf(guard, 0.0, 1.0), GUARD_BAR.y)
+	draw_rect(Rect2(corner, fill), GUARD_LOW.lerp(GUARD_FULL, guard))
 
 
 ## The character's sprite for the current animation and time, or null to
@@ -137,6 +158,11 @@ static func read_state(fighter: Node) -> Dictionary:
 		"attacking": fighter.has_method("is_attacking") and fighter.is_attacking(),
 		"hurt": fighter.has_method("is_in_hitstun") and fighter.is_in_hitstun(),
 		"diving": fighter.has_method("is_diving") and fighter.is_diving(),
+		"rolling": fighter.has_method("is_rolling") and fighter.is_rolling(),
+		"grabbing": fighter.has_method("is_grabbing") and fighter.is_grabbing(),
+		"held": fighter.has_method("is_held") and fighter.is_held(),
+		"move": fighter.attack_move() if fighter.has_method("attack_move") else &"jab",
+		"guard": fighter.guard_energy() if fighter.has_method("guard_energy") else 1.0,
 		"riding": fighter.has_method("is_riding") and fighter.is_riding(),
 		"blocking": fighter.has_method("is_blocking") and fighter.is_blocking(),
 		"armed": weapons != null and weapons.has_weapon(),
@@ -146,13 +172,26 @@ static func read_state(fighter: Node) -> Dictionary:
 static func choose_anim(state: Dictionary) -> Anim:
 	if state.get("riding", false):
 		return Anim.RIDE
+	if state.get("held", false):
+		return Anim.HELD
 	if state.hurt:
 		return Anim.HURT
+	if state.get("rolling", false):
+		return Anim.ROLL
 	if state.get("diving", false):
 		return Anim.DIVE
 	if state.get("blocking", false):
 		return Anim.BLOCK
+	if state.get("grabbing", false):
+		return Anim.GRAB
 	if state.attacking:
+		match state.get("move", &"jab"):
+			&"uppercut":
+				return Anim.UPPERCUT
+			&"kick":
+				return Anim.KICK
+			&"air_kick":
+				return Anim.AIR_KICK
 		return Anim.ATTACK
 	if not state.on_floor:
 		return Anim.JUMP if state.velocity.y < 0.0 else Anim.FALL
@@ -168,7 +207,7 @@ static func choose_anim(state: Dictionary) -> Anim:
 static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 	var p := {"hip_y": -LEG_LENGTH, "hip_x": 0.0, "bob": 0.0, "lean": 0.0,
 			"leg_front": 0.08, "leg_back": -0.08, "knee_front": 0.0, "knee_back": 0.0,
-			"arm_front": -0.1, "arm_back": 0.15, "shoulder_spread": 0.0}
+			"arm_front": -0.1, "arm_back": 0.15, "shoulder_spread": 0.0, "spin": 0.0}
 	match anim:
 		Anim.IDLE, Anim.AIM:
 			p.bob = 1.0 if sin(t * TAU / 1.2) > 0.0 else 0.0
@@ -223,6 +262,57 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 			p.arm_back = -1.5
 			p.leg_front = 1.0
 			p.leg_back = 1.3
+		Anim.ROLL:
+			# Tucked into a ball, turning forward over the hips.
+			p.hip_y = -6.0
+			p.leg_front = -2.2
+			p.knee_front = 2.4
+			p.leg_back = -2.0
+			p.knee_back = 2.5
+			p.lean = 0.9
+			p.arm_front = -2.4
+			p.arm_back = -2.2
+			p.spin = fmod(t, ROLL_PERIOD) / ROLL_PERIOD * TAU
+		Anim.UPPERCUT:
+			# Rising fist straight up, body stretched into it.
+			p.arm_front = -2.9
+			p.arm_back = 0.8
+			p.lean = -0.15
+			p.leg_front = -0.35
+			p.leg_back = 0.35
+			p.bob = -1.0
+		Anim.KICK:
+			# Low side kick: front leg straight out, body leaning away.
+			p.hip_y = -8.0
+			p.leg_front = -1.55
+			p.leg_back = 0.1
+			p.knee_back = 0.5
+			p.lean = -0.45
+			p.arm_front = 1.2
+			p.arm_back = -0.8
+		Anim.AIR_KICK:
+			# Drop kick: front leg aimed down and forward, the other tucked.
+			p.leg_front = -1.1
+			p.leg_back = 0.5
+			p.knee_back = 1.3
+			p.lean = -0.5
+			p.arm_front = -2.3
+			p.arm_back = 2.2
+		Anim.GRAB:
+			# Both hands forward, holding the rival up.
+			p.arm_front = -1.4
+			p.arm_back = -1.25
+			p.lean = -0.1
+			p.leg_front = -0.3
+			p.leg_back = 0.3
+		Anim.HELD:
+			# Hanging from the grabber's hands, legs kicking.
+			var kick := 0.35 * sin(t * 18.0)
+			p.lean = -0.4
+			p.arm_front = 2.5
+			p.arm_back = 2.8
+			p.leg_front = 0.2 + kick
+			p.leg_back = -0.2 - kick
 		Anim.RIDE:
 			# Crouched on the rocket, arms out for balance.
 			var sway := 0.2 * sin(t * 12.0)
@@ -285,6 +375,20 @@ static func parts(p: Dictionary, team: Color, flashing := false, character: Figh
 		_add(out, "team_marker", PackedVector2Array([tip + Vector2(-2, -3), tip + Vector2(2, -3), tip]), marker)
 	_add(out, "eye", _box(head + Vector2(1.0, -1.0), Vector2(2.0, 2.0)), DARK)
 	_arm(out, "arm_front", shoulder + spread, p.arm_front, team.lightened(0.18), skin)
+	var spin: float = p.get("spin", 0.0)
+	if spin != 0.0:
+		# Whole-body turn (rolls) around the middle of the tucked body, kept
+		# centred over the feet line.
+		var box := Rect2(out[0].points[0], Vector2.ZERO)
+		for part in out:
+			for point in part.points:
+				box = box.expand(point)
+		var pivot := box.get_center()
+		for part in out:
+			var points: PackedVector2Array = part.points
+			for i in points.size():
+				points[i] = Vector2(0.0, pivot.y) + (points[i] - pivot).rotated(spin)
+			part.points = points
 	# Spread legs reach below the hips' drop: lift the body so the lowest
 	# shoe corner rests on the floor line instead of sinking through it.
 	var lowest := -INF

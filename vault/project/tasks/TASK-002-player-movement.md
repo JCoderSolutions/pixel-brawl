@@ -28,5 +28,12 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
       (250 px/s, saltito bajo), agachado, sin dirección ni salto hasta que
       aterriza; los primeros 0.3 s no lo tocan golpes ni balas y aterriza sin
       daño por caída. Pose `DIVE` en el rig. Test `scripts/test_dive.gd`
+- [x] Rodada y zambullida en el aire (feedback de Jose 2026-09-29: "no veo
+      que pueda correr y lanzarme para rodar"): la zambullida arranca desde el
+      35 % de `run_speed` (antes 80 %, casi imposible con el stick táctil),
+      al aterrizar sigue rodando por el piso (0.3 s a 210 px/s, agachado,
+      0.15 s sin recibir golpes) y en el aire agacharse con dirección se
+      zambulle una vez por salto. Pose `ROLL` (el cuerpo gira). Test
+      `scripts/test_dive.gd`
 - [ ] Test manual de la zambullida en PC y teléfono
 - [ ] Rápido test manual: moverse con WASD (P1) se siente responsivo (las flechas son de P2 desde TASK-008)

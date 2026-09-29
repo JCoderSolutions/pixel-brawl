@@ -55,7 +55,10 @@ const PLAYER_COLORS: Array[Color] = [
 @export var sudden_death_after := 90.0
 ## With bots in the match: seconds after the last human is out before
 ## sudden death, so nobody watches the bots for long.
-@export var sudden_death_without_humans := 10.0
+@export var sudden_death_without_humans := 3.0
+## Sudden death drain once only bots are left: settle it quickly so the
+## round result and the winner screen come up right away.
+@export var bots_only_dps := 25.0
 ## Health per second every fighter still alive loses in sudden death.
 @export var sudden_death_dps := 5.0
 ## Players whose input is read locally; the rest are dummies until
@@ -282,7 +285,8 @@ func _tick_sudden_death(delta: float) -> void:
 		sudden_death_started.emit()
 	if not _sudden_death:
 		return
-	_drain += sudden_death_dps * delta
+	var bots_only := bot_difficulties.size() > 0 and human_players > 0 and not _humans_in_play()
+	_drain += (bots_only_dps if bots_only else sudden_death_dps) * delta
 	var damage := floori(_drain)
 	if damage <= 0:
 		return

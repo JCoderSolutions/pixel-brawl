@@ -33,6 +33,10 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
       hasta que queda uno. Arregla partidas que no terminaban porque dos bots
       quedaban trabados (Fundición en Fácil: uno en un tablón y el otro
       debajo). El HUD muestra "¡MUERTE SÚBITA!"
+- [x] Partidas con bots terminan rápido si ya no queda ningún humano
+      (feedback de Jose 2026-09-29: "si gana el bot no veo la finalización"):
+      la muerte súbita llega a los 3 s (antes 10 s) y quita 25 de vida por
+      segundo (`bots_only_dps`) hasta que queda un bot
 - [ ] Test manual de la muerte súbita
 - [x] Personajes y equipos (pedido de Jose 2026-09-29, base del menú en
       secuencia): 8 personajes `FighterLook` (los 4 primeros con los colores

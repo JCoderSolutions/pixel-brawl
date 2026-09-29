@@ -22,6 +22,25 @@ con un pipeline de daño reutilizable para armas, props y tiles destructibles.
 - [x] Ataque del player con startup / active / recovery, hitstun, knockback e i-frames
 - [x] Acción `attack` (J; desde TASK-008 `p1_attack` J, `p2_attack` Ctrl / Enter) y dummy de práctica en `test_arena`
 - [x] Test headless `scripts/test_melee.gd`
+- [x] Movimientos de Superfighters (pedido de Jose 2026-09-29, ver
+      `/mnt/project-files/analisis/dinamismo-vs-superfighters.md`):
+      combo de tres golpes, jab → cross → uppercut. Cada golpe tiene una
+      ventana de 0.3 s para encadenar el siguiente, y apretar durante el
+      golpe deja el próximo en cola. Jab y cross empujan poco y dan un paso
+      de 6 px para que el combo no se salga del alcance. El uppercut hace
+      x1.6 de daño y lanza hacia arriba (-330). Agachado + Golpear es una
+      patada (x1.3, empuja 290). Golpear en el aire es una patada voladora
+      hacia adelante y abajo (x1.4). Con las manos vacías, Agarrar
+      junto a un rival lo agarra: Golpear le da rodillazos (hasta 3),
+      Agarrar lo lanza hacia donde mira o hacia la dirección que se mantiene,
+      y a los 1.5 s se suelta solo. El agarrado se zafa apretando botones
+      6 veces, y el que lo tenía queda aturdido. `Hitbox.damage_scale`
+      escala cada movimiento sin pisar el power-up de Fuerza. Un golpe que
+      mata siempre lanza (mínimo 220/-160). Los i-frames bajan a 0.15 s
+      para que entre el combo. Poses nuevas: `UPPERCUT`, `KICK`,
+      `AIR_KICK`, `GRAB`, `HELD`. Los bots en Normal y Difícil agarran a
+      veces (15 % / 30 %) y no patean en el aire. Test
+      `scripts/test_melee_moves.gd`
 - [ ] Test manual de sensaciones: el golpe se siente con peso y el alcance es justo
 
 ## Detalles

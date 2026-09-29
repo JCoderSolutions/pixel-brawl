@@ -20,6 +20,8 @@ var grenade_awareness := 1.2
 var weapon_greed := 1.0
 ## Horizontal tolerance, in px, when lining up a shot with a target's height.
 var aim_tolerance := 12.0
+## Chance that an empty-handed strike at fist range is a grab instead of a punch.
+var grab_chance := 0.15
 
 
 static func create(level: Difficulty) -> BotProfile:
@@ -32,12 +34,14 @@ static func create(level: Difficulty) -> BotProfile:
 			profile.grenade_awareness = 0.0
 			profile.weapon_greed = 0.5
 			profile.aim_tolerance = 20.0
+			profile.grab_chance = 0.0
 		Difficulty.HARD:
 			profile.think_interval = 4
 			profile.aggression = 1.0
 			profile.grenade_awareness = 2.0
 			profile.weapon_greed = 1.6
 			profile.aim_tolerance = 10.0
+			profile.grab_chance = 0.3
 	return profile
 
 

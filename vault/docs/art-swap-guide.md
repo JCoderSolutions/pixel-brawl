@@ -41,7 +41,8 @@ Paleta: Endesga 32. Test de los enganches: `scripts/test_art_hooks.gd`.
   `punk.tres`, `obrero.tres`). `FighterLook` lo carga solo si existe.
 - Una animación por pose de `FighterRig.Anim`, con estos nombres: `idle`,
   `run`, `jump`, `fall`, `crouch`, `attack`, `hurt`, `aim`, `victory`,
-  `dive`, `ride`, `block`. Velocidad (FPS) y loop se configuran en cada
+  `dive`, `ride`, `block`, `roll`, `uppercut`, `kick`, `air_kick`, `grab`,
+  `held`. Velocidad (FPS) y loop se configuran en cada
   animación. Si falta una animación, esa pose se dibuja con formas nativas.
 - Cuadros de 32x32, **mirando a la derecha** y con **los pies en el borde de
   abajo**, centrados. El juego los espeja al mirar a la izquierda.

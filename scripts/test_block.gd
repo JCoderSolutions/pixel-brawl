@@ -2,8 +2,10 @@ extends SceneTree
 
 ## Headless tests for blocking (Superfighters): the block button (the old
 ## fire button) plants the fighter, stops hits from the front but not from
-## behind, doesn't stop bullets, and with a metal blade (katana) a block
-## started right before a bullet lands sends it back at the shooter.
+## behind (a bit of damage still gets through), doesn't stop bullets, spends
+## guard energy that breaks the guard when it runs out, and with a metal
+## blade (katana) a block started right before a bullet lands sends it back
+## at the shooter.
 ## Run: godot --headless --path . -s scripts/test_block.gd
 
 const PLAYER_SCENE := preload("res://scenes/characters/player.tscn")
@@ -25,7 +27,9 @@ func _run_tests() -> void:
 	await _test_block_does_not_stop_bullets()
 	await _test_katana_parry_returns_bullets()
 	await _test_late_or_wooden_blocks_do_not_parry()
-	print("OK: block plants the fighter, stops front hits and thrown weapons only, not bullets, and a timely katana block returns bullets verified" if _ok else "FAILED")
+	await _test_guard_energy_drains_and_refills()
+	await _test_guard_breaks_under_pressure()
+	print("OK: block plants the fighter, stops front hits (with chip damage) and thrown weapons only, not bullets, guard energy drains, refills and breaks, and a timely katana block returns bullets verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -94,8 +98,10 @@ func _test_block_plants_and_poses() -> void:
 	await process_frame
 
 
-## A punch from the front bounces off the guard; the same punch in the back hurts.
+## A punch from the front bounces off the guard with a little chip damage;
+## the same punch in the back hurts in full.
 func _test_block_stops_front_hits_only() -> void:
+	var lost := {}
 	for from_front in [true, false]:
 		var stage := _stage()
 		var blocker := _fighter(stage, 0, _hold(60, 0.0, InputFrame.BLOCK), not from_front)
@@ -103,13 +109,16 @@ func _test_block_stops_front_hits_only() -> void:
 		var blocked := [0]
 		blocker.get_node("Hurtbox").blocked.connect(func(_kind): blocked[0] += 1)
 		await _frames(60)
-		var hurt: bool = blocker.health.current_health < blocker.health.max_health
+		lost[from_front] = blocker.health.max_health - blocker.health.current_health
 		if from_front:
-			_check(not hurt and blocked[0] == 1, "a punch from the front is blocked (hp %d)" % blocker.health.current_health)
+			_check(blocked[0] == 1, "a punch from the front is blocked")
+			_check(blocker.guard_energy() < 1.0, "blocking it spends guard energy")
 		else:
-			_check(hurt and blocked[0] == 0, "a punch in the back still hurts (hp %d)" % blocker.health.current_health)
+			_check(lost[false] > 0 and blocked[0] == 0, "a punch in the back still hurts (lost %d)" % lost[false])
 		stage.queue_free()
 		await process_frame
+	_check(lost[true] > 0 and lost[true] * 3 <= lost[false],
+			"the guard lets only a little chip damage through (%d of %d)" % [lost[true], lost[false]])
 
 
 ## Superfighters blocks thrown items too: a katana thrown at a guard from the
@@ -122,8 +131,9 @@ func _test_block_stops_thrown_weapons() -> void:
 	thrower.weapons.equip(KATANA)
 	await _frames(70)
 	_check(not thrower.weapons.has_weapon(), "the katana was thrown")
-	_check(blocker.health.current_health == blocker.health.max_health,
-			"a weapon thrown at a guard from the front is blocked (hp %d)" % blocker.health.current_health)
+	var lost: int = blocker.health.max_health - blocker.health.current_health
+	_check(lost <= ceili(KATANA.damage * blocker.block_chip),
+			"a weapon thrown at a guard from the front is blocked (lost %d)" % lost)
 	stage.queue_free()
 	await process_frame
 
@@ -178,3 +188,41 @@ func _test_late_or_wooden_blocks_do_not_parry() -> void:
 		_check(shooter.health.current_health == shooter.health.max_health, "%s: nothing comes back" % case)
 		stage.queue_free()
 		await process_frame
+
+
+## Holding the guard slowly spends energy; letting go refills it.
+func _test_guard_energy_drains_and_refills() -> void:
+	var stage := _stage()
+	var player := _fighter(stage, 0, _hold(120, 0.0, InputFrame.BLOCK) + _hold(240))
+	await _frames(130)
+	var held: float = player.guard_energy()
+	_check(held < 1.0 and held > 0.5, "holding the guard for 2 s spends some energy (%.2f)" % held)
+	await _frames(240)
+	_check(is_equal_approx(player.guard_energy(), 1.0), "resting refills it (%.2f)" % player.guard_energy())
+	stage.queue_free()
+	await process_frame
+
+
+## A flurry of punches into a guard empties it: the guard breaks, the
+## blocker is stunned and can't block again until the energy recovers.
+func _test_guard_breaks_under_pressure() -> void:
+	var stage := _stage()
+	var blocker := _fighter(stage, 0, _hold(400, 0.0, InputFrame.BLOCK))
+	var punches: Array[InputFrame] = _hold(8)
+	for i in 30:
+		punches += _hold(1, 0.0, InputFrame.ATTACK) + _hold(11)
+	var attacker := _fighter(stage, 22, punches, true)
+	var broke := [false]
+	for i in 400:
+		await physics_frame
+		# Keep the attacker in reach: blocked punches push the blocker away.
+		attacker.position.x = blocker.position.x + 22.0
+		if blocker.is_guard_broken():
+			broke[0] = true
+			break
+	_check(broke[0], "enough punches break the guard (energy %.2f)" % blocker.guard_energy())
+	_check(blocker.is_in_hitstun(), "a broken guard stuns the blocker")
+	await _frames(2)
+	_check(not blocker.is_blocking(), "and it can't block right away")
+	stage.queue_free()
+	await process_frame

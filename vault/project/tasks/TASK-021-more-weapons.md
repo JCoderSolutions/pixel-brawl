@@ -41,6 +41,12 @@ arma es un `.tres` en `scripts/weapons/data/`.
       `player.guard()`); las balas pasan. Con un arma de metal (katana,
       `WeaponData.metal`) un bloqueo de menos de 0.25 s devuelve la bala al
       que disparó (`Projectile._deflect`). Pose `BLOCK`. Test `scripts/test_block.gd`
+- [x] Cubrirse ya no es infinito (feedback de Jose 2026-09-29): pasa el 25 %
+      del daño (`block_chip`) y cada golpe gasta energía de guardia
+      (`block_hit_cost` 0.03 por punto de daño, más 0.12/s mantenido). Sin
+      energía la guardia se rompe: 0.8 s aturdido y no se puede cubrir hasta
+      recuperar el 35 % (se recarga 0.35/s). Barra de energía sobre la
+      cabeza mientras no está llena. Test `scripts/test_block.gd`
 - [x] Montarse en el cohete (Superfighters, pedido de Jose 2026-09-29): si
       el cohete de la bazuca le pega a un luchador (no al que disparó), lo
       engancha y se lo lleva; el jinete lo dirige con izquierda/derecha

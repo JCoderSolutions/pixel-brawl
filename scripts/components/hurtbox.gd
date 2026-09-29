@@ -16,11 +16,12 @@ signal blocked(kind: StringName)
 
 
 ## `kind` and `from` (where the hit comes from, global) let the owner block
-## it: an owner with `guard(kind, from) -> bool` returning true takes nothing.
+## it: an owner with `guard(kind, from, damage, source) -> bool` returning
+## true takes nothing more (it may take chip damage itself).
 func receive_hit(damage: int, knockback: Vector2, source: Node, kind := &"hit", from := Vector2.INF) -> void:
 	if health == null or health.is_dead():
 		return
-	if owner != null and owner.has_method("guard") and owner.guard(kind, from):
+	if owner != null and owner.has_method("guard") and owner.guard(kind, from, damage, source):
 		blocked.emit(kind)
 		return
 	health.take_damage(damage, source)

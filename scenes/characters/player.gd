@@ -21,10 +21,23 @@ extends CharacterBody2D
 @export var block_parry_window := 0.25
 ## Push a blocked hit still gives the blocker (px/s, away from the hit).
 @export var block_push := 80.0
+## Share of a blocked hit's damage that still gets through the guard.
+@export_range(0.0, 1.0) var block_chip := 0.25
+## Guard energy (0-1, Superfighters' energy bar) spent per second held...
+@export var block_drain := 0.12
+## ...and per point of damage stopped.
+@export var block_hit_cost := 0.03
+## Guard energy recovered per second while not blocking.
+@export var block_regen := 0.35
+## Hitstun when a hit empties the guard; no blocking again until the energy
+## is back to `block_recover`.
+@export var guard_break_stun := 0.8
+@export_range(0.0, 1.0) var block_recover := 0.35
 
 @export_group("Dive")
-## Crouching while running this fast (share of run_speed) dives forward.
-@export var dive_min_speed := 0.8
+## Crouching while running this fast (share of run_speed) dives forward; in
+## the air, crouch with a direction dives once per jump.
+@export var dive_min_speed := 0.35
 @export var dive_speed := 250.0
 @export var dive_lift := -150.0
 ## Seconds before a dive can end (it lasts until the fighter lands).
@@ -32,6 +45,11 @@ extends CharacterBody2D
 ## Seconds a dive can't be hit, from its start.
 @export var dive_dodge_time := 0.3
 @export var dive_cooldown := 0.4
+## A dive that lands turns into a roll along the floor: low and fast.
+@export var roll_time := 0.3
+@export var roll_speed := 210.0
+## Seconds of the roll that can't be hit.
+@export var roll_dodge_time := 0.15
 ## Only the controlled player reads input; others (dummies) don't.
 @export var is_controlled := true
 ## Team from the match setup (0 = none). Bots leave teammates alone.
@@ -41,11 +59,48 @@ extends CharacterBody2D
 @export_range(1, 4) var player_slot := 1
 
 @export_group("Melee")
-@export var attack_startup := 0.05
-@export var attack_active := 0.1
-@export var attack_recovery := 0.15
 @export var hitstun := 0.25
-@export var invulnerability := 0.3
+## Short enough for a combo's next punch to land.
+@export var invulnerability := 0.15
+## Seconds after a jab or cross when the next press chains the combo
+## (jab -> cross -> uppercut, Superfighters). A press during a swing queues it.
+@export var combo_window := 0.3
+
+@export_group("Grab")
+## Pickup with empty hands next to a rival grabs them (Superfighters).
+@export var grab_reach := 20.0
+## Seconds before a grabbed rival slips away.
+@export var grab_hold_time := 1.5
+## Presses the grabbed fighter needs to break free.
+@export var grab_escape_presses := 6
+## Knees (attack while holding) before the rival is thrown anyway.
+@export var max_knees := 3
+@export var knee_damage := 7
+@export var knee_cooldown := 0.3
+## Throw (pickup while holding, towards the facing side or the held
+## direction): launch speed, damage and the thrown fighter's stun.
+@export var throw_velocity := Vector2(330.0, -230.0)
+@export var throw_damage := 6
+@export var throw_stun := 0.6
+
+## Melee moves: damage scale on the punch Hitbox (the Strength power-up
+## scales its base), knockback, timings (s) and where the hit lands.
+const MOVES := {
+	&"jab": {"scale": 1.0, "knockback": Vector2(10, -20), "startup": 0.05, "active": 0.08,
+			"recovery": 0.12, "offset": Vector2(16, -17)},
+	&"cross": {"scale": 1.0, "knockback": Vector2(30, -30), "startup": 0.05, "active": 0.08,
+			"recovery": 0.14, "offset": Vector2(16, -17)},
+	&"uppercut": {"scale": 1.6, "knockback": Vector2(200, -330), "startup": 0.08, "active": 0.1,
+			"recovery": 0.25, "offset": Vector2(16, -20)},
+	&"kick": {"scale": 1.3, "knockback": Vector2(290, -150), "startup": 0.08, "active": 0.1,
+			"recovery": 0.22, "offset": Vector2(18, -8)},
+	&"air_kick": {"scale": 1.4, "knockback": Vector2(250, -60), "startup": 0.04, "active": 0.25,
+			"recovery": 0.12, "offset": Vector2(14, -8)},
+}
+## Speed a drop kick throws the fighter at (forward, downward).
+const AIR_KICK_VELOCITY := Vector2(220.0, 140.0)
+## Chained punches step in this far (px) so the combo keeps its reach.
+const COMBO_STEP := 6.0
 
 var _coyote_timer := 0.0
 var _jump_buffer_timer := 0.0
@@ -55,6 +110,17 @@ var _attack_timer := 0.0
 var _hitstun_timer := 0.0
 var _invulnerable_timer := 0.0
 var _prev_buttons := 0
+var _move := &"jab"
+## 1 after a jab, 2 after a cross: what the next press in the window chains.
+var _combo_step := 0
+var _combo_timer := 0.0
+var _attack_buffered := false
+var _holding: CharacterBody2D
+var _held_by: CharacterBody2D
+var _grab_timer := 0.0
+var _knees := 0
+var _knee_timer := 0.0
+var _escape_presses := 0
 var _diving := false
 ## The rocket this fighter is riding (Grenade), if any.
 var _riding: Node
@@ -63,6 +129,12 @@ var _blocking := false
 var _block_time := 0.0
 var _dive_timer := 0.0
 var _dive_cooldown_timer := 0.0
+var _air_dive_used := false
+var _rolling := false
+var _roll_timer := 0.0
+var _roll_dir := 1.0
+var _guard := 1.0
+var _guard_broken := false
 ## True from a jump until its rise ends or is cut; knockback launches never
 ## set it, so letting go of jump only shortens real jumps.
 var _jump_rising := false
@@ -80,7 +152,6 @@ var input_source: InputSource
 @onready var _base_color: Color = _visual.color
 @onready var health: HealthComponent = $HealthComponent
 @onready var _hitbox: Hitbox = $Hitbox
-@onready var _hitbox_offset: float = absf(_hitbox.position.x)
 @onready var weapons: WeaponHolder = $WeaponHolder
 
 
@@ -108,6 +179,9 @@ func _physics_process(delta: float) -> void:
 	var frame := _sample_input()
 	var just_pressed := frame.buttons & ~_prev_buttons
 	_prev_buttons = frame.buttons
+	# Held by a rival: only mashing buttons to break free.
+	if _update_held(just_pressed):
+		return
 
 	var can_act := _hitstun_timer == 0.0 and not health.is_dead()
 	if not can_act:
@@ -118,7 +192,17 @@ func _physics_process(delta: float) -> void:
 
 	if _ride(input_dir):
 		return
+	var had_grab := _holding != null
+	_update_grab(delta, input_dir, just_pressed)
+	if had_grab:
+		# Planted while holding someone: attack knees, pickup throws (and
+		# that press doesn't grab again right away).
+		input_dir = 0.0
+		just_pressed = 0
+		frame = InputFrame.new()
+		want_crouch = false
 	_update_dive(delta, input_dir, just_pressed, can_act)
+	_update_roll(delta)
 	_update_block(delta, frame)
 	if _blocking:
 		# Planted behind the guard: no walking, no attacks.
@@ -131,17 +215,19 @@ func _physics_process(delta: float) -> void:
 	else:
 		_jump_buffer_timer = max(_jump_buffer_timer - delta, 0.0)
 
-	# Attack punches with empty hands; with a weapon it uses the weapon.
+	# Attack punches with empty hands (crouched it kicks, in the air it drop
+	# kicks); with a weapon it uses the weapon.
 	if just_pressed & InputFrame.ATTACK and not weapons.has_weapon():
-		start_attack()
+		_press_attack(want_crouch)
 	_update_attack(delta)
 	_use_weapon(frame, just_pressed)
 
 	_set_crouching(want_crouch)
 	_apply_gravity(delta, want_crouch)
-	if _hitstun_timer == 0.0 and not _diving:
+	var drop_kicking := is_attacking() and _move == &"air_kick"
+	if _hitstun_timer == 0.0 and not _diving and not _rolling and not drop_kicking:
 		_apply_horizontal(input_dir, delta)
-	if not _diving:
+	if not _diving and not _rolling:
 		_perform_jump(input_dir)
 	_cut_jump(frame.is_held(InputFrame.JUMP))
 
@@ -159,7 +245,10 @@ func _sample_input() -> InputFrame:
 ## the nearest weapon, or throws the current one when nothing is in reach.
 func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
 	if just_pressed & InputFrame.PICKUP and not weapons.try_pick_up():
-		weapons.throw_weapon()
+		if weapons.has_weapon():
+			weapons.throw_weapon()
+		else:
+			try_grab()
 	if not weapons.has_weapon():
 		return
 	var trigger := frame.buttons if weapons.weapon.automatic else just_pressed
@@ -178,8 +267,10 @@ func is_in_hitstun() -> bool:
 
 ## Carried away by a bazooka rocket that hit this fighter (Grenade calls it).
 func start_rocket_ride(rocket: Node) -> void:
+	release_grab()
 	_riding = rocket
 	_diving = false
+	_rolling = false
 	_blocking = false
 	_attack_timer = 0.0
 	_hitbox.deactivate()
@@ -221,11 +312,35 @@ func is_blocking() -> bool:
 
 ## Hurtbox asks before a hit lands: a guard stops melee (fists, blades,
 ## thrown weapons) coming from the front and pushes the blocker back a bit.
-func guard(kind: StringName, from: Vector2) -> bool:
+## Some damage still gets through (chip) and each hit spends guard energy;
+## the hit that empties it breaks the guard and stuns the blocker.
+func guard(kind: StringName, from: Vector2, damage := 0, source: Node = null) -> bool:
 	if not _blocking or kind != &"melee" or not _in_front(from):
 		return false
 	velocity.x = (-1.0 if _facing_right else 1.0) * block_push
+	_guard = maxf(_guard - damage * block_hit_cost, 0.0)
+	var chip := ceili(damage * block_chip)
+	if chip > 0:
+		health.take_damage(chip, source)
+	if _guard == 0.0:
+		_break_guard()
 	return true
+
+
+## Guard energy, 0-1: the rig shows it while it isn't full.
+func guard_energy() -> float:
+	return _guard
+
+
+func is_guard_broken() -> bool:
+	return _guard_broken
+
+
+func _break_guard() -> void:
+	_blocking = false
+	_guard_broken = true
+	_hitstun_timer = maxf(_hitstun_timer, guard_break_stun)
+	velocity.x *= 2.0
 
 
 ## A bullet from the front meets a fresh block with a metal blade: it goes
@@ -242,13 +357,22 @@ func _in_front(from: Vector2) -> bool:
 
 
 func _update_block(delta: float, frame: InputFrame) -> void:
+	if _guard_broken and _guard >= block_recover:
+		_guard_broken = false
 	var want := frame.is_held(InputFrame.BLOCK) and is_on_floor() and not _diving \
-			and not is_attacking() and _hitstun_timer == 0.0 and not health.is_dead()
+			and not _rolling and not _guard_broken and not is_attacking() \
+			and _hitstun_timer == 0.0 and not health.is_dead()
 	if want and not _blocking:
 		_block_time = 0.0
 	elif want:
 		_block_time += delta
 	_blocking = want
+	if _blocking:
+		_guard = maxf(_guard - block_drain * delta, 0.0)
+		if _guard == 0.0:
+			_break_guard()
+	else:
+		_guard = minf(_guard + block_regen * delta, 1.0)
 
 
 ## Mid-dive: low, fast and (at first) untouchable. FallDamage skips it.
@@ -256,29 +380,224 @@ func is_diving() -> bool:
 	return _diving
 
 
+## Rolling along the floor after a dive lands.
+func is_rolling() -> bool:
+	return _rolling
+
+
 func is_attacking() -> bool:
 	return _attack_timer > 0.0
 
 
+## The melee move being thrown (&"jab", &"cross", &"uppercut", &"kick",
+## &"air_kick"); the rig poses it.
+func attack_move() -> StringName:
+	return _move
+
+
+## Starts the next punch of the combo (or a jab); tests and scripts call it.
 func start_attack() -> void:
 	if is_attacking() or health.is_dead():
 		return
-	_attack_timer = attack_startup + attack_active + attack_recovery
+	_begin_move(_next_punch())
+
+
+func _press_attack(crouching: bool) -> void:
+	if health.is_dead():
+		return
+	if is_attacking():
+		_attack_buffered = _move == &"jab" or _move == &"cross"
+		return
+	_begin_move(_next_move(crouching))
+
+
+func _next_move(crouching: bool) -> StringName:
+	if not is_on_floor():
+		return &"air_kick"
+	if crouching:
+		return &"kick"
+	return _next_punch()
+
+
+## Jab, or the next punch of the combo while its window is open.
+func _next_punch() -> StringName:
+	if _combo_timer > 0.0:
+		if _combo_step == 1:
+			return &"cross"
+		if _combo_step == 2:
+			return &"uppercut"
+	return &"jab"
+
+
+func _begin_move(move: StringName) -> void:
+	var m: Dictionary = MOVES[move]
+	_move = move
+	_combo_step = 1 if move == &"jab" else (2 if move == &"cross" else 0)
+	_combo_timer = 0.0
+	_attack_buffered = false
+	_attack_timer = m.startup + m.active + m.recovery
+	var facing := 1.0 if _facing_right else -1.0
+	_hitbox.damage_scale = m.scale
+	_hitbox.knockback = m.knockback
+	_hitbox.position = Vector2(m.offset.x * facing, m.offset.y)
+	if move == &"cross" or move == &"uppercut":
+		move_and_collide(Vector2(facing * COMBO_STEP, 0.0))
+	if move == &"air_kick":
+		velocity = Vector2(facing * AIR_KICK_VELOCITY.x, maxf(velocity.y, AIR_KICK_VELOCITY.y))
 
 
 ## Hit window opens after startup and closes before recovery, so a swing
-## reads as wind-up -> strike -> follow-through.
+## reads as wind-up -> strike -> follow-through. A press queued during a jab
+## or cross chains the next punch as soon as the swing ends.
 func _update_attack(delta: float) -> void:
 	if not is_attacking():
+		_combo_timer = maxf(_combo_timer - delta, 0.0)
 		return
+	var m: Dictionary = MOVES[_move]
 	_attack_timer = max(_attack_timer - delta, 0.0)
-	var in_active_window := _attack_timer <= attack_active + attack_recovery \
-			and _attack_timer > attack_recovery
+	var in_active_window: bool = _attack_timer <= m.active + m.recovery \
+			and _attack_timer > m.recovery
 	if in_active_window and not _hitbox.is_active():
 		_hitbox.direction = 1.0 if _facing_right else -1.0
 		_hitbox.activate()
 	elif not in_active_window and _hitbox.is_active():
 		_hitbox.deactivate()
+	if _attack_timer == 0.0:
+		_combo_timer = combo_window if _combo_step > 0 else 0.0
+		if _attack_buffered and is_on_floor() and _hitstun_timer == 0.0:
+			_begin_move(_next_punch())
+
+
+func is_grabbing() -> bool:
+	return _holding != null and is_instance_valid(_holding)
+
+
+func is_held() -> bool:
+	return _held_by != null and is_instance_valid(_held_by)
+
+
+## Grabs the closest rival right in front, if any (pickup with empty hands).
+func try_grab() -> bool:
+	if not is_on_floor() or is_attacking() or _blocking or _diving or _rolling \
+			or is_grabbing() or health.is_dead():
+		return false
+	var target := _grab_target()
+	if target == null:
+		return false
+	_holding = target
+	_grab_timer = grab_hold_time
+	_knees = 0
+	_knee_timer = 0.0
+	target.start_held(self)
+	return true
+
+
+## Whether this fighter can be grabbed right now.
+func can_be_grabbed() -> bool:
+	return not health.is_dead() and not is_riding() and not is_held() and not is_grabbing() \
+			and not _diving and not _rolling
+
+
+func _grab_target() -> CharacterBody2D:
+	var facing := 1.0 if _facing_right else -1.0
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(grab_reach, 24.0)
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = shape
+	query.transform = Transform2D(0.0, global_position + Vector2(facing * (8.0 + grab_reach / 2.0), -15.0))
+	query.collision_mask = collision_layer
+	query.exclude = [get_rid()]
+	var best: CharacterBody2D
+	for hit in get_world_2d().direct_space_state.intersect_shape(query, 8):
+		var body := hit.collider as CharacterBody2D
+		if body == null or not body.has_method("can_be_grabbed") or not body.can_be_grabbed():
+			continue
+		if team != 0 and body.team == team:
+			continue
+		if best == null or absf(body.global_position.x - global_position.x) < absf(best.global_position.x - global_position.x):
+			best = body
+	return best
+
+
+## Called by the grabber: this fighter hangs in front of it until thrown,
+## let go or it breaks free.
+func start_held(by: CharacterBody2D) -> void:
+	_held_by = by
+	_escape_presses = 0
+	_attack_timer = 0.0
+	_hitbox.deactivate()
+	_blocking = false
+	_diving = false
+	_rolling = false
+	velocity = Vector2.ZERO
+
+
+func _update_held(just_pressed: int) -> bool:
+	if _held_by == null:
+		return false
+	if not is_instance_valid(_held_by) or _held_by._holding != self:
+		_held_by = null
+		return false
+	if just_pressed != 0:
+		_escape_presses += 1
+		if _escape_presses >= _held_by.grab_escape_presses:
+			_held_by.release_grab(true)
+			return false
+	var facing := 1.0 if _held_by._facing_right else -1.0
+	global_position = _held_by.global_position + Vector2(facing * 14.0, -2.0)
+	velocity = Vector2.ZERO
+	return true
+
+
+func _update_grab(delta: float, input_dir: float, just_pressed: int) -> void:
+	if _holding == null:
+		return
+	if not is_grabbing() or health.is_dead() or _hitstun_timer > 0.0 or _holding.health.is_dead():
+		release_grab()
+		return
+	_grab_timer -= delta
+	_knee_timer = maxf(_knee_timer - delta, 0.0)
+	var facing := 1.0 if _facing_right else -1.0
+	if just_pressed & InputFrame.PICKUP:
+		var dir := signf(input_dir) if input_dir != 0.0 else facing
+		if dir != facing:
+			_flip(dir > 0.0)
+		_throw(dir)
+	elif just_pressed & InputFrame.ATTACK and _knee_timer == 0.0:
+		_knees += 1
+		_knee_timer = knee_cooldown
+		var damage := roundi(knee_damage * _hitbox.damage / 10.0)
+		_holding.get_node("Hurtbox").receive_hit(damage, Vector2.ZERO, self, &"knee")
+		if _knees >= max_knees:
+			_throw(facing)
+	elif _grab_timer <= 0.0:
+		release_grab(true)
+
+
+func _throw(dir: float) -> void:
+	var victim := _holding
+	_holding = null
+	if not is_instance_valid(victim):
+		return
+	victim._held_by = null
+	victim.get_node("Hurtbox").receive_hit(throw_damage, Vector2(dir * throw_velocity.x, throw_velocity.y), self, &"throw")
+	victim._hitstun_timer = maxf(victim._hitstun_timer, throw_stun)
+
+
+## Lets go of the held rival; `pushed` shoves both apart (it broke free or
+## slipped away), and a rival breaking free leaves the grabber reeling.
+func release_grab(pushed := false) -> void:
+	var victim := _holding
+	_holding = null
+	if not is_instance_valid(victim):
+		return
+	victim._held_by = null
+	if pushed:
+		var facing := 1.0 if _facing_right else -1.0
+		victim.velocity.x = facing * 140.0
+		velocity.x = -facing * 140.0
+		if victim._escape_presses >= grab_escape_presses:
+			_hitstun_timer = maxf(_hitstun_timer, 0.3)
 
 
 func _on_hit_received(_damage: int, knockback: Vector2, _source: Node) -> void:
@@ -297,6 +616,7 @@ func _end_invulnerability() -> void:
 
 
 func _on_died(_source: Node) -> void:
+	release_grab()
 	_attack_timer = 0.0
 	_hitbox.deactivate()
 	$Hurtbox.set_deferred("monitorable", false)
@@ -354,31 +674,67 @@ func _cut_jump(jump_held: bool) -> void:
 
 
 func _set_crouching(pressed: bool) -> void:
-	var want_crouch := (pressed and is_on_floor()) or _diving
+	var want_crouch := (pressed and is_on_floor()) or _diving or _rolling
 	if want_crouch == _is_crouching:
 		return
 	_is_crouching = want_crouch
 	_set_body_height(crouch_height if _is_crouching else _stand_height)
 
 
-## Superfighters dive: crouch while running to throw yourself forward. It
-## keeps its momentum (no steering, no jumping) until it lands.
+## Superfighters dive: crouch while running to throw yourself forward (or
+## crouch with a direction in the air, once per jump). It keeps its momentum
+## (no steering, no jumping) until it lands, then rolls on along the floor.
 func _update_dive(delta: float, input_dir: float, just_pressed: int, can_act: bool) -> void:
 	_dive_cooldown_timer = maxf(_dive_cooldown_timer - delta, 0.0)
+	if is_on_floor() and not _diving:
+		_air_dive_used = false
 	if _diving:
 		_dive_timer = maxf(_dive_timer - delta, 0.0)
 		if _dive_timer == 0.0 and is_on_floor():
 			_diving = false
 			_dive_cooldown_timer = dive_cooldown
+			_start_roll(signf(velocity.x) if velocity.x != 0.0 else _roll_dir)
 		return
-	var running := absf(velocity.x) >= run_speed * dive_min_speed and input_dir != 0.0
-	if can_act and just_pressed & InputFrame.CROUCH and running and is_on_floor() \
-			and _dive_cooldown_timer == 0.0 and not is_attacking():
-		_diving = true
-		_dive_timer = dive_time
-		velocity = Vector2(signf(velocity.x) * dive_speed, dive_lift)
-		_invulnerable_timer = maxf(_invulnerable_timer, dive_dodge_time)
-		$Hurtbox.set_deferred("monitorable", false)
+	if not can_act or not just_pressed & InputFrame.CROUCH or input_dir == 0.0 \
+			or _dive_cooldown_timer > 0.0 or is_attacking() or _rolling:
+		return
+	if is_on_floor():
+		var running := absf(velocity.x) >= run_speed * dive_min_speed \
+				and signf(velocity.x) == signf(input_dir)
+		if running:
+			_start_dive(signf(input_dir), dive_lift)
+	elif not _air_dive_used:
+		_air_dive_used = true
+		_start_dive(signf(input_dir), minf(velocity.y, 0.0))
+
+
+func _start_dive(dir: float, lift: float) -> void:
+	_diving = true
+	_dive_timer = dive_time
+	_roll_dir = dir
+	velocity = Vector2(dir * dive_speed, lift)
+	_flip(dir > 0.0)
+	_invulnerable_timer = maxf(_invulnerable_timer, dive_dodge_time)
+	$Hurtbox.set_deferred("monitorable", false)
+
+
+func _start_roll(dir: float) -> void:
+	_rolling = true
+	_roll_timer = roll_time
+	_roll_dir = dir
+	_invulnerable_timer = maxf(_invulnerable_timer, roll_dodge_time)
+	$Hurtbox.set_deferred("monitorable", false)
+
+
+## The roll keeps its speed on the floor; rolling off a ledge just falls.
+func _update_roll(delta: float) -> void:
+	if not _rolling:
+		return
+	_roll_timer = maxf(_roll_timer - delta, 0.0)
+	if _roll_timer == 0.0 or not is_on_floor() or health.is_dead() or _hitstun_timer > 0.0:
+		_rolling = false
+		return
+	velocity.x = _roll_dir * roll_speed
 
 
 ## Origin sits at the feet, so shapes grow upward from y = 0 and the body
@@ -396,5 +752,5 @@ func _flip(facing_right: bool) -> void:
 	# left edge, which drew the body 18 px away from its collider.
 	_visual.pivot_offset.x = _visual.size.x / 2.0
 	_visual.scale.x = 1.0 if facing_right else -1.0
-	_hitbox.position.x = _hitbox_offset if facing_right else -_hitbox_offset
+	_hitbox.position.x = absf(_hitbox.position.x) * (1.0 if facing_right else -1.0)
 	weapons.facing = 1 if facing_right else -1
