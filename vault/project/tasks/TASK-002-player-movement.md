@@ -23,4 +23,10 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
       caer 6 tiles siga sin doler; los bots mantienen el salto hasta la cima.
       Test headless `scripts/test_jump.gd`
 - [ ] Test manual del salto variable en PC y teléfono
+- [x] Zambullida estilo Superfighters (pedido de Jose, 2026-09-28): agacharse
+      corriendo (>= 80 % de `run_speed`) tira al luchador hacia adelante
+      (250 px/s, saltito bajo), agachado, sin dirección ni salto hasta que
+      aterriza; los primeros 0.3 s no lo tocan golpes ni balas y aterriza sin
+      daño por caída. Pose `DIVE` en el rig. Test `scripts/test_dive.gd`
+- [ ] Test manual de la zambullida en PC y teléfono
 - [ ] Rápido test manual: moverse con WASD (P1) se siente responsivo (las flechas son de P2 desde TASK-008)

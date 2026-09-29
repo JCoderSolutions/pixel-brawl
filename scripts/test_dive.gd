@@ -1,0 +1,145 @@
+extends SceneTree
+
+## Headless tests for the dive (Superfighters): crouching while running
+## throws the fighter forward, low and briefly untouchable; standing crouch
+## stays a crouch; a dive over a ledge lands without fall damage; the rig
+## shows it.
+## Run: godot --headless --path . -s scripts/test_dive.gd
+
+const PLAYER_SCENE := preload("res://scenes/characters/player.tscn")
+
+var _ok := true
+
+
+func _init() -> void:
+	process_frame.connect(_run_tests, CONNECT_ONE_SHOT)
+
+
+func _run_tests() -> void:
+	await _test_running_crouch_dives()
+	await _test_standing_crouch_does_not_dive()
+	await _test_dive_dodges_hits()
+	await _test_dive_skips_fall_damage()
+	print("OK: running dive, standing crouch, dodge window and no fall damage after a dive verified" if _ok else "FAILED")
+	quit(0 if _ok else 1)
+
+
+func _check(condition: bool, message: String) -> void:
+	if not condition:
+		push_error("FAIL: " + message)
+		_ok = false
+
+
+## Floor spans [left, right] at y = 0; returns [stage, player].
+func _stage(frames: Array[InputFrame], left := -400.0, right := 1200.0, start := Vector2.ZERO) -> Array:
+	var stage := Node2D.new()
+	root.add_child(stage)
+	var floor_body := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	shape.shape = RectangleShape2D.new()
+	shape.shape.size = Vector2(right - left, 20)
+	floor_body.add_child(shape)
+	floor_body.position = Vector2((left + right) / 2.0, 10)
+	stage.add_child(floor_body)
+	var player: CharacterBody2D = PLAYER_SCENE.instantiate()
+	player.position = start
+	player.input_source = ScriptedInputSource.new(frames)
+	stage.add_child(player)
+	return [stage, player]
+
+
+func _hold(frames: Array[InputFrame], count: int, move := 0.0, buttons := 0) -> void:
+	for i in count:
+		frames.append(InputFrame.create(move, buttons))
+
+
+func _frames(count: int) -> void:
+	for i in count:
+		await physics_frame
+
+
+func _test_running_crouch_dives() -> void:
+	var frames: Array[InputFrame] = []
+	_hold(frames, 10)
+	_hold(frames, 30, 1.0)
+	_hold(frames, 40, 1.0, InputFrame.CROUCH)
+	var s := _stage(frames)
+	var player: CharacterBody2D = s[1]
+	await _frames(41)
+	var from := player.position.x
+	await _frames(2)
+	_check(player.is_diving(), "crouching while running starts a dive")
+	_check(player.velocity.x > player.run_speed, "the dive is faster than running (%.0f)" % player.velocity.x)
+	_check(player.is_crouching(), "and keeps the body low")
+	var rig: FighterRig = player.get_node("Visual")
+	await process_frame
+	_check(rig.anim == FighterRig.Anim.DIVE, "the rig dives (%s)" % FighterRig.Anim.keys()[rig.anim])
+	await _frames(40)
+	_check(not player.is_diving(), "the dive ends")
+	_check(player.position.x - from > 60.0, "and covers ground (%.0f px)" % (player.position.x - from))
+	s[0].queue_free()
+	await process_frame
+
+
+func _test_standing_crouch_does_not_dive() -> void:
+	var frames: Array[InputFrame] = []
+	_hold(frames, 10)
+	_hold(frames, 30, 0.0, InputFrame.CROUCH)
+	var s := _stage(frames)
+	var player: CharacterBody2D = s[1]
+	var dove := false
+	for i in 40:
+		await physics_frame
+		dove = dove or player.is_diving()
+	_check(not dove, "crouching while standing is just a crouch")
+	_check(player.is_crouching(), "and crouches")
+	s[0].queue_free()
+	await process_frame
+
+
+func _test_dive_dodges_hits() -> void:
+	var frames: Array[InputFrame] = []
+	_hold(frames, 10)
+	_hold(frames, 30, 1.0)
+	_hold(frames, 20, 1.0, InputFrame.CROUCH)
+	var s := _stage(frames)
+	var player: CharacterBody2D = s[1]
+	await _frames(43)
+	_check(player.is_diving(), "diving")
+	await _frames(1)
+	var hurtbox: Hurtbox = player.get_node("Hurtbox")
+	_check(not hurtbox.monitorable, "hits can't find a diving fighter")
+	await _frames(40)
+	_check(hurtbox.monitorable, "they can again once the dive is over")
+	s[0].queue_free()
+	await process_frame
+
+
+## The same 10-tile drop hurts from a walk-off and not at the end of a dive.
+func _test_dive_skips_fall_damage() -> void:
+	for dive in [false, true]:
+		var frames: Array[InputFrame] = []
+		_hold(frames, 10)
+		_hold(frames, 12, 1.0)
+		if dive:
+			_hold(frames, 40, 1.0, InputFrame.CROUCH)
+		else:
+			_hold(frames, 40, 1.0)
+		var s := _stage(frames, -400.0, 40.0)
+		var player: CharacterBody2D = s[1]
+		var low := StaticBody2D.new()
+		var shape := CollisionShape2D.new()
+		shape.shape = RectangleShape2D.new()
+		shape.shape.size = Vector2(800, 20)
+		low.add_child(shape)
+		low.position = Vector2(400, 170)
+		s[0].add_child(low)
+		await _frames(150)
+		_check(player.is_on_floor() and player.position.y > 150.0, "landed on the low floor (%s)" % player.position)
+		var hurt: bool = player.health.current_health < player.health.max_health
+		if dive:
+			_check(not hurt, "a dive lands without fall damage (hp %d)" % player.health.current_health)
+		else:
+			_check(hurt, "walking off the same drop hurts (hp %d)" % player.health.current_health)
+		s[0].queue_free()
+		await process_frame

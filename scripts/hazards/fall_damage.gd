@@ -39,7 +39,9 @@ func _physics_process(_delta: float) -> void:
 	if _body == null:
 		return
 	var on_floor := _body.is_on_floor()
-	if on_floor and not _was_on_floor:
+	# A dive lands rolling (Superfighters): no fall damage.
+	var diving: bool = _body.has_method("is_diving") and _body.is_diving()
+	if on_floor and not _was_on_floor and not diving:
 		_land(_fall_speed)
 	# Landing zeroes velocity, so remember the last airborne speed.
 	_fall_speed = 0.0 if on_floor else maxf(_body.velocity.y, 0.0)
