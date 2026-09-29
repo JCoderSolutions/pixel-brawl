@@ -20,8 +20,8 @@ en GitHub Pages para probar desde teléfono o PC sin instalar nada.
 - [x] Workflow `.github/workflows/ci.yml`: tests → build Web → deploy (solo `main`)
 - [x] `tools/run_tests.sh` corre `scripts/test_*.gd` + `verify_launch.gd`
 - [x] Build Web corre en un host sin headers COOP/COEP (verificado en Chromium)
-- [ ] Pages activado con Source = GitHub Actions (lo hace el dueño del repo)
-- [ ] Primer deploy abre en https://jcodersolutions.github.io/pixel-brawl/
+- [x] Pages activado con Source = GitHub Actions (Jose, 2026-09-29)
+- [x] Primer deploy abre en https://jcodersolutions.github.io/pixel-brawl/ (deploy del CI de main, 2026-09-29)
 
 ## Detalles
 
