@@ -14,4 +14,5 @@ extends Node
 func _ready() -> void:
 	GameManager.human_players = humans
 	GameManager.bot_difficulties.assign(difficulties)
+	GameManager.match_size = humans + difficulties.size()
 	add_child(arena_scene.instantiate())

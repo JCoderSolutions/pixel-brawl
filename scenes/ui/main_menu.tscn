@@ -21,7 +21,8 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.11, 0.17, 1)
 
-[node name="Box" type="VBoxContainer" parent="."]
+[node name="TitleBox" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -29,61 +30,97 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -120.0
-offset_top = -129.0
+offset_top = -80.0
 offset_right = 120.0
-offset_bottom = 129.0
+offset_bottom = 80.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Title" type="Label" parent="Box"]
+[node name="Title" type="Label" parent="TitleBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "PIXEL BRAWL"
 horizontal_alignment = 1
 
-[node name="PlayButton" type="Button" parent="Box"]
+[node name="PlayButton" type="Button" parent="TitleBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 text = "Jugar"
 
-[node name="Map" type="OptionButton" parent="Box"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 28)
-layout_mode = 2
-alignment = 1
-
-[node name="Rivals" type="OptionButton" parent="Box"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 28)
-layout_mode = 2
-alignment = 1
-
-[node name="Difficulty" type="OptionButton" parent="Box"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 28)
-layout_mode = 2
-alignment = 1
-
-[node name="Row" type="HBoxContainer" parent="Box"]
+[node name="Row" type="HBoxContainer" parent="TitleBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="OptionsButton" type="Button" parent="Box/Row"]
+[node name="OptionsButton" type="Button" parent="TitleBox/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Opciones"
 
-[node name="QuitButton" type="Button" parent="Box/Row"]
+[node name="QuitButton" type="Button" parent="TitleBox/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Salir"
+
+[node name="SetupBox" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = -16.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 6
+
+[node name="StepTitle" type="Label" parent="SetupBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+[node name="Content" type="VBoxContainer" parent="SetupBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Hint" type="Label" parent="SetupBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.753, 0.796, 0.863, 1)
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Nav" type="HBoxContainer" parent="SetupBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="SetupBox/Nav"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(110, 30)
+layout_mode = 2
+text = "Atrás"
+
+[node name="NextButton" type="Button" parent="SetupBox/Nav"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(110, 30)
+layout_mode = 2
+text = "Siguiente"
 
 [node name="Options" parent="." instance=ExtResource("2")]
 unique_name_in_owner = true

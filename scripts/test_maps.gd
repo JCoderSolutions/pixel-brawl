@@ -244,8 +244,13 @@ func _test_menu_map_choice() -> void:
 	var menu = load(MENU_PATH).instantiate()
 	root.add_child(menu)
 	await process_frame
-	var options: OptionButton = menu.get_node("%Map")
-	_check(options.item_count == MapCatalog.size() + 1, "menu lists every map plus a random pick")
+	menu.open_setup()
+	menu.next()
+	menu.next()
+	menu.next()
+	_check(menu.step == menu.Step.MAP, "the setup reaches the map step")
+	_check(menu.get_node("%Content").get_child(0).get_child_count() == MapCatalog.size() + 1,
+			"menu lists every map plus a random pick")
 	for i in MapCatalog.size():
 		menu.select_map(i + 1)
 		menu.apply_selection()
