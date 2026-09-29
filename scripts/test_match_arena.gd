@@ -122,7 +122,7 @@ func _test_pick_up_and_fire() -> void:
 	_hold(frames, 10)
 	_hold(frames, 1, 0.0, InputFrame.PICKUP)
 	_hold(frames, 5)
-	_hold(frames, 1, 0.0, InputFrame.FIRE)
+	_hold(frames, 1, 0.0, InputFrame.ATTACK)
 	var d := _make_duel(frames)
 	var player = d.player
 	var pickup := _drop_pistol(d.arena, Vector2(0, -8))
@@ -133,7 +133,7 @@ func _test_pick_up_and_fire() -> void:
 	var hp: int = d.target.health.current_health
 	await _frames(40)
 	_check(d.target.health.current_health == hp - PISTOL.damage,
-		"fire button shoots the other player (hp %d -> %d)" % [hp, d.target.health.current_health])
+		"attack shoots the other player (hp %d -> %d)" % [hp, d.target.health.current_health])
 	_check(player.weapons.ammo == PISTOL.max_ammo - 1, "one shot spends one bullet")
 	_check(player.health.current_health == player.health.max_health, "shooter is unharmed")
 	d.arena.queue_free()
@@ -143,12 +143,12 @@ func _test_pick_up_and_fire() -> void:
 func _test_semi_auto_needs_repress() -> void:
 	var frames: Array[InputFrame] = []
 	_hold(frames, 5)
-	_hold(frames, 90, 0.0, InputFrame.FIRE)
+	_hold(frames, 90, 0.0, InputFrame.ATTACK)
 	var d := _make_duel(frames, 400.0)
 	d.player.weapons.equip(PISTOL)
 	await _frames(100)
 	_check(d.player.weapons.ammo == PISTOL.max_ammo - 1,
-		"holding fire with a pistol shoots once (ammo %d)" % d.player.weapons.ammo)
+		"holding attack with a pistol shoots once (ammo %d)" % d.player.weapons.ammo)
 	d.arena.queue_free()
 	await process_frame
 

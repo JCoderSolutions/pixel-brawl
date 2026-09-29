@@ -12,7 +12,7 @@ extends Control
 ## limb forward (towards +x, the facing side).
 
 ## VICTORY is never picked from a fighter's state: screens set it.
-enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE }
+enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE, RIDE, BLOCK }
 
 ## Seconds for a full stride (two steps) at run speed.
 const RUN_PERIOD := 0.5
@@ -102,15 +102,21 @@ static func read_state(fighter: Node) -> Dictionary:
 		"attacking": fighter.has_method("is_attacking") and fighter.is_attacking(),
 		"hurt": fighter.has_method("is_in_hitstun") and fighter.is_in_hitstun(),
 		"diving": fighter.has_method("is_diving") and fighter.is_diving(),
+		"riding": fighter.has_method("is_riding") and fighter.is_riding(),
+		"blocking": fighter.has_method("is_blocking") and fighter.is_blocking(),
 		"armed": weapons != null and weapons.has_weapon(),
 	}
 
 
 static func choose_anim(state: Dictionary) -> Anim:
+	if state.get("riding", false):
+		return Anim.RIDE
 	if state.hurt:
 		return Anim.HURT
 	if state.get("diving", false):
 		return Anim.DIVE
+	if state.get("blocking", false):
+		return Anim.BLOCK
 	if state.attacking:
 		return Anim.ATTACK
 	if not state.on_floor:
@@ -182,6 +188,24 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 			p.arm_back = -1.5
 			p.leg_front = 1.0
 			p.leg_back = 1.3
+		Anim.RIDE:
+			# Crouched on the rocket, arms out for balance.
+			var sway := 0.2 * sin(t * 12.0)
+			p.hip_y = -6.0
+			p.leg_front = -1.3
+			p.knee_front = 1.4
+			p.leg_back = -1.25
+			p.knee_back = 1.5
+			p.lean = 0.35
+			p.arm_front = -1.7 + sway
+			p.arm_back = 1.7 + sway
+		Anim.BLOCK:
+			# Guard up: forearms raised in front of the face.
+			p.lean = -0.1
+			p.arm_front = -2.3
+			p.arm_back = -1.9
+			p.leg_front = -0.25
+			p.leg_back = 0.25
 		Anim.VICTORY:
 			var pump := sin(t * 10.0)
 			# Arms up in a V from spread shoulders, beside the head.
