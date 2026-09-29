@@ -7,6 +7,8 @@ extends Node
 ## Round rules (Superfighters style): last player standing wins the round,
 ## first to `rounds_to_win` wins the match. With `lives_per_round > 1` a dead
 ## player respawns at its spawn point until its lives run out.
+## Sudden death: a round that drags on (stuck bots, campers) drains everyone
+## still alive until one is left, so every round ends.
 
 signal match_started
 signal round_started(round_number: int)
@@ -16,6 +18,7 @@ signal match_ended(winner_id: int)
 signal player_spawned(id: int, player: Node)
 signal player_died(id: int, lives_left: int)
 signal scores_changed(scores: Array)
+signal sudden_death_started
 
 enum State { IDLE, ROUND_STARTING, FIGHTING, ROUND_OVER, MATCH_OVER }
 
@@ -38,6 +41,13 @@ const PLAYER_COLORS: Array[Color] = [
 @export var respawn_delay := 1.5
 ## Players below this Y (fell off the map) die instantly.
 @export var kill_zone_y := 400.0
+## Seconds of fighting before sudden death.
+@export var sudden_death_after := 90.0
+## With bots in the match: seconds after the last human is out before
+## sudden death, so nobody watches the bots for long.
+@export var sudden_death_without_humans := 10.0
+## Health per second every fighter still alive loses in sudden death.
+@export var sudden_death_dps := 5.0
 ## Players whose input is read locally; the rest are dummies until
 ## local 2P (TASK-008) or netcode assign them a controller.
 @export var controlled_ids: Array[int] = [0]
@@ -59,6 +69,10 @@ var _players := {}
 var _respawn_timers := {}
 var _state_timer := 0.0
 var _grace_timer := -1.0
+var _fight_time := 0.0
+var _humans_out_time := 0.0
+var _sudden_death := false
+var _drain := 0.0
 
 
 func _process(delta: float) -> void:
@@ -152,6 +166,7 @@ func advance(delta: float) -> void:
 		State.FIGHTING:
 			_check_kill_zone()
 			_tick_respawns(delta)
+			_tick_sudden_death(delta)
 			if _grace_timer >= 0.0:
 				_grace_timer -= delta
 				if _grace_timer < 0.0:
@@ -168,6 +183,10 @@ func _start_round() -> void:
 	lives.resize(_spawn_points.size())
 	lives.fill(lives_per_round)
 	_grace_timer = -1.0
+	_fight_time = 0.0
+	_humans_out_time = 0.0
+	_sudden_death = false
+	_drain = 0.0
 	for id in _spawn_points.size():
 		_spawn(id)
 	state = State.ROUND_STARTING
@@ -214,6 +233,38 @@ func _tick_respawns(delta: float) -> void:
 		if _respawn_timers[id] <= 0.0:
 			_respawn_timers.erase(id)
 			_spawn(id)
+
+
+func is_sudden_death() -> bool:
+	return _sudden_death
+
+
+func _tick_sudden_death(delta: float) -> void:
+	_fight_time += delta
+	if bot_difficulties.size() > 0 and human_players > 0 and not _humans_in_play():
+		_humans_out_time += delta
+	if not _sudden_death and (_fight_time >= sudden_death_after
+			or _humans_out_time >= sudden_death_without_humans):
+		_sudden_death = true
+		sudden_death_started.emit()
+	if not _sudden_death:
+		return
+	_drain += sudden_death_dps * delta
+	var damage := floori(_drain)
+	if damage <= 0:
+		return
+	_drain -= damage
+	for id in _players:
+		var p = _players[id]
+		if is_instance_valid(p) and not p.health.is_dead():
+			p.health.take_damage(damage)
+
+
+func _humans_in_play() -> bool:
+	for id in lives.size():
+		if not is_bot(id) and lives[id] > 0:
+			return true
+	return false
 
 
 func _check_kill_zone() -> void:
