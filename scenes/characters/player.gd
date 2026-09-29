@@ -34,6 +34,23 @@ extends CharacterBody2D
 @export var guard_break_stun := 0.8
 @export_range(0.0, 1.0) var block_recover := 0.35
 
+@export_group("Sprint")
+## Double-tap a direction (within this many seconds) to sprint while it's held.
+@export var sprint_tap_window := 0.25
+@export var sprint_multiplier := 1.45
+
+@export_group("Ledge")
+## Falling while pushing into a wall whose top is within reach of the hands
+## hangs from it (Superfighters). Jump climbs up; crouch or away lets go.
+@export var ledge_grab := true
+## How far up (px) a climb from a ledge throws the fighter, as a share of
+## the jump.
+@export_range(0.0, 1.5) var ledge_climb := 0.9
+@export var ledge_cooldown := 0.3
+## Pressing crouch this many seconds before landing rolls out of the fall:
+## no fall damage (Superfighters' recovery roll).
+@export var recovery_window := 0.25
+
 @export_group("Dive")
 ## Crouching while running this fast (share of run_speed) dives forward; in
 ## the air, crouch with a direction dives once per jump.
@@ -138,6 +155,17 @@ var _guard_broken := false
 ## True from a jump until its rise ends or is cut; knockback launches never
 ## set it, so letting go of jump only shortens real jumps.
 var _jump_rising := false
+var _sprinting := false
+## Direction and time of the last move press, for the sprint double tap.
+var _last_tap_dir := 0.0
+var _since_tap := INF
+var _prev_move_dir := 0.0
+var _hanging := false
+var _ledge_timer := 0.0
+var _since_crouch_press := INF
+var _was_airborne := false
+## Distance from the feet to the hands when they hang from a ledge.
+const HANG_REACH := 29.0
 
 ## Swap in a ScriptedInputSource, a bot or a network source to drive this
 ## player; by default a controlled player reads its slot's device actions.
@@ -192,6 +220,12 @@ func _physics_process(delta: float) -> void:
 
 	if _ride(input_dir):
 		return
+	_update_sprint(delta, input_dir)
+	_since_crouch_press = 0.0 if just_pressed & InputFrame.CROUCH else _since_crouch_press + delta
+	_ledge_timer = maxf(_ledge_timer - delta, 0.0)
+	if _hanging:
+		_update_hang(input_dir, just_pressed)
+		return
 	var had_grab := _holding != null
 	_update_grab(delta, input_dir, just_pressed)
 	if had_grab:
@@ -232,6 +266,8 @@ func _physics_process(delta: float) -> void:
 	_cut_jump(frame.is_held(InputFrame.JUMP))
 
 	move_and_slide()
+	_check_recovery_roll(input_dir)
+	_try_ledge_grab(input_dir)
 
 
 func _sample_input() -> InputFrame:
@@ -637,7 +673,7 @@ func _apply_gravity(delta: float, want_crouch: bool) -> void:
 
 
 func _apply_horizontal(input_dir: float, delta: float) -> void:
-	var target_speed := input_dir * run_speed
+	var target_speed := input_dir * run_speed * (sprint_multiplier if _sprinting else 1.0)
 	if _is_crouching:
 		target_speed *= crouch_speed_multiplier
 
@@ -735,6 +771,95 @@ func _update_roll(delta: float) -> void:
 		_rolling = false
 		return
 	velocity.x = _roll_dir * roll_speed
+
+
+func is_sprinting() -> bool:
+	return _sprinting
+
+
+## Double tap: a second press of the same direction soon after the first
+## sprints until the direction is let go, reversed or crouched out of.
+func _update_sprint(delta: float, input_dir: float) -> void:
+	var dir := signf(input_dir)
+	_since_tap += delta
+	if dir != 0.0 and _prev_move_dir == 0.0:
+		if dir == _last_tap_dir and _since_tap <= sprint_tap_window:
+			_sprinting = true
+		_last_tap_dir = dir
+		_since_tap = 0.0
+	if dir == 0.0 or dir != _last_tap_dir or _is_crouching:
+		_sprinting = false
+	_prev_move_dir = dir
+
+
+func is_hanging() -> bool:
+	return _hanging
+
+
+## After moving: falling into a wall while pushing towards it, with the
+## wall's top edge at hand height and room above it, hangs from that edge.
+func _try_ledge_grab(input_dir: float) -> void:
+	if not ledge_grab or _hanging or is_on_floor() or velocity.y < 0.0 or input_dir == 0.0 \
+			or _ledge_timer > 0.0 or _diving or _rolling or is_attacking() or is_grabbing() \
+			or _hitstun_timer > 0.0 or health.is_dead() or is_riding():
+		return
+	var dir := signf(input_dir)
+	var space := get_world_2d().direct_space_state
+	var half := _collision_shape.size.x / 2.0
+	# The wall at chest height, right in front.
+	var chest := global_position + Vector2(0.0, -20.0)
+	var wall := space.intersect_ray(PhysicsRayQueryParameters2D.create(chest, chest + Vector2(dir * (half + 4.0), 0.0), 1, [get_rid()]))
+	if wall.is_empty():
+		return
+	# Its top: looking down just past the wall face, from above the hands.
+	var probe_x: float = wall.position.x + dir * 3.0
+	var from := Vector2(probe_x, global_position.y - HANG_REACH - 8.0)
+	var top := space.intersect_ray(PhysicsRayQueryParameters2D.create(from, Vector2(probe_x, chest.y + 2.0), 1, [get_rid()]))
+	if top.is_empty() or top.normal.y > -0.7:
+		return
+	var ledge_y: float = top.position.y
+	# Room to climb onto it.
+	var above := Vector2(probe_x, ledge_y - 2.0)
+	if not space.intersect_ray(PhysicsRayQueryParameters2D.create(above, above + Vector2(0.0, -24.0), 1, [get_rid()])).is_empty():
+		return
+	_hanging = true
+	_sprinting = false
+	_jump_rising = false
+	velocity = Vector2.ZERO
+	_flip(dir > 0.0)
+	global_position = Vector2(wall.position.x - dir * half, ledge_y + HANG_REACH)
+
+
+## Hanging: jump climbs over the edge, crouch or pushing away lets go.
+func _update_hang(input_dir: float, just_pressed: int) -> void:
+	var facing := 1.0 if _facing_right else -1.0
+	if _hitstun_timer > 0.0 or health.is_dead():
+		_hanging = false
+		return
+	if just_pressed & InputFrame.JUMP:
+		_hanging = false
+		_ledge_timer = ledge_cooldown
+		velocity = Vector2(facing * 70.0, jump_velocity * ledge_climb)
+		_jump_rising = false
+	elif just_pressed & InputFrame.CROUCH or signf(input_dir) == -facing:
+		_hanging = false
+		_ledge_timer = ledge_cooldown
+	else:
+		velocity = Vector2.ZERO
+		return
+	move_and_slide()
+
+
+## Landing from a fall with crouch pressed just before: roll out of it
+## (FallDamage skips rolls, like dives).
+func _check_recovery_roll(input_dir: float) -> void:
+	var airborne := not is_on_floor()
+	if _was_airborne and not airborne and _since_crouch_press <= recovery_window \
+			and not _diving and not _rolling and not health.is_dead() and _hitstun_timer == 0.0:
+		var dir := signf(input_dir) if input_dir != 0.0 else (1.0 if _facing_right else -1.0)
+		_start_roll(dir)
+		_since_crouch_press = INF
+	_was_airborne = airborne
 
 
 ## Origin sits at the feet, so shapes grow upward from y = 0 and the body

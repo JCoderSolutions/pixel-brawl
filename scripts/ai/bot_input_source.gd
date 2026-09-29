@@ -120,7 +120,10 @@ func _decide() -> InputFrame:
 			buttons |= _pending
 			_pending = 0
 
-	if body.is_on_floor():
+	if body.has_method("is_hanging") and body.is_hanging():
+		# Caught a ledge on the way: climb it.
+		buttons |= InputFrame.JUMP if not _last_buttons & InputFrame.JUMP else 0
+	elif body.is_on_floor():
 		if move != 0.0 and not _safe_ground(signf(move) * (LEDGE_PROBE + absf(body.velocity.x) * 0.08)):
 			if _gap_jumpable(signf(move)):
 				buttons |= InputFrame.JUMP

@@ -13,7 +13,7 @@ extends Control
 
 ## VICTORY is never picked from a fighter's state: screens set it.
 enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE, RIDE, BLOCK, ROLL,
-		UPPERCUT, KICK, AIR_KICK, GRAB, HELD }
+		UPPERCUT, KICK, AIR_KICK, GRAB, HELD, HANG }
 
 ## Seconds for one full turn of a roll.
 const ROLL_PERIOD := 0.3
@@ -161,6 +161,7 @@ static func read_state(fighter: Node) -> Dictionary:
 		"rolling": fighter.has_method("is_rolling") and fighter.is_rolling(),
 		"grabbing": fighter.has_method("is_grabbing") and fighter.is_grabbing(),
 		"held": fighter.has_method("is_held") and fighter.is_held(),
+		"hanging": fighter.has_method("is_hanging") and fighter.is_hanging(),
 		"move": fighter.attack_move() if fighter.has_method("attack_move") else &"jab",
 		"guard": fighter.guard_energy() if fighter.has_method("guard_energy") else 1.0,
 		"riding": fighter.has_method("is_riding") and fighter.is_riding(),
@@ -174,6 +175,8 @@ static func choose_anim(state: Dictionary) -> Anim:
 		return Anim.RIDE
 	if state.get("held", false):
 		return Anim.HELD
+	if state.get("hanging", false):
+		return Anim.HANG
 	if state.hurt:
 		return Anim.HURT
 	if state.get("rolling", false):
@@ -313,6 +316,14 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 			p.arm_back = 2.8
 			p.leg_front = 0.2 + kick
 			p.leg_back = -0.2 - kick
+		Anim.HANG:
+			# Both hands up on the ledge, body against the wall, legs dangling.
+			var sway := 0.12 * sin(t * 4.0)
+			p.arm_front = -2.95
+			p.arm_back = -2.8
+			p.lean = -0.05
+			p.leg_front = 0.15 + sway
+			p.leg_back = -0.1 + sway
 		Anim.RIDE:
 			# Crouched on the rocket, arms out for balance.
 			var sway := 0.2 * sin(t * 12.0)
