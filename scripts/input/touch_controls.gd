@@ -1,7 +1,8 @@
 class_name TouchControls
 extends CanvasLayer
 ## On-screen controls for phones and tablets: a floating stick on the left
-## (move + crouch) and jump/attack/fire/pickup buttons on the right. They press
+## (move + crouch) and jump/attack/block/pickup buttons on the right (the
+## "fire" action blocks). They press
 ## the slot's `p<slot>_*` actions, so the player reads them through its usual
 ## DeviceInputSource with no touch-specific code.
 ##

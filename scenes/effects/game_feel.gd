@@ -14,6 +14,7 @@ extends Node
 ##   PowerUpReceiver.power_up_applied -> pickup blip, sparkles, floating name
 ##   Explosion.exploded         -> explosion, blast burst, hit-stop
 ##   DestructibleBlock.destroyed -> block break, debris
+##   Hurtbox.blocked            -> guard clank (or ricochet for a parry), sparks
 ##   HealthComponent.died       -> death jingle (not for map tiles)
 ##   fighters (CharacterBody2D with `jump_velocity`) -> jump / landing + dust
 ##
@@ -87,6 +88,8 @@ func wire(node: Node) -> void:
 		node.power_up_applied.connect(_on_power_up.bind(node))
 	elif node is DestructibleBlock:
 		node.destroyed.connect(_on_block_destroyed)
+	elif node is Hurtbox:
+		node.blocked.connect(_on_blocked.bind(node))
 	elif node is HealthComponent:
 		node.died.connect(_on_died.bind(node))
 	elif _is_fighter(node):
@@ -227,6 +230,11 @@ func _on_weapon_equipped(_weapon: WeaponData, _ammo: int) -> void:
 func _on_dry_fired(_weapon: WeaponData, holder: WeaponHolder) -> void:
 	_play(&"dry_fire")
 	FloatingText.spawn(self, "SIN BALAS", Color("c0cbdc"), holder.global_position + Vector2(0.0, -20.0))
+
+
+func _on_blocked(kind: StringName, hurtbox: Hurtbox) -> void:
+	_play(&"ricochet" if kind == &"bullet" else &"block_hit")
+	_burst(ImpactBurst.Kind.SPARK, _hurtbox_center(hurtbox), Vector2.UP)
 
 
 func _on_power_up(data: PowerUpData, receiver: PowerUpReceiver) -> void:
