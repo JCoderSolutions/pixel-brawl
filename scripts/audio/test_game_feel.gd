@@ -46,8 +46,9 @@ func _run_tests() -> void:
 	await _test_player_death()
 	await _test_jump_and_land()
 	await _test_power_up_pickup()
+	await _test_empty_gun_click()
 	_test_wire_once()
-	print("OK: impact bursts, melee hit + hit-stop, block thud, projectile flesh/ricochet, weapon sounds, explosion + debris, death, jump/landing, power-up pickup feedback and single wiring verified" if _ok else "FAILED")
+	print("OK: impact bursts, melee hit + hit-stop, block thud, projectile flesh/ricochet, weapon sounds, explosion + debris, death, jump/landing, power-up pickup feedback, empty-gun click and single wiring verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -297,6 +298,25 @@ func _test_power_up_pickup() -> void:
 	receiver.apply(MEDKIT)
 	texts = _floating_texts()
 	_check(texts.size() == 1 and texts[0].text == "+%d VIDA" % roundi(MEDKIT.amount), "a medkit shows the health it gives (%s)" % [texts.map(func(t): return t.text)])
+	arena.queue_free()
+	await process_frame
+
+
+func _test_empty_gun_click() -> void:
+	_reset()
+	var arena := _arena()
+	var player: CharacterBody2D = PLAYER_SCENE.instantiate()
+	player.is_controlled = false
+	arena.add_child(player)
+	await _frames(2)
+	player.weapons.equip(PISTOL, 0)
+	player.weapons.try_use()
+	_check(&"dry_fire" in _played, "an empty gun clicks")
+	var texts := _floating_texts()
+	_check(texts.size() == 1 and texts[0].text == "SIN BALAS", "and says it is out of ammo")
+	_reset()
+	player.weapons.throw_weapon()
+	_check(&"throw" in _played, "throwing a weapon whooshes")
 	arena.queue_free()
 	await process_frame
 

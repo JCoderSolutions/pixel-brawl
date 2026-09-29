@@ -119,7 +119,7 @@ func _test_sawed_off_blast() -> void:
 	_check(near.velocity.x > 100.0, "sawed-off shoves hard")
 	await _frames(40)
 	shooter.weapons.try_use()
-	_check(not shooter.weapons.has_weapon(), "two shells and it's spent")
+	_check(shooter.weapons.is_empty(), "two shells and it's empty (it stays in hand to throw)")
 	arena.queue_free()
 	await _frames(1)
 

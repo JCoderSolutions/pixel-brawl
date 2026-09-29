@@ -187,6 +187,14 @@ def pickup():
     return render(0.14, fn)
 
 
+def dry_fire():
+    """Clic metálico seco: el gatillo de un arma sin balas."""
+    ph = sweep(2400, 1800, 0.03)
+    ph2 = sweep(1600, 1200, 0.03)
+    return render(0.07, lambda t: 0.5 * env(t, 0.025, 0.0005, 3.0) * square(ph(t), 0.3) +
+                  (0.4 * env(t - 0.035, 0.03, 0.0005, 3.0) * square(ph2(t - 0.035), 0.3) if t > 0.035 else 0.0))
+
+
 RECIPES = {
     "punch": punch,
     "hit": hit,
@@ -202,6 +210,7 @@ RECIPES = {
     "land": land,
     "death": death,
     "pickup": pickup,
+    "dry_fire": dry_fire,
 }
 
 

@@ -61,7 +61,7 @@ func _on_player_spawned(id: int, player: Node) -> void:
 		holder.weapon_equipped.connect(func(_w, _a) -> void: label.text = weapon_line(holder))
 		holder.ammo_changed.connect(func(_a) -> void: label.text = weapon_line(holder))
 		holder.weapon_dropped.connect(func(_w, _a) -> void: label.text = "")
-		holder.weapon_spent.connect(func(_w) -> void: label.text = "")
+		holder.weapon_spent.connect(func(_w) -> void: label.text = weapon_line(holder))
 
 
 func weapon_text(id: int) -> String:
