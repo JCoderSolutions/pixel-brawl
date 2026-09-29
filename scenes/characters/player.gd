@@ -34,6 +34,8 @@ extends CharacterBody2D
 @export var dive_cooldown := 0.4
 ## Only the controlled player reads input; others (dummies) don't.
 @export var is_controlled := true
+## Team from the match setup (0 = none). Bots leave teammates alone.
+@export var team := 0
 ## Local slot whose `p<slot>_*` actions drive this player when no other
 ## input source is assigned.
 @export_range(1, 4) var player_slot := 1

@@ -40,6 +40,17 @@ const DARK := Color("181425")
 		color = value
 		queue_redraw()
 ## Hit flash: every part drawn white while it lasts.
+## The character (FighterLook): pants, skin and headband. Null keeps the
+## default look with a headband in a lighter `color`.
+var look: FighterLook:
+	set(value):
+		look = value
+		queue_redraw()
+## Team marker over the head; transparent (no team) hides it.
+var team_color := Color(0, 0, 0, 0):
+	set(value):
+		team_color = value
+		queue_redraw()
 var flash := false:
 	set(value):
 		flash = value
@@ -77,7 +88,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	# Pose space has its origin at the feet, the Control's bottom centre.
 	draw_set_transform(Vector2(size.x / 2.0, size.y))
-	for part in parts(pose(anim, anim_time, armed), color, flash):
+	for part in parts(pose(anim, anim_time, armed), color, flash, look, team_color):
 		draw_colored_polygon(part.points, part.color)
 
 
@@ -215,23 +226,30 @@ static func pose(anim: Anim, t: float, armed := false) -> Dictionary:
 
 ## The body as coloured polygons in pose space (feet at the origin, facing
 ## +x), back to front. `team` tints torso, sleeves and headband.
-static func parts(p: Dictionary, team: Color, flashing := false) -> Array[Dictionary]:
+static func parts(p: Dictionary, team: Color, flashing := false, character: FighterLook = null, marker := Color(0, 0, 0, 0)) -> Array[Dictionary]:
+	var pants := character.pants if character != null else PANTS
+	var skin := character.skin if character != null else SKIN
+	var band := character.band if character != null else team.lightened(0.3)
 	var out: Array[Dictionary] = []
 	var hip := Vector2(p.hip_x, p.hip_y + p.bob)
 	var up := Vector2.UP.rotated(p.lean)
 	var shoulder := hip + up * (TORSO_HEIGHT - 1.0)
 	var back := team.darkened(0.3)
-	_limb(out, "leg_back", hip + Vector2(-1.5, 0), p.leg_back, p.knee_back, PANTS.darkened(0.3), DARK)
+	_limb(out, "leg_back", hip + Vector2(-1.5, 0), p.leg_back, p.knee_back, pants.darkened(0.3), DARK)
 	var spread := Vector2(p.shoulder_spread, 0.0)
-	_arm(out, "arm_back", shoulder - spread, p.arm_back, back, SKIN.darkened(0.25))
+	_arm(out, "arm_back", shoulder - spread, p.arm_back, back, skin.darkened(0.25))
 	_add(out, "torso", _bar(hip, p.lean + PI, TORSO_HEIGHT, TORSO_WIDTH), team)
-	_limb(out, "leg_front", hip + Vector2(1.5, 0), p.leg_front, p.knee_front, PANTS, DARK)
+	_limb(out, "leg_front", hip + Vector2(1.5, 0), p.leg_front, p.knee_front, pants, DARK)
 	var head := (shoulder + up * (HEAD_SIZE / 2.0 + 1.0)).round()
 	var half := HEAD_SIZE / 2.0
-	_add(out, "head", _box(head - Vector2(half, half), Vector2(HEAD_SIZE, HEAD_SIZE)), SKIN)
-	_add(out, "headband", _box(head - Vector2(half, half - 1.0), Vector2(HEAD_SIZE, 2.0)), team.lightened(0.3))
+	_add(out, "head", _box(head - Vector2(half, half), Vector2(HEAD_SIZE, HEAD_SIZE)), skin)
+	_add(out, "headband", _box(head - Vector2(half, half - 1.0), Vector2(HEAD_SIZE, 2.0)), band)
+	if marker.a > 0.0:
+		# Team marker: a small arrow just over the head.
+		var tip := head - Vector2(0.0, half + 1.0)
+		_add(out, "team_marker", PackedVector2Array([tip + Vector2(-2, -3), tip + Vector2(2, -3), tip]), marker)
 	_add(out, "eye", _box(head + Vector2(1.0, -1.0), Vector2(2.0, 2.0)), DARK)
-	_arm(out, "arm_front", shoulder + spread, p.arm_front, team.lightened(0.18), SKIN)
+	_arm(out, "arm_front", shoulder + spread, p.arm_front, team.lightened(0.18), skin)
 	# Spread legs reach below the hips' drop: lift the body so the lowest
 	# shoe corner rests on the floor line instead of sinking through it.
 	var lowest := -INF

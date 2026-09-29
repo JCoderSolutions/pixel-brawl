@@ -5,7 +5,8 @@ extends Node
 ## signals, so HUD, winner screen and future netcode never poke at players.
 ##
 ## Round rules (Superfighters style): last player standing wins the round,
-## first to `rounds_to_win` wins the match. With `lives_per_round > 1` a dead
+## first to `rounds_to_win` wins the match. With `teams`, the last team
+## standing wins it and every member scores. With `lives_per_round > 1` a dead
 ## player respawns at its spawn point until its lives run out.
 ## Sudden death: a round that drags on (stuck bots, campers) drains everyone
 ## still alive until one is left, so every round ends.
@@ -23,6 +24,15 @@ signal sudden_death_started
 enum State { IDLE, ROUND_STARTING, FIGHTING, ROUND_OVER, MATCH_OVER }
 
 const NO_WINNER := -1
+## Team 0 is "no team" (free for all); teams 1-4 by colour.
+const TEAM_NAMES := ["", "ROJO", "AZUL", "VERDE", "AMARILLO"]
+const TEAM_COLORS: Array[Color] = [
+	Color(0, 0, 0, 0),
+	Color("e43b44"),
+	Color("0099db"),
+	Color("63c74d"),
+	Color("fee761"),
+]
 const PLAYER_COLORS: Array[Color] = [
 	Color(0.2, 0.545, 0.8),
 	Color(0.894, 0.231, 0.267),
@@ -57,6 +67,10 @@ const PLAYER_COLORS: Array[Color] = [
 var bot_difficulties: Array[int] = []
 ## Local humans in a match with bots; 0 just watches the bots fight.
 var human_players := 1
+## Team per player id (0 = no team). Missing ids play on their own.
+var teams: Array[int] = []
+## FighterLook preset per player id. Missing ids get preset `id`.
+var looks: Array[int] = []
 
 var state := State.IDLE
 var current_round := 0
@@ -209,7 +223,11 @@ func _spawn(id: int) -> void:
 		player.is_controlled = true
 		# Seeded by id: the same match setup always plays out the same way.
 		player.input_source = BotInputSource.new(player, bot_difficulties[id - human_players], id)
-	player.get_node("Visual").color = PLAYER_COLORS[id % PLAYER_COLORS.size()]
+	player.team = team_of(id)
+	var rig = player.get_node("Visual")
+	rig.look = look_of(id)
+	rig.color = player_color(id)
+	rig.team_color = TEAM_COLORS[team_of(id)]
 	_arena.add_child(player)
 	player.health.died.connect(_on_player_died.bind(id), CONNECT_ONE_SHOT)
 	_players[id] = player
@@ -223,7 +241,7 @@ func _on_player_died(_source: Node, id: int) -> void:
 	player_died.emit(id, lives[id])
 	if lives[id] > 0:
 		_respawn_timers[id] = respawn_delay
-	elif _grace_timer < 0.0 and _players_in_play() <= 1:
+	elif _grace_timer < 0.0 and _sides_in_play().size() <= 1:
 		_grace_timer = round_end_grace
 
 
@@ -274,25 +292,18 @@ func _check_kill_zone() -> void:
 			p.health.take_damage(p.health.current_health)
 
 
-## Players still alive or waiting to respawn.
-func _players_in_play() -> int:
-	var count := 0
-	for id in lives.size():
-		if lives[id] > 0:
-			count += 1
-	return count
-
 
 func _end_round() -> void:
 	_respawn_timers.clear()
 	var winner := NO_WINNER
-	for id in lives.size():
-		if lives[id] > 0:
-			winner = id
-	if _players_in_play() > 1:
-		winner = NO_WINNER
-	if winner != NO_WINNER:
-		scores[winner] += 1
+	var sides := _sides_in_play()
+	if sides.size() == 1:
+		for id in lives.size():
+			if _side(id) == sides[0]:
+				# Every member scores; the one still standing names the win.
+				scores[id] += 1
+				if lives[id] > 0:
+					winner = id
 		scores_changed.emit(scores)
 	round_ended.emit(winner)
 	if winner != NO_WINNER and scores[winner] >= rounds_to_win:
@@ -301,6 +312,45 @@ func _end_round() -> void:
 	else:
 		state = State.ROUND_OVER
 		_state_timer = round_end_delay
+
+
+func team_of(id: int) -> int:
+	return teams[id] if id < teams.size() and teams[id] > 0 and teams[id] < TEAM_NAMES.size() else 0
+
+
+func look_of(id: int) -> FighterLook:
+	return FighterLook.at(looks[id] if id < looks.size() else id)
+
+
+## The player's own colour (their character's shirt): HUD bars and names.
+func player_color(id: int) -> Color:
+	return look_of(id).shirt
+
+
+## Who a win belongs to, for banners: "EQUIPO ROJO" or "P2".
+func side_label(id: int) -> String:
+	var team := team_of(id)
+	return "EQUIPO %s" % TEAM_NAMES[team] if team > 0 else "P%d" % (id + 1)
+
+
+func side_color(id: int) -> Color:
+	var team := team_of(id)
+	return TEAM_COLORS[team] if team > 0 else player_color(id)
+
+
+## A team, or a lone player (negative ids so they never match a team).
+func _side(id: int) -> int:
+	var team := team_of(id)
+	return team if team > 0 else -(id + 1)
+
+
+## Sides with someone still alive or waiting to respawn.
+func _sides_in_play() -> Array:
+	var sides := []
+	for id in lives.size():
+		if lives[id] > 0 and not _side(id) in sides:
+			sides.append(_side(id))
+	return sides
 
 
 func _clear_players() -> void:

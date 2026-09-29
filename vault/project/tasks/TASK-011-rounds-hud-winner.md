@@ -34,6 +34,15 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
       quedaban trabados (Fundición en Fácil: uno en un tablón y el otro
       debajo). El HUD muestra "¡MUERTE SÚBITA!"
 - [ ] Test manual de la muerte súbita
+- [x] Personajes y equipos (pedido de Jose 2026-09-29, base del menú en
+      secuencia): 8 personajes `FighterLook` (los 4 primeros con los colores
+      clásicos de P1-P4); `GameManager.looks` y `teams` (0 = sin equipo). Gana
+      la ronda el último bando en pie y todos sus integrantes suman; HUD y
+      pantalla final dicen "EQUIPO ROJO GANA"; marcador de equipo sobre la
+      cabeza; fuego amigo activo; los bots no atacan a sus compañeros. Test
+      `scripts/test_teams.gd`
+- [ ] Menú en secuencia que elige modo, cantidad, personaje/equipo, mapa,
+      dificultad y rondas (siguiente PR)
 
 ## Detalles
 

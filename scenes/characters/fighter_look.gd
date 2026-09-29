@@ -1,0 +1,46 @@
+class_name FighterLook
+extends RefCounted
+
+## A pickable character: a name and the colours FighterRig draws it in
+## (Endesga 32). The first four keep P1-P4's classic shirts, so a match set
+## up without a character screen looks the same as before.
+
+var name := ""
+var shirt := Color.WHITE
+var pants := Color("3a4466")
+var skin := Color("e8b796")
+var band := Color.WHITE
+
+static var _presets: Array[FighterLook] = []
+
+
+static func create(look_name: String, shirt_color: Color, pants_color: Color, skin_color: Color, band_color: Color) -> FighterLook:
+	var look := FighterLook.new()
+	look.name = look_name
+	look.shirt = shirt_color
+	look.pants = pants_color
+	look.skin = skin_color
+	look.band = band_color
+	return look
+
+
+## The roster, built once; index it with the ids the menu stores.
+static func presets() -> Array[FighterLook]:
+	if _presets.is_empty():
+		_presets = [
+			create("Bruno", Color(0.2, 0.545, 0.8), Color("3a4466"), Color("e8b796"), Color("2ce8f5")),
+			create("Roja", Color(0.894, 0.231, 0.267), Color("262b44"), Color("c28569"), Color("feae34")),
+			create("Kai", Color(0.388, 0.78, 0.302), Color("5a6988"), Color("733e39"), Color("0099db")),
+			create("Sol", Color(0.996, 0.906, 0.38), Color("3e2731"), Color("ead4aa"), Color("e43b44")),
+			create("Sombra", Color("262b44"), Color("181425"), Color("e8b796"), Color("e43b44")),
+			create("Doc", Color("c0cbdc"), Color("3a4466"), Color("c28569"), Color("0099db")),
+			create("Punk", Color("b55088"), Color("262b44"), Color("ead4aa"), Color("63c74d")),
+			create("Obrero", Color("f77622"), Color("3a4466"), Color("733e39"), Color("fee761")),
+		]
+	return _presets
+
+
+## Preset `index`, wrapping around the roster.
+static func at(index: int) -> FighterLook:
+	var all := presets()
+	return all[posmod(index, all.size())]
