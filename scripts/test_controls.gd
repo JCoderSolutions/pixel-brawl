@@ -3,7 +3,7 @@ extends SceneTree
 ## Headless tests for the attack button (Superfighters style): unarmed it
 ## punches, with a gun it shoots (held for automatic weapons), with a blade
 ## or a bat it swings the weapon instead of punching; the old fire button
-## still works.
+## is the block button now.
 ## Run: godot --headless --path . -s scripts/test_controls.gd
 
 const PLAYER_SCENE := preload("res://scenes/characters/player.tscn")
@@ -23,8 +23,8 @@ func _run_tests() -> void:
 	await _test_attack_fires_a_gun()
 	await _test_attack_holds_automatic_fire()
 	await _test_attack_swings_a_blade()
-	await _test_fire_button_still_fires()
-	print("OK: attack punches unarmed, fires guns (held for automatics), swings blades, and fire still fires verified" if _ok else "FAILED")
+	await _test_fire_button_blocks_instead()
+	print("OK: attack punches unarmed, fires guns (held for automatics), swings blades, and the fire button blocks verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -115,8 +115,8 @@ func _test_attack_swings_a_blade() -> void:
 	await _done(player)
 
 
-func _test_fire_button_still_fires() -> void:
-	var player := _player(PISTOL, _press(InputFrame.FIRE))
-	var seen := await _run(player, 20)
-	_check(seen.shots == 1, "the fire button still shoots")
+func _test_fire_button_blocks_instead() -> void:
+	var player := _player(PISTOL, _press(InputFrame.BLOCK, 10))
+	var seen := await _run(player, 25)
+	_check(seen.shots == 0 and player.weapons.ammo == PISTOL.max_ammo, "the old fire button blocks; it doesn't shoot")
 	await _done(player)

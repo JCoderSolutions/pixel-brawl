@@ -47,7 +47,7 @@ const SHOOT_KEEP_DISTANCE := 90.0
 const THROW_DISTANCE := 60.0
 ## Buttons the player reacts to on the press edge; the bot releases them for
 ## a tick between presses.
-const TAP_BUTTONS := InputFrame.JUMP | InputFrame.ATTACK | InputFrame.FIRE | InputFrame.PICKUP
+const TAP_BUTTONS := InputFrame.JUMP | InputFrame.ATTACK | InputFrame.PICKUP
 
 var profile: BotProfile
 ## The fighter this bot drives (a player CharacterBody2D with `health` and
@@ -110,7 +110,7 @@ func _decide() -> InputFrame:
 	elif _pending != 0:
 		# Strikes come out of the facing side: turn first, strike next tick.
 		var side := _side_of(_target)
-		if side != 0 and side != body.weapons.facing and _pending & (InputFrame.ATTACK | InputFrame.FIRE | InputFrame.PICKUP):
+		if side != 0 and side != body.weapons.facing and _pending & (InputFrame.ATTACK | InputFrame.PICKUP):
 			move = side * 0.1
 		else:
 			buttons |= _pending
@@ -131,12 +131,12 @@ func _decide() -> InputFrame:
 
 	# A tap only registers on its press edge: release before pressing again.
 	# Automatic weapons are the exception: they fire while FIRE stays held.
-	var taps := TAP_BUTTONS & ~(InputFrame.FIRE if _holds_automatic() else 0)
+	var taps := TAP_BUTTONS & ~(InputFrame.ATTACK if _holds_automatic() else 0)
 	var repeated := buttons & _last_buttons & taps
 	_pending |= repeated & ~InputFrame.JUMP
 	buttons &= ~repeated
-	if _holds_automatic() and _last_buttons & InputFrame.FIRE and threat == null and _in_shot(_target):
-		buttons |= InputFrame.FIRE
+	if _holds_automatic() and _last_buttons & InputFrame.ATTACK and threat == null and _in_shot(_target):
+		buttons |= InputFrame.ATTACK
 	# Letting go of jump cuts the rise short: hold it until the apex.
 	if _last_buttons & InputFrame.JUMP and not body.is_on_floor() and body.velocity.y < 0.0:
 		buttons |= InputFrame.JUMP
@@ -183,16 +183,16 @@ func _think() -> void:
 	elif weapon is GrenadeData:
 		_goal_x = _target.global_position.x - side * (GRENADE_MIN_RANGE + GRENADE_MAX_RANGE) * 0.5
 		if absf(dx) >= GRENADE_MIN_RANGE and absf(dx) <= GRENADE_MAX_RANGE and dy <= MELEE_HEIGHT * 2.0:
-			strike = InputFrame.FIRE
+			strike = InputFrame.ATTACK
 	elif weapon.is_ranged():
 		_goal_x = _target.global_position.x if dy > profile.aim_tolerance \
 				else _target.global_position.x - side * SHOOT_KEEP_DISTANCE
 		if _in_shot(_target):
-			strike = InputFrame.FIRE
+			strike = InputFrame.ATTACK
 	else:
 		_goal_x = _target.global_position.x - side * weapon.melee_offset
 		if absf(dx) <= weapon.melee_offset + weapon.reach.x * 0.5 and dy <= MELEE_HEIGHT:
-			strike = InputFrame.FIRE
+			strike = InputFrame.ATTACK
 	if strike != 0 and (weapon == null or weapons.is_ready()) and _rng.randf() < profile.aggression:
 		_pending |= strike
 

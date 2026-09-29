@@ -16,6 +16,12 @@ extends CharacterBody2D
 @export var jump_buffer := 0.12
 @export var crouch_height := 14.0
 
+@export_group("Block")
+## A block younger than this (seconds) with a metal blade sends bullets back.
+@export var block_parry_window := 0.25
+## Push a blocked hit still gives the blocker (px/s, away from the hit).
+@export var block_push := 80.0
+
 @export_group("Dive")
 ## Crouching while running this fast (share of run_speed) dives forward.
 @export var dive_min_speed := 0.8
@@ -51,6 +57,8 @@ var _diving := false
 ## The rocket this fighter is riding (Grenade), if any.
 var _riding: Node
 var _ride_steer := 0.0
+var _blocking := false
+var _block_time := 0.0
 var _dive_timer := 0.0
 var _dive_cooldown_timer := 0.0
 ## True from a jump until its rise ends or is cut; knockback launches never
@@ -109,6 +117,12 @@ func _physics_process(delta: float) -> void:
 	if _ride(input_dir):
 		return
 	_update_dive(delta, input_dir, just_pressed, can_act)
+	_update_block(delta, frame)
+	if _blocking:
+		# Planted behind the guard: no walking, no attacks.
+		input_dir = 0.0
+		just_pressed &= ~(InputFrame.ATTACK | InputFrame.PICKUP)
+		frame = InputFrame.create(0.0, frame.buttons & ~InputFrame.ATTACK)
 
 	if just_pressed & InputFrame.JUMP:
 		_jump_buffer_timer = jump_buffer
@@ -138,7 +152,7 @@ func _sample_input() -> InputFrame:
 	return input_source.sample()
 
 
-## Attack (or the fire button) uses the weapon in hand. Automatic weapons
+## Attack uses the weapon in hand (the fire button blocks now). Automatic weapons
 ## fire while it is held; the rest need a fresh press per shot. Pickup grabs
 ## the nearest weapon, or throws the current one when nothing is in reach.
 func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
@@ -147,7 +161,7 @@ func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
 	if not weapons.has_weapon():
 		return
 	var trigger := frame.buttons if weapons.weapon.automatic else just_pressed
-	if trigger & (InputFrame.ATTACK | InputFrame.FIRE):
+	if trigger & InputFrame.ATTACK:
 		weapons.try_use()
 
 
@@ -164,6 +178,7 @@ func is_in_hitstun() -> bool:
 func start_rocket_ride(rocket: Node) -> void:
 	_riding = rocket
 	_diving = false
+	_blocking = false
 	_attack_timer = 0.0
 	_hitbox.deactivate()
 	velocity = Vector2.ZERO
@@ -196,6 +211,42 @@ func _ride(input_dir: float) -> bool:
 	velocity = Vector2.ZERO
 	global_position = _riding.global_position + Vector2(0.0, 3.0)
 	return true
+
+
+func is_blocking() -> bool:
+	return _blocking
+
+
+## Hurtbox asks before a hit lands: a guard stops melee (fists, blades,
+## thrown weapons) coming from the front and pushes the blocker back a bit.
+func guard(kind: StringName, from: Vector2) -> bool:
+	if not _blocking or kind != &"melee" or not _in_front(from):
+		return false
+	velocity.x = (-1.0 if _facing_right else 1.0) * block_push
+	return true
+
+
+## A bullet from the front meets a fresh block with a metal blade: it goes
+## back (Superfighters' perfect block).
+func parry(from: Vector2) -> bool:
+	return _blocking and _block_time <= block_parry_window and _in_front(from) \
+			and weapons.has_weapon() and weapons.weapon.metal
+
+
+func _in_front(from: Vector2) -> bool:
+	if from == Vector2.INF:
+		return false
+	return (from.x - global_position.x) * (1.0 if _facing_right else -1.0) >= -2.0
+
+
+func _update_block(delta: float, frame: InputFrame) -> void:
+	var want := frame.is_held(InputFrame.BLOCK) and is_on_floor() and not _diving \
+			and not is_attacking() and _hitstun_timer == 0.0 and not health.is_dead()
+	if want and not _blocking:
+		_block_time = 0.0
+	elif want:
+		_block_time += delta
+	_blocking = want
 
 
 ## Mid-dive: low, fast and (at first) untouchable. FallDamage skips it.

@@ -34,6 +34,13 @@ arma es un `.tres` en `scripts/weapons/data/`.
       al primero que toca, nunca a quien la lanzó. Las vacías lanzadas
       desaparecen al caer; las cargadas quedan en el piso. Los bots lanzan sus
       armas vacías. Test `scripts/weapons/test_throw.gd`
+- [x] Cubrirse (Superfighters, pedido de Jose 2026-09-29): el botón "fire"
+      (Disparar) pasa a ser Cubrirse (`InputFrame.BLOCK`); disparar es con
+      Golpear. Cubierto, el luchador se planta y los golpes y armas lanzadas
+      de frente no hacen daño (`Hurtbox.receive_hit` pregunta a
+      `player.guard()`); las balas pasan. Con un arma de metal (katana,
+      `WeaponData.metal`) un bloqueo de menos de 0.25 s devuelve la bala al
+      que disparó (`Projectile._deflect`). Pose `BLOCK`. Test `scripts/test_block.gd`
 - [x] Montarse en el cohete (Superfighters, pedido de Jose 2026-09-29): si
       el cohete de la bazuca le pega a un luchador (no al que disparó), lo
       engancha y se lo lleva; el jinete lo dirige con izquierda/derecha

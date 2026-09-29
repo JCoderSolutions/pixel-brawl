@@ -9,6 +9,9 @@ const JUMP := 1
 const CROUCH := 2
 const ATTACK := 4
 const FIRE := 8
+## The "fire" action is the block button since attack uses the weapon in
+## hand (Superfighters); BLOCK names it where that reads better.
+const BLOCK := FIRE
 const PICKUP := 16
 
 const AXIS_STEPS := 127

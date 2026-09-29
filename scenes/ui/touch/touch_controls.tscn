@@ -31,12 +31,12 @@ color = Color(0.388, 0.78, 0.302, 1)
 layout_mode = 3
 mouse_filter = 2
 script = ExtResource("3")
-label = "Disp"
+label = "Cubrir"
 color = Color(0.996, 0.682, 0.204, 1)
 
 [node name="Pickup" type="Control" parent="."]
 layout_mode = 3
 mouse_filter = 2
 script = ExtResource("3")
-label = "Coger"
+label = "Tomar"
 color = Color(0.0, 0.6, 0.859, 1)

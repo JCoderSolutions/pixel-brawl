@@ -70,7 +70,7 @@ func _add_player(arena: Node2D, x: float) -> CharacterBody2D:
 func _hold_fire(ticks: int) -> ScriptedInputSource:
 	var frames: Array[InputFrame] = []
 	for i in ticks:
-		frames.append(InputFrame.create(0.0, InputFrame.FIRE))
+		frames.append(InputFrame.create(0.0, InputFrame.ATTACK))
 	return ScriptedInputSource.new(frames)
 
 
