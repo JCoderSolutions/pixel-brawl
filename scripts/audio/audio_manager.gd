@@ -30,6 +30,7 @@ const SFX := {
 	&"land": preload("res://assets/audio/sfx/land.wav"),
 	&"death": preload("res://assets/audio/sfx/death.wav"),
 	&"pickup": preload("res://assets/audio/sfx/pickup.wav"),
+	&"dry_fire": preload("res://assets/audio/sfx/dry_fire.wav"),
 }
 
 ## Looping chiptune themes (assets/audio/generate_music.py).

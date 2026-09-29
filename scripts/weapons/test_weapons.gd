@@ -229,9 +229,9 @@ func _test_ammo_runs_out() -> void:
 	holder.equip(PISTOL, 1)
 	await _frames(3)
 	_check(holder.try_use(), "last bullet fires")
-	_check(not holder.has_weapon(), "empty gun is discarded")
+	_check(holder.has_weapon() and holder.is_empty(), "the empty gun stays in hand (throw it with pickup)")
 	_check(spent[0] == PISTOL, "weapon_spent reports the empty gun")
-	_check(not holder.try_use(), "empty hands cannot fire")
+	_check(not holder.try_use(), "an empty gun cannot fire")
 	await _free(setup)
 
 

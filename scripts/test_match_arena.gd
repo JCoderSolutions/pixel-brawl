@@ -160,7 +160,7 @@ func _test_pickup_button_drops_weapon() -> void:
 	var d := _make_duel(frames, 400.0)
 	d.player.weapons.equip(PISTOL, 4)
 	await _frames(10)
-	_check(not d.player.weapons.has_weapon(), "pickup with nothing in reach drops the weapon")
+	_check(not d.player.weapons.has_weapon(), "pickup with nothing in reach throws the weapon")
 	var dropped := _pickups_in(d.arena)
 	_check(dropped.size() == 1 and dropped[0].ammo == 4, "dropped weapon keeps its ammo")
 	d.arena.queue_free()

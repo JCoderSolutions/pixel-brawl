@@ -19,6 +19,8 @@ enum Kind { RANGED, MELEE }
 @export var max_ammo := -1
 ## Keeps firing while the button is held instead of once per press.
 @export var automatic := false
+## Damage when thrown at someone (pickup button with nothing to grab).
+@export var throw_damage := 12
 ## Metal blades can send bullets back with a well-timed block (katana).
 @export var metal := false
 ## Placeholder color until the art pass replaces it with a sprite.

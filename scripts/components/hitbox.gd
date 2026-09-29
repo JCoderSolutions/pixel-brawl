@@ -11,6 +11,8 @@ signal hit_landed(target: Hurtbox)
 @export var knockback := Vector2(220.0, -120.0)
 
 var direction := 1.0
+## Never hits this node's hurtboxes either (a thrown weapon's thrower).
+var exclude: Node
 
 var _hit_this_window: Array[Hurtbox] = []
 
@@ -36,7 +38,7 @@ func is_active() -> bool:
 
 func _on_area_entered(area: Area2D) -> void:
 	var hurtbox := area as Hurtbox
-	if hurtbox == null or hurtbox.owner == owner:
+	if hurtbox == null or hurtbox.owner == owner or (exclude != null and hurtbox.owner == exclude):
 		return
 	if hurtbox in _hit_this_window:
 		return

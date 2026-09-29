@@ -9,6 +9,8 @@ extends Node
 ##   Projectile.impacted        -> flesh hit or ricochet, sparks / dust
 ##   WeaponHolder.fired         -> shot, shotgun, swing or throw, muzzle spark
 ##   WeaponHolder.weapon_equipped -> pickup blip
+##   WeaponHolder.dry_fired     -> empty click, "SIN BALAS" over the fighter
+##   WeaponHolder.weapon_thrown -> throw whoosh
 ##   PowerUpReceiver.power_up_applied -> pickup blip, sparkles, floating name
 ##   Explosion.exploded         -> explosion, blast burst, hit-stop
 ##   DestructibleBlock.destroyed -> block break, debris
@@ -78,6 +80,8 @@ func wire(node: Node) -> void:
 	elif node is WeaponHolder:
 		node.fired.connect(_on_fired.bind(node))
 		node.weapon_equipped.connect(_on_weapon_equipped)
+		node.dry_fired.connect(_on_dry_fired.bind(node))
+		node.weapon_thrown.connect(func(_w: WeaponData) -> void: _play(&"throw"))
 	elif node is Explosion:
 		node.exploded.connect(_on_exploded)
 	elif node is PowerUpReceiver:
@@ -221,6 +225,11 @@ func _on_fired(data: WeaponData, projectile_count: int, holder: WeaponHolder) ->
 
 func _on_weapon_equipped(_weapon: WeaponData, _ammo: int) -> void:
 	_play(&"pickup")
+
+
+func _on_dry_fired(_weapon: WeaponData, holder: WeaponHolder) -> void:
+	_play(&"dry_fire")
+	FloatingText.spawn(self, "SIN BALAS", Color("c0cbdc"), holder.global_position + Vector2(0.0, -20.0))
 
 
 func _on_blocked(kind: StringName, hurtbox: Hurtbox) -> void:

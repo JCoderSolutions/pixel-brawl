@@ -12,6 +12,9 @@ signal weapon_dropped(weapon: WeaponData, ammo: int)
 signal weapon_spent(weapon: WeaponData)
 signal ammo_changed(ammo: int)
 signal fired(weapon: WeaponData, projectile_count: int)
+## The trigger was pulled on an empty gun: it only clicks.
+signal dry_fired(weapon: WeaponData)
+signal weapon_thrown(weapon: WeaponData)
 
 const PROJECTILE_SCENE := preload("res://scenes/items/projectile.tscn")
 const PICKUP_SCENE := preload("res://scenes/items/weapon_pickup.tscn")
@@ -19,6 +22,7 @@ const GRENADE_SCENE := preload("res://scenes/items/grenade.tscn")
 
 @export var pickup_radius := 28.0
 @export var drop_velocity := Vector2(90.0, -160.0)
+@export var throw_velocity := Vector2(380.0, -70.0)
 ## Where projectiles and dropped weapons go; defaults to the wielder's parent
 ## so they stay in the world when the wielder moves or dies.
 @export var world: Node
@@ -57,6 +61,19 @@ func is_ready() -> bool:
 	return has_weapon() and _cooldown == 0.0 and _swing_timer == 0.0
 
 
+## A gun with no ammo left, still in hand: throw it (Superfighters).
+func is_empty() -> bool:
+	return has_weapon() and not weapon.has_unlimited_ammo() and ammo <= 0
+
+
+## Guns (and the bazooka tube) stay in hand when empty; a hand grenade is
+## the ammo itself, so the last one leaves the hand empty.
+static func keeps_when_empty(data: WeaponData) -> bool:
+	if data is GrenadeData:
+		return data.explode_on_contact
+	return data.is_ranged()
+
+
 ## Equips `data`. `with_ammo` < 0 means a fresh weapon with full ammo.
 func equip(data: WeaponData, with_ammo := -1) -> void:
 	weapon = data
@@ -72,6 +89,10 @@ func equip(data: WeaponData, with_ammo := -1) -> void:
 func try_use() -> bool:
 	if not is_ready():
 		return false
+	if is_empty():
+		_cooldown = weapon.cooldown
+		dry_fired.emit(weapon)
+		return false
 	var used := weapon
 	_cooldown = used.cooldown
 	if used is GrenadeData:
@@ -84,7 +105,8 @@ func try_use() -> bool:
 		ammo -= 1
 		ammo_changed.emit(ammo)
 		if ammo <= 0:
-			_clear()
+			if not keeps_when_empty(used):
+				_clear()
 			weapon_spent.emit(used)
 	return true
 
@@ -114,6 +136,24 @@ func drop() -> WeaponPickup:
 	var left := ammo
 	_clear()
 	weapon_dropped.emit(dropped, left)
+	return pickup
+
+
+## Throws the weapon in hand at whoever stands in front: it flies fast and
+## hurts the first fighter it hits for `throw_damage`, never the thrower.
+func throw_weapon() -> WeaponPickup:
+	if not has_weapon():
+		return null
+	var pickup: WeaponPickup = PICKUP_SCENE.instantiate()
+	pickup.weapon = weapon
+	pickup.ammo = ammo
+	pickup.linear_velocity = Vector2(throw_velocity.x * facing, throw_velocity.y)
+	_world().add_child(pickup)
+	pickup.global_position = global_position
+	var thrown := weapon
+	pickup.start_throw(_wielder(), roundi(thrown.throw_damage * damage_multiplier), facing)
+	_clear()
+	weapon_thrown.emit(thrown)
 	return pickup
 
 

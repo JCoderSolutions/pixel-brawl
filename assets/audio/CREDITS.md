@@ -4,7 +4,7 @@
 
 | Archivo | Fuente | Licencia |
 | --- | --- | --- |
-| `punch`, `hit`, `ricochet`, `shot`, `shotgun`, `swing`, `throw`, `explosion`, `block_hit`, `block_break`, `jump`, `land`, `death`, `pickup` | Generados por `assets/audio/generate_sfx.py` (síntesis procedural estilo sfxr, sin samples externos) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `punch`, `hit`, `ricochet`, `shot`, `shotgun`, `swing`, `throw`, `explosion`, `block_hit`, `block_break`, `jump`, `land`, `death`, `pickup`, `dry_fire` | Generados por `assets/audio/generate_sfx.py` (síntesis procedural estilo sfxr, sin samples externos) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
 Son obra original del proyecto: no hay que dar crédito a terceros y se pueden
 usar, modificar y redistribuir sin restricciones. Para cambiar un sonido se

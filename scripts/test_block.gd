@@ -21,10 +21,11 @@ func _init() -> void:
 func _run_tests() -> void:
 	await _test_block_plants_and_poses()
 	await _test_block_stops_front_hits_only()
+	await _test_block_stops_thrown_weapons()
 	await _test_block_does_not_stop_bullets()
 	await _test_katana_parry_returns_bullets()
 	await _test_late_or_wooden_blocks_do_not_parry()
-	print("OK: block plants the fighter, stops front hits only, not bullets, and a timely katana block returns bullets verified" if _ok else "FAILED")
+	print("OK: block plants the fighter, stops front hits and thrown weapons only, not bullets, and a timely katana block returns bullets verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -109,6 +110,22 @@ func _test_block_stops_front_hits_only() -> void:
 			_check(hurt and blocked[0] == 0, "a punch in the back still hurts (hp %d)" % blocker.health.current_health)
 		stage.queue_free()
 		await process_frame
+
+
+## Superfighters blocks thrown items too: a katana thrown at a guard from the
+## front bounces off.
+func _test_block_stops_thrown_weapons() -> void:
+	var stage := _stage()
+	var blocker := _fighter(stage, 0, _hold(80, 0.0, InputFrame.BLOCK))
+	var thrower := _fighter(stage, 90, _hold(12) + _hold(1, 0.0, InputFrame.PICKUP) + _hold(40), true)
+	await _frames(1)
+	thrower.weapons.equip(KATANA)
+	await _frames(70)
+	_check(not thrower.weapons.has_weapon(), "the katana was thrown")
+	_check(blocker.health.current_health == blocker.health.max_health,
+			"a weapon thrown at a guard from the front is blocked (hp %d)" % blocker.health.current_health)
+	stage.queue_free()
+	await process_frame
 
 
 func _shoot_at(stage: Node2D, from_x: float, target: CharacterBody2D) -> CharacterBody2D:
