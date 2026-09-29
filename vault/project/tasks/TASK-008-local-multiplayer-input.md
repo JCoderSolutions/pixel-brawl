@@ -24,6 +24,16 @@ controles táctiles, bots y online con input determinista.
 - [x] Test headless `scripts/test_input.gd`
 - [x] Segundo jugador en la arena (la partida de `test_arena` usa los slots 1 y 2)
 - [ ] Test manual: dos personas en un teclado sin que se pisen las teclas
+- [x] Control por jugador (pedido de Jose 2026-09-29): en el paso
+      "Personajes, equipos y controles" del menú cada jugador elige "WASD o
+      mando", "WASD", "Flechas" o "Mando 1-4", sin importar el orden en que se
+      conectaron los mandos. Por defecto: un jugador solo usa teclado **y**
+      mando 1; con varios, los teclados van a quienes no alcanzan los mandos
+      conectados. No deja seguir si dos comparten teclado o mando.
+      `ControlSchemes.apply()` reescribe las acciones `p<slot>_*` al armar la
+      partida (`GameManager.controls`) y `reset()` vuelve al mapa original.
+      Test `scripts/test_control_schemes.gd`
+- [ ] Test manual con 2 en teclado + 2 mandos
 
 ## Detalles
 

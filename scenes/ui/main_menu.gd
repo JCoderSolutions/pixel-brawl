@@ -23,6 +23,8 @@ const TEAM_LABELS := ["Sin equipo", "Rojo", "Azul", "Verde", "Amarillo"]
 static var _setup := {
 	vs_bots = true, humans = 1, bots = 1, difficulty = BotProfile.Difficulty.NORMAL,
 	looks = [0, 1, 2, 3], teams = [0, 0, 0, 0], map = 0, rounds = 3,
+	# ControlSchemes.Scheme per human; `auto` until someone picks one.
+	controls = [0, 1, 2, 3], controls_auto = true,
 }
 
 var step: int = Step.TITLE
@@ -77,12 +79,15 @@ func choose_mode(vs_bots: bool) -> void:
 ## Clamps to what the mode allows: 2-4 humans alone, or 1-3 humans and at
 ## least one bot, never more than MAX_FIGHTERS in total.
 func set_counts(humans: int, bots: int) -> void:
+	var before: int = _setup.humans
 	if _setup.vs_bots:
 		_setup.humans = clampi(humans, 1, MAX_FIGHTERS - 1)
 		_setup.bots = clampi(bots, 1, MAX_FIGHTERS - _setup.humans)
 	else:
 		_setup.humans = clampi(humans, 2, MAX_FIGHTERS)
 		_setup.bots = 0
+	if _setup.humans != before:
+		_setup.controls_auto = true
 
 
 func humans() -> int:
@@ -117,6 +122,33 @@ func set_team(slot: int, team: int) -> void:
 
 func team(slot: int) -> int:
 	return _setup.teams[slot]
+
+
+## Keyboard half or gamepad for human `slot` (ControlSchemes.Scheme).
+func set_control(slot: int, scheme: int) -> void:
+	_auto_controls()
+	_setup.controls[slot] = posmod(scheme, ControlSchemes.LABELS.size())
+	_setup.controls_auto = false
+
+
+func control(slot: int) -> int:
+	_auto_controls()
+	return _setup.controls[slot]
+
+
+## No two players on the same keyboard half or gamepad.
+func controls_valid() -> bool:
+	_auto_controls()
+	return ControlSchemes.all_distinct(_setup.controls.slice(0, _setup.humans))
+
+
+## Until someone picks, controls follow the players and the pads plugged in.
+func _auto_controls() -> void:
+	if not _setup.controls_auto:
+		return
+	var picked := ControlSchemes.defaults(_setup.humans, Input.get_connected_joypads().size())
+	for slot in picked.size():
+		_setup.controls[slot] = picked[slot]
 
 
 ## Someone has to have a rival: not everybody on the same team.
@@ -171,6 +203,8 @@ func apply_selection() -> void:
 		manager.looks.assign(_setup.looks.slice(0, fighters()))
 		manager.teams.assign(_setup.teams.slice(0, fighters()) if teams_valid() else [])
 		manager.rounds_to_win = _setup.rounds
+		_auto_controls()
+		manager.controls.assign(_setup.controls.slice(0, _setup.humans))
 	match_scene = MapCatalog.random_path() if _setup.map == 0 else MapCatalog.path(_setup.map - 1)
 
 
@@ -190,7 +224,7 @@ func next() -> void:
 		Step.COUNT:
 			_show(Step.FIGHTERS)
 		Step.FIGHTERS:
-			if teams_valid():
+			if teams_valid() and controls_valid():
 				_show(Step.MAP)
 		Step.MAP:
 			_show(Step.DIFFICULTY if _setup.vs_bots else Step.ROUNDS)
@@ -241,9 +275,10 @@ func _show(to: int) -> void:
 		Step.COUNT:
 			_step_title.text = "¿Cuántos?"
 			_build_counts()
-			_hint.text = "P1: WASD  ·  P2: flechas  ·  P3 y P4: mando"
+			_hint.text = "En el paso siguiente cada jugador elige teclado o mando"
 		Step.FIGHTERS:
-			_step_title.text = "Personajes y equipos"
+			_step_title.text = "Personajes, equipos y controles"
+			_auto_controls()
 			for slot in fighters():
 				_content.add_child(_fighter_row(slot))
 			_refresh_teams_hint()
@@ -376,15 +411,15 @@ func _fighter_row(slot: int) -> Control:
 	row.add_theme_constant_override("separation", 4)
 	var tag := Label.new()
 	tag.text = "P%d" % (slot + 1) if slot < _setup.humans else "BOT %d" % (slot - _setup.humans + 1)
-	tag.custom_minimum_size.x = 44
+	tag.custom_minimum_size.x = 52
 	row.add_child(tag)
 	var rig := FighterRig.new()
 	rig.custom_minimum_size = Vector2(32, 32)
 	var name_label := Label.new()
-	name_label.custom_minimum_size.x = 60
+	name_label.custom_minimum_size.x = 56
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var team_button := Button.new()
-	team_button.custom_minimum_size = Vector2(96, 28)
+	team_button.custom_minimum_size = Vector2(80, 28)
 	var refresh := func() -> void:
 		var character := FighterLook.at(_setup.looks[slot])
 		rig.look = character
@@ -410,14 +445,50 @@ func _fighter_row(slot: int) -> Control:
 		refresh.call()
 		_refresh_teams_hint())
 	row.add_child(team_button)
+	row.add_child(_control_button(slot) if slot < _setup.humans else _cpu_label())
 	refresh.call()
 	return row
 
 
+## Cycles the human's keyboard half / gamepad; greyed out while that pad
+## isn't plugged in (it still counts: it can be plugged in later).
+func _control_button(slot: int) -> Button:
+	var button := Button.new()
+	button.custom_minimum_size = Vector2(100, 28)
+	var refresh := func() -> void:
+		var scheme := control(slot)
+		button.text = ControlSchemes.LABELS[scheme]
+		var pad := ControlSchemes.pad_of(scheme)
+		if pad >= 0 and scheme != ControlSchemes.Scheme.KEYS_OR_PAD and not pad in Input.get_connected_joypads():
+			button.add_theme_color_override("font_color", Color("8b9bb4"))
+		else:
+			button.remove_theme_color_override("font_color")
+	button.pressed.connect(func() -> void:
+		set_control(slot, control(slot) + 1)
+		refresh.call()
+		_refresh_teams_hint())
+	refresh.call()
+	return button
+
+
+func _cpu_label() -> Label:
+	var label := Label.new()
+	label.text = "CPU"
+	label.custom_minimum_size.x = 100
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
+
+
 func _refresh_teams_hint() -> void:
-	var ok := teams_valid()
-	_next_button.disabled = not ok
-	_hint.text = "Hacen equipo los del mismo color" if ok else "Todos en el mismo equipo: no queda rival"
+	var teams_ok := teams_valid()
+	var controls_ok := controls_valid()
+	_next_button.disabled = not (teams_ok and controls_ok)
+	if not teams_ok:
+		_hint.text = "Todos en el mismo equipo: no queda rival"
+	elif not controls_ok:
+		_hint.text = "Dos jugadores con el mismo teclado o mando"
+	else:
+		_hint.text = "Hacen equipo los del mismo color"
 
 
 func _manager() -> Node:

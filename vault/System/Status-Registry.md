@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-29"
+last_updated_notes: "TASK-008 control por jugador (teclado o cualquier mando) desde el menú"
 last_updated_notes: "TASK-023 enganches para tilesets y sprites en progreso"
 last_updated_notes: "TASK-011 menú en secuencia (modo, cantidad, personajes/equipos, mapa, dificultad, rondas) en progreso"
 last_updated_notes: "TASK-011 muerte súbita: las partidas contra bots siempre terminan"
