@@ -70,6 +70,9 @@ var human_players := 1
 ## Fighters in the next match (humans + bots), spread over the map's spawn
 ## markers. 0 = one per marker, the first `controlled_ids` read their keys.
 var match_size := 0
+## ControlSchemes.Scheme per local player (slot 1 first). Empty keeps the
+## shipped bindings (P1 WASD + first pad, P2 arrows + second pad...).
+var controls: Array[int] = []
 ## Team per player id (0 = no team). Missing ids play on their own.
 var teams: Array[int] = []
 ## FighterLook preset per player id. Missing ids get preset `id`.
@@ -102,6 +105,7 @@ func setup(arena: Node, spawn_points: Array[Vector2]) -> void:
 	teardown()
 	_arena = arena
 	_spawn_points = spawn_points
+	ControlSchemes.apply(controls)
 	if match_size > 0:
 		_spawn_points = spread_spawns(spawn_points, match_size)
 		controlled_ids.assign(range(match_size))
