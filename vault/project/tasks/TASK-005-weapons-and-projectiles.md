@@ -58,7 +58,12 @@ aparecen al azar en el mapa y hacen daño por el mismo pipeline de TASK-003.
       girada y aparece una mira láser punteada. Al soltar vuelve a 0. Con
       armas cuerpo a cuerpo el botón sigue cubriendo. Test
       `scripts/weapons/test_aim.gd`
-- [ ] Los bots todavía no apuntan a mano: disparan en horizontal
+- [x] Los bots apuntan a mano (2026-09-30): con un rival arriba o abajo, a
+      tiro y a la vista (rayo contra el mapa), se plantan con Cubrirse, giran
+      la mira con Saltar/Agacharse como un jugador y disparan al quedar
+      alineados. Error de puntería por dificultad (Normal 0.08 rad, Difícil
+      0.03); Fácil no apunta. Test `scripts/ai/test_bots.gd` (rival sobre
+      una plataforma)
 
 ## Inventario por espacios (2026-09-30)
 
@@ -77,8 +82,15 @@ aparecen al azar en el mapa y hacen daño por el mismo pipeline de TASK-003.
       demás. Los bots sacan el arma de fuego si el rival está lejos y el bate
       o la katana si tienen los puños. Test `scripts/weapons/test_inventory.gd`
 - [ ] Test manual: cambiar de arma se siente rápido con teclado, mando y táctil
-- [ ] Espacio de power-up (Superfighters guarda uno para usarlo después):
-      hoy los power-ups se aplican al tocarlos
+- [x] Espacio de power-up (Superfighters guarda uno para usarlo después,
+      2026-09-30): al tocarlo se guarda (`PowerUpReceiver.store`), con el
+      espacio lleno queda en el piso, y se usa con el botón nuevo **Power**
+      (`InputFrame.POWER`; P1 O, P2 ; o Numpad 4, mando B, botón táctil).
+      El botiquín no se gasta con la vida llena; morir vacía el espacio. El
+      HUD lo muestra en su color ("+ Velocidad"). Los bots guardan uno, usan
+      el botiquín heridos y el resto con un rival cerca. Tests
+      `scripts/powerups/test_powerups.gd`
+- [ ] Test manual: guardar y usar el power-up con teclado, mando y táctil
 
 ## Evidencia
 

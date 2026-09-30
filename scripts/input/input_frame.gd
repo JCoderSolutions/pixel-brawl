@@ -15,6 +15,8 @@ const BLOCK := FIRE
 const PICKUP := 16
 ## Draws the next carried weapon (inventory slots).
 const SWITCH := 32
+## Uses the stored power-up (Superfighters keeps one for later).
+const POWER := 64
 
 const AXIS_STEPS := 127
 

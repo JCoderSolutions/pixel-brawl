@@ -9,8 +9,10 @@ extends InputSource
 ## Priorities, Superfighters style:
 ##   1. Flee a grenade about to blow (NORMAL and HARD).
 ##   2. Unarmed and a weapon is closer than the enemy: grab it.
-##   2b. A power-up it can use is closer than the enemy: walk over it.
-##   3. Close in on the nearest enemy and punch, slash, shoot or throw.
+##   2b. A power-up it can use is closer than the enemy: walk over it (it
+##       keeps one; the medkit is used once hurt, the rest near a rival).
+##   3. Close in on the nearest enemy and punch, slash, shoot or throw. A
+##      gun is aimed at rivals above or below (NORMAL and HARD).
 ##   Every tick: never walk off a ledge or into a hazard; jump gaps it can
 ##   clear, walls in the way and platforms the enemy stands on.
 ##
@@ -50,7 +52,14 @@ const THROW_DISTANCE := 60.0
 const FIRE_ROLL_REACH := 80.0
 ## Buttons the player reacts to on the press edge; the bot releases them for
 ## a tick between presses.
-const TAP_BUTTONS := InputFrame.JUMP | InputFrame.ATTACK | InputFrame.PICKUP | InputFrame.SWITCH
+const TAP_BUTTONS := InputFrame.JUMP | InputFrame.ATTACK | InputFrame.PICKUP | InputFrame.SWITCH \
+		| InputFrame.POWER
+## Timed power-ups (speed, strength, shield) are used with a rival this close.
+const POWER_UP_RANGE := 120.0
+## Aim closer than this to the goal angle (rad) and the bot shoots.
+const AIM_SNAP := 0.05
+## Where a shot aims on a standing rival: chest height above the feet.
+const CHEST_HEIGHT := 17.0
 
 var profile: BotProfile
 ## The fighter this bot drives (a player CharacterBody2D with `health` and
@@ -68,6 +77,8 @@ var _target: Node2D
 var _destination: Node2D
 var _pending := 0
 var _last_buttons := 0
+## Aim angle (WeaponHolder.aim_angle) the bot is turning its gun to, or NAN.
+var _aim_goal := NAN
 
 
 func _init(fighter: CharacterBody2D, level := BotProfile.Difficulty.NORMAL, seed_value := 0) -> void:
@@ -107,6 +118,8 @@ func _decide() -> InputFrame:
 		move = signf(_goal_x - body.global_position.x)
 
 	var threat := _grenade_threat()
+	if threat == null and _can_hold_aim():
+		return _aim_frame()
 	if threat != null:
 		move = 1.0 if body.global_position.x >= threat.global_position.x else -1.0
 		_pending = 0
@@ -163,6 +176,64 @@ func _decide() -> InputFrame:
 	return InputFrame.create(move, buttons)
 
 
+func _can_hold_aim() -> bool:
+	var weapons: WeaponHolder = body.weapons
+	return not is_nan(_aim_goal) and current_target() != null and body.is_on_floor() \
+			and weapons.has_weapon() and weapons.weapon.is_ranged() and not weapons.is_empty()
+
+
+## Planted with block held, turning the aim with jump (up) and crouch (down)
+## like a player; shoots once the aim is on the goal.
+func _aim_frame() -> InputFrame:
+	var weapons: WeaponHolder = body.weapons
+	var side := _side_of(_target)
+	var buttons := InputFrame.BLOCK
+	var error := _aim_goal - weapons.aim_angle
+	if error < -AIM_SNAP:
+		buttons |= InputFrame.JUMP
+	elif error > AIM_SNAP:
+		buttons |= InputFrame.CROUCH
+	elif (side == 0 or side == weapons.facing) and weapons.is_ready() \
+			and (weapons.weapon.automatic or not _last_buttons & InputFrame.ATTACK):
+		buttons |= InputFrame.ATTACK
+	# Moving while aiming only turns the fighter round.
+	return InputFrame.create(float(side), buttons)
+
+
+## Aim angle from the gun to the rival's chest, or NAN if the shot is not
+## worth aiming: level enough to shoot straight, out of range, too steep
+## or behind a wall.
+func _aim_angle_to(target: Node2D) -> float:
+	var weapons: WeaponHolder = body.weapons
+	var weapon: WeaponData = weapons.weapon
+	var from := weapons.global_position
+	var to := target.global_position - Vector2(0.0, CHEST_HEIGHT)
+	var dx := absf(to.x - from.x)
+	if not profile.aims or weapon == null or not weapon.is_ranged() \
+			or absf(target.global_position.y - body.global_position.y) <= profile.aim_tolerance \
+			or from.distance_to(to) > weapon.projectile_range * 0.8:
+		return NAN
+	var angle := atan2(to.y - from.y, maxf(dx, 1.0))
+	if absf(angle) > WeaponHolder.MAX_AIM:
+		return NAN
+	var query := PhysicsRayQueryParameters2D.create(from, to, WORLD_MASK)
+	query.exclude = [body.get_rid()]
+	if not body.get_world_2d().direct_space_state.intersect_ray(query).is_empty():
+		return NAN
+	return angle
+
+
+## Uses the stored power-up when it helps: a medkit once hurt by at least
+## half of what it heals, anything else with a rival in reach.
+func _wants_power_up(receiver: PowerUpReceiver) -> bool:
+	if receiver == null or receiver.stored == null:
+		return false
+	var data := receiver.stored
+	if data.effect == PowerUpData.Effect.HEAL:
+		return body.health.max_health - body.health.current_health >= data.amount * 0.5
+	return _target != null and _dist(_target) <= POWER_UP_RANGE
+
+
 func _burning() -> bool:
 	var burning := Burning.of(body)
 	return burning != null and burning.is_burning()
@@ -171,7 +242,10 @@ func _burning() -> bool:
 ## Picks what to do next; runs every `think_interval` ticks.
 func _think() -> void:
 	_target = _nearest(opponents_provider.call())
+	_aim_goal = NAN
 	var weapons: WeaponHolder = body.weapons
+	if _wants_power_up(PowerUpReceiver.find_on(body)):
+		_pending |= InputFrame.POWER
 	var pickup := _nearest(_loose_weapons()) if not weapons.has_weapon() else null
 	if pickup != null and (_target == null or _dist(pickup) < _dist(_target) * profile.weapon_greed):
 		_goal_x = pickup.global_position.x
@@ -216,6 +290,13 @@ func _think() -> void:
 		if absf(dx) >= GRENADE_MIN_RANGE and absf(dx) <= GRENADE_MAX_RANGE and dy <= MELEE_HEIGHT * 2.0:
 			strike = InputFrame.ATTACK
 	elif weapon.is_ranged():
+		var aim := _aim_angle_to(_target) if body.is_on_floor() else NAN
+		if not is_nan(aim):
+			# Rival above or below, in range and in sight: plant and aim.
+			_goal_x = body.global_position.x
+			_aim_goal = clampf(aim + _rng.randf_range(-profile.aim_error, profile.aim_error),
+					-WeaponHolder.MAX_AIM, WeaponHolder.MAX_AIM)
+			return
 		_goal_x = _target.global_position.x if dy > profile.aim_tolerance \
 				else _target.global_position.x - side * SHOOT_KEEP_DISTANCE
 		if _in_shot(_target):
@@ -308,9 +389,13 @@ func _loose_weapons() -> Array:
 	return found
 
 
-## Reachable power-ups, minus medkits while at full health.
+## Reachable power-ups, minus medkits while at full health; none while the
+## bot already keeps one.
 func _loose_power_ups() -> Array:
 	var found := []
+	var receiver := PowerUpReceiver.find_on(body)
+	if receiver != null and receiver.stored != null:
+		return found
 	var full_health: bool = body.health.current_health >= body.health.max_health
 	for node in body.get_tree().get_nodes_in_group(PowerUpPickup.GROUP):
 		if node.is_queued_for_deletion() or absf(node.global_position.y - body.global_position.y) > CLIMB_RANGE:

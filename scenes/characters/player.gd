@@ -293,10 +293,15 @@ func _sample_input() -> InputFrame:
 ## Attack uses the weapon in hand (the fire button blocks now). Automatic weapons
 ## fire while it is held; the rest need a fresh press per shot. Pickup grabs
 ## the nearest weapon, or throws the current one when nothing is in reach.
-## Switch draws the next carried weapon (or the fists).
+## Switch draws the next carried weapon (or the fists). Power uses the
+## stored power-up.
 func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
 	if just_pressed & InputFrame.SWITCH and not is_attacking():
 		weapons.switch_next()
+	if just_pressed & InputFrame.POWER:
+		var receiver := PowerUpReceiver.find_on(self)
+		if receiver != null:
+			receiver.use_stored()
 	if just_pressed & InputFrame.PICKUP and not weapons.try_pick_up():
 		if weapons.has_weapon():
 			weapons.throw_weapon()

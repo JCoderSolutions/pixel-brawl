@@ -1,7 +1,7 @@
 class_name TouchControls
 extends CanvasLayer
 ## On-screen controls for phones and tablets: a floating stick on the left
-## (move + crouch) and jump/attack/block/pickup/switch buttons on the right (the
+## (move + crouch) and jump/attack/block/pickup/switch/power buttons on the right (the
 ## "fire" action blocks). They press
 ## the slot's `p<slot>_*` actions, so the player reads them through its usual
 ## DeviceInputSource with no touch-specific code.
@@ -23,6 +23,7 @@ const BUTTONS := {
 	"Fire": {"offset": Vector2(-74, -76), "radius": 17.0},
 	"Pickup": {"offset": Vector2(-26, -100), "radius": 15.0},
 	"Switch": {"offset": Vector2(-122, -100), "radius": 15.0},
+	"Power": {"offset": Vector2(-74, -124), "radius": 15.0},
 	# Pause sits at the top centre (see compute_layout), away from the thumbs.
 	"Pause": {"offset": Vector2.ZERO, "radius": 15.0},
 }
@@ -30,11 +31,12 @@ const BUTTONS := {
 const GLOBAL_ACTIONS := {"Pause": "pause"}
 ## Actions that may not be in project.godot yet (weapons are not wired into
 ## the player). They are created empty at runtime so the buttons can press them.
-const RUNTIME_ACTIONS := ["fire", "pickup", "switch"]
+const RUNTIME_ACTIONS := ["fire", "pickup", "switch", "power"]
 ## Button colors: one role per action, from the UI tokens.
 const BUTTON_COLORS := {
 	"Attack": UiTokens.DANGER, "Jump": UiTokens.SUCCESS, "Fire": UiTokens.ACCENT,
-	"Pickup": UiTokens.INFO, "Switch": UiTokens.SPECIAL, "Pause": UiTokens.TEXT,
+	"Pickup": UiTokens.INFO, "Switch": UiTokens.SPECIAL, "Power": UiTokens.ACCENT_HI,
+	"Pause": UiTokens.TEXT,
 }
 
 @export_range(1, 4) var slot := 1
@@ -51,6 +53,7 @@ var _mode := Visibility.AUTO
 	"Fire": $Fire as TouchActionButton,
 	"Pickup": $Pickup as TouchActionButton,
 	"Switch": $Switch as TouchActionButton,
+	"Power": $Power as TouchActionButton,
 	"Pause": $Pause as TouchActionButton,
 }
 

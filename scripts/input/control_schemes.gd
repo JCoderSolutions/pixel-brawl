@@ -38,7 +38,7 @@ static func pad_of(scheme: int) -> int:
 
 
 ## Keys each keyboard half shows on its fighter card.
-const KEY_HINTS := {Scheme.WASD: "J K L I", Scheme.ARROWS: ". , / Enter", Scheme.KEYS_OR_PAD: "Teclado o mando"}
+const KEY_HINTS := {Scheme.WASD: "J K L I O", Scheme.ARROWS: ". , / Enter", Scheme.KEYS_OR_PAD: "Teclado o mando"}
 ## Actions that join a keyboard half to a fighter card. Movement and jump are
 ## left out: the arrows and the space bar also move through the menu.
 const JOIN_ACTIONS := ["attack", "fire", "pickup", "switch"]

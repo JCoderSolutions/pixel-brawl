@@ -33,7 +33,7 @@ func _run_tests() -> void:
 	await _test_pickup_by_touch()
 	await _test_spawner_mixes_power_ups()
 	await _test_bot_walks_to_power_up()
-	print("OK: power-up data, medkit, speed + expiry, strength, shield, refresh, death, touch pickup, spawner mix and bots collecting verified" if _ok else "FAILED")
+	print("OK: power-up data, medkit, speed + expiry, strength, shield, refresh, death, stored slot + POWER, spawner mix and bots keeping and using power-ups verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -232,26 +232,58 @@ func _test_pickup_by_touch() -> void:
 	player.is_controlled = true
 	player.input_source = _run_right(120)
 	await _frames(60)
+	var receiver := _receiver(player)
 	_check(collected == [player], "walking over it collects it")
-	_check(_receiver(player).is_active(PowerUpData.Effect.SPEED), "collecting applies the effect")
+	_check(receiver.stored == SPEED and not receiver.is_active(PowerUpData.Effect.SPEED),
+			"collecting keeps it for later instead of using it")
 	await _frames(1)
 	_check(not is_instance_valid(pickup), "collected power-up leaves the map")
 
-	# A medkit waits under a healthy fighter and is taken once they get hurt.
+	# The slot holds one: another pickup stays on the map.
+	var second: PowerUpPickup = POWER_UP_SCENE.instantiate()
+	second.power_up = SHIELD
+	second.position = player.position + Vector2(0, -8)
+	player.is_controlled = false
+	arena.add_child(second)
+	await _frames(20)
+	_check(is_instance_valid(second) and receiver.stored == SPEED, "with the slot full the next one stays")
+
+	# POWER uses it; the one waiting underfoot is taken right after.
+	await _press(player, InputFrame.POWER)
+	_check(receiver.is_active(PowerUpData.Effect.SPEED), "POWER uses the stored power-up")
+	await _frames(20)
+	_check(not is_instance_valid(second) and receiver.stored == SHIELD, "the waiting one fills the emptied slot")
+
+	# A stored medkit is refused at full health and kept for later.
+	receiver.use_stored()
 	var medkit: PowerUpPickup = POWER_UP_SCENE.instantiate()
 	medkit.power_up = MEDKIT
 	medkit.position = player.position + Vector2(0, -8)
-	player.is_controlled = false
 	arena.add_child(medkit)
 	await _frames(20)
-	_check(is_instance_valid(medkit), "medkit stays while at full health")
+	_check(receiver.stored == MEDKIT, "a medkit is kept even at full health")
+	_check(not receiver.use_stored() and receiver.stored == MEDKIT, "and not wasted at full health")
+	receiver.clear() # the shield would soak the hit
 	player.health.take_damage(30)
-	await _frames(20)
+	_check(receiver.use_stored() and receiver.stored == null, "used once hurt")
 	var healed := mini(100 - 30 + int(MEDKIT.amount), 100)
-	_check(not is_instance_valid(medkit) and player.health.current_health == healed,
-			"medkit is taken once hurt (health %d)" % player.health.current_health)
+	_check(player.health.current_health == healed, "the medkit heals (health %d)" % player.health.current_health)
+
+	# Death empties the slot.
+	receiver.store(SPEED)
+	player.health.take_damage(1000)
+	_check(receiver.stored == null, "death empties the slot")
 	arena.queue_free()
 	await _frames(1)
+
+
+## One physics tick with `button` held, then released.
+func _press(player: CharacterBody2D, button: int) -> void:
+	var frames: Array[InputFrame] = [InputFrame.create(0.0, button), InputFrame.new()]
+	player.is_controlled = true
+	player.input_source = ScriptedInputSource.new(frames)
+	await _frames(3)
+	player.is_controlled = false
 
 
 func _test_spawner_mixes_power_ups() -> void:
@@ -301,7 +333,22 @@ func _test_bot_walks_to_power_up() -> void:
 	medkit.position = Vector2(-160, -8)
 	arena.add_child(medkit)
 	await _frames(180)
-	_check(_receiver(bot).is_active(PowerUpData.Effect.STRENGTH), "bot walks over a power-up to collect it")
+	var receiver := _receiver(bot)
+	_check(receiver.stored == STRENGTH, "bot walks over a power-up to keep it")
 	_check(is_instance_valid(medkit), "a healthy bot leaves the medkit")
+	_check(not receiver.is_active(PowerUpData.Effect.STRENGTH), "and saves it with no rival around")
+
+	# A rival in reach: the bot uses it.
+	var rival := _add_player(arena, bot.position.x + 60.0)
+	await _frames(40)
+	_check(receiver.is_active(PowerUpData.Effect.STRENGTH), "bot uses a stored power-up near a rival")
+	rival.queue_free()
+	await _frames(1)
+
+	# Hurt with a medkit stored: it heals itself.
+	receiver.store(MEDKIT)
+	bot.health.take_damage(50)
+	await _frames(40)
+	_check(receiver.stored == null and bot.health.current_health > 50, "hurt bot uses its medkit")
 	arena.queue_free()
 	await _frames(1)
