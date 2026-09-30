@@ -24,6 +24,11 @@ var aim_tolerance := 12.0
 var grab_chance := 0.15
 ## Dives and rolls to put out flames when on fire.
 var puts_out_fire := true
+## Aims guns at rivals above or below (hold block, turn the aim, shoot)
+## instead of only shooting straight ahead.
+var aims := true
+## Random error, in radians, added to each aim.
+var aim_error := 0.08
 
 
 static func create(level: Difficulty) -> BotProfile:
@@ -38,6 +43,7 @@ static func create(level: Difficulty) -> BotProfile:
 			profile.aim_tolerance = 20.0
 			profile.grab_chance = 0.0
 			profile.puts_out_fire = false
+			profile.aims = false
 		Difficulty.HARD:
 			profile.think_interval = 4
 			profile.aggression = 1.0
@@ -45,6 +51,7 @@ static func create(level: Difficulty) -> BotProfile:
 			profile.weapon_greed = 1.6
 			profile.aim_tolerance = 10.0
 			profile.grab_chance = 0.3
+			profile.aim_error = 0.03
 	return profile
 
 

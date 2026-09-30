@@ -45,6 +45,7 @@ func _run_tests() -> void:
 	_test_profiles()
 	await _test_bot_punches_player()
 	await _test_bot_grabs_weapon_and_shoots()
+	await _test_bot_aims_up()
 	await _test_bot_stops_at_ledge()
 	await _test_bot_jumps_small_gap()
 	await _test_bot_jumps_map_gaps()
@@ -54,7 +55,7 @@ func _run_tests() -> void:
 	await _test_game_manager_bot_slots()
 	await _test_menu_bot_option()
 	await _test_bots_fight_in_arena()
-	print("OK: difficulty profiles, punching, weapon pickup + shooting, ledges, gap jumps, hazards, grenade dodging by difficulty, determinism, GameManager bot slots, menu bot option and bots-only arena match verified" if _ok else "FAILED")
+	print("OK: difficulty profiles, punching, weapon pickup + shooting, aiming up at a rival on a platform, ledges, gap jumps, hazards, grenade dodging by difficulty, determinism, GameManager bot slots, menu bot option and bots-only arena match verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -145,6 +146,34 @@ func _test_bot_grabs_weapon_and_shoots() -> void:
 	_check(dummy.health.current_health < dummy.health.max_health, "bullets hit the opponent")
 	_check(min_gap > BotInputSource.PUNCH_RANGE * 2.0, "armed bot keeps its distance")
 	await _free(arena)
+
+
+## A rival on a platform above: NORMAL/HARD bots plant, turn the aim up and
+## hit; EASY ones never aim.
+func _test_bot_aims_up() -> void:
+	for level in [HARD, EASY]:
+		var arena := _make_arena([[-300, 400]])
+		var ledge := StaticBody2D.new()
+		var shape := CollisionShape2D.new()
+		shape.shape = RectangleShape2D.new()
+		shape.shape.size = Vector2(100, 10)
+		ledge.add_child(shape)
+		ledge.position = Vector2(200, -55)
+		arena.add_child(ledge)
+		var bot := _add_bot(arena, -50, level)
+		bot.weapons.equip(PISTOL)
+		var dummy := _add_dummy(arena, 200)
+		dummy.position.y = -60
+		var aimed_up := false
+		for i in 240:
+			await physics_frame
+			aimed_up = aimed_up or (bot.weapons.aiming and bot.weapons.aim_angle < -0.1)
+		if level == HARD:
+			_check(aimed_up, "a hard bot aims up at a rival above")
+			_check(dummy.health.current_health < dummy.health.max_health, "and its shots land")
+		else:
+			_check(not aimed_up, "an easy bot never aims")
+		await _free(arena)
 
 
 func _test_bot_stops_at_ledge() -> void:
