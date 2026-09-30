@@ -857,15 +857,22 @@ func _try_ledge_grab(input_dir: float) -> void:
 	if wall.is_empty():
 		return
 	# Its top: looking down just past the wall face, from above the hands.
+	# Walls are stacks of separate 16 px blocks: a probe that starts inside one
+	# must count it (hit_from_inside), or the seam with the block below reads
+	# as a ledge in the middle of the wall.
 	var probe_x: float = wall.position.x + dir * 3.0
 	var from := Vector2(probe_x, global_position.y - HANG_REACH - 8.0)
-	var top := space.intersect_ray(PhysicsRayQueryParameters2D.create(from, Vector2(probe_x, chest.y + 2.0), 1, [get_rid()]))
+	var down := PhysicsRayQueryParameters2D.create(from, Vector2(probe_x, chest.y + 2.0), 1, [get_rid()])
+	down.hit_from_inside = true
+	var top := space.intersect_ray(down)
 	if top.is_empty() or top.normal.y > -0.7:
 		return
 	var ledge_y: float = top.position.y
-	# Room to climb onto it.
+	# Room to climb onto it: nothing solid right above the edge.
 	var above := Vector2(probe_x, ledge_y - 2.0)
-	if not space.intersect_ray(PhysicsRayQueryParameters2D.create(above, above + Vector2(0.0, -24.0), 1, [get_rid()])).is_empty():
+	var up := PhysicsRayQueryParameters2D.create(above, above + Vector2(0.0, -24.0), 1, [get_rid()])
+	up.hit_from_inside = true
+	if not space.intersect_ray(up).is_empty():
 		return
 	_hanging = true
 	_sprinting = false
