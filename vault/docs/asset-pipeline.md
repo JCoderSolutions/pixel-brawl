@@ -192,6 +192,66 @@ PERSONAJE: Bruno, street brawler, short dark hair with a cyan headband
 Los colores con su hex de Endesga 32 (los de `FighterLook`) y las
 proporciones van siempre. Lo único que cambia entre pedidos es la pose.
 
+### Paso 1b: que parezca un luchador, no un NPC
+
+Si la ficha solo describe ropa ("remera azul, pantalón oscuro"), el modelo
+devuelve un extra genérico. El carácter sale de cuatro cosas, en este orden:
+
+1. **Arquetipo con tema**: no "street brawler", sino *quién* es: boxeador
+   de barrio, luchador enmascarado, obrero de la construcción. En SFD casi
+   todos son "un tipo de la calle + un oficio o una tribu" (mafioso, motero,
+   soldado, agente) y se reconocen por eso.
+2. **Silueta**: un rasgo que se lea en negro puro: casco, cresta, gorro,
+   melena, capucha, bufanda al viento, hombros enormes. Prueba: pintar el
+   sprite todo negro; si no se sabe quién es, falta silueta.
+3. **Proporciones exageradas** (dentro de los 16x28): cabeza un poco
+   grande, torso y hombros anchos, puños grandes, piernas cortas y
+   separadas. "Robusto" se dibuja con el torso, no con la altura.
+4. **Actitud**: pose de guardia (puños arriba, peso adelante, rodillas
+   flexionadas), ceño fruncido o sonrisa torcida, un detalle de historia
+   (cicatriz, vendas en los puños, diente de oro, curita en la nariz).
+
+Palabras que ayudan en el prompt: `tough`, `burly`, `broad shoulders`,
+`big fists`, `fists raised`, `fighting stance`, `confident smirk`,
+`angry eyebrows`, `bold silhouette`, `chunky proportions`, `thick dark
+outline`, `high contrast`. Palabras que lo vuelven NPC: `relaxed`,
+`standing`, `casual`, `simple`, `athletic`.
+
+Colores: los dos de `FighterLook` (remera y pantalón) llevan el cuerpo y
+el **color de acento** (la banda) va solo en el rasgo de silueta, para que
+el ojo vaya ahí. Contorno siempre `#181425`.
+
+Los 8 del juego, con los colores que ya tienen (el tema se puede cambiar,
+los colores conviene mantenerlos porque son los que usa el juego hoy):
+
+| Personaje | Tema | Rasgo de silueta | Prompt (se agrega a la línea de estilo) |
+| --- | --- | --- | --- |
+| **Bruno** | Boxeador de barrio | Vincha cyan con puntas al viento, puños vendados | `burly street boxer, broad shoulders, big taped fists raised, cyan headband with long tails, short dark hair, stubble, scar on eyebrow, blue tank top, dark navy boxing shorts over pants, confident smirk` |
+| **Roja** | Kickboxer muay thai | Coleta larga naranja | `female muay thai kickboxer, long orange-tied ponytail, red sports top, red hand wraps, dark navy shorts with knee pads, fierce eyes, one knee raised in guard` |
+| **Kai** | Capoeirista / callejero | Rastas atadas con pañuelo azul | `capoeira street fighter, dark skin, dreadlocks tied with a blue bandana, green sleeveless shirt open, loose grey-blue pants, barefoot, cocky grin, low wide stance` |
+| **Sol** | Luchador enmascarado | Máscara roja con llamas, capa corta | `mexican luchador wrestler, red mask with sun flame pattern, yellow wrestling singlet, short red cape, huge chest, thick arms, dark brown boots, flexing pose` |
+| **Sombra** | Ninja / agente | Capucha y bufanda roja larga | `shadow ninja assassin, dark navy hood and mask, only eyes visible, long red scarf flowing behind, black wrapped pants, slim, crouched ready stance` |
+| **Doc** | Científico loco | Pelo blanco disparado + gafas | `mad scientist brawler, wild spiky white hair, blue goggles on forehead, long light grey lab coat, dark pants, crazy grin, fists up` |
+| **Punk** | Punk callejero | Cresta verde alta | `street punk, tall green mohawk, magenta sleeveless leather vest with spikes, dark ripped jeans, heavy boots, chain belt, snarl, fists raised` |
+| **Obrero** | Obrero de obra | Casco amarillo, bigote | `tough construction worker, yellow hard hat, big mustache, dark skin, orange safety vest, huge forearms, dark navy work pants, heavy boots, grumpy face` |
+
+### Paso 1c: diseñar primero, animar después
+
+El maniquí gris como imagen de entrada **congela el diseño**: con strength
+0.55–0.7 copia su pose neutra y su cuerpo flaco, y a 32x32 no queda lugar
+para inventar personalidad. Por eso se separa en dos:
+
+1. **Diseño (concepto)**: RD Plus estilo **Default**, **64x64 o más**,
+   **sin imagen de entrada** (o strength **0.8–0.9** si se quiere forzar
+   la vista lateral). Prompt: línea de estilo + fila de la tabla +
+   `side view, facing right, full body, fighting stance`. Tandas de 4
+   hasta que uno "tenga cara de personaje"; anotar semilla.
+2. **Sprite del juego**: ese concepto se lleva a 32x32 redibujándolo en
+   Pixelorama sobre `x4/base.png` (el concepto al lado como guía): el
+   cuerpo lo pone el maniquí, el carácter lo ponen pelo, accesorio,
+   colores y cara. Recién ahí se usan las poses de `poses/` como entrada,
+   con el sprite ya dibujado como referencia (RD Pro).
+
 ### Paso 2: Retro Diffusion, el diseño base
 
 Configuración (2026-09-30):
@@ -201,8 +261,8 @@ Configuración (2026-09-30):
 | Modelo | **RD Pro** si alcanzan los créditos: es el único que baja a 32x32 y acepta imágenes de referencia. Si no, **RD Plus** |
 | Estilo | RD Plus: **Low Res** (hecho para assets chicos). "Default" pinta más detalle y llena el lienzo: sirve para bocetos a 64x64, no para el sprite final |
 | Medida | **32x32**. Si el modelo o el estilo no la aceptan (RD Plus pide mínimo 64 salvo los estilos low res), **64x64** y después se redibuja a 32 en Pixelorama usando el resultado de guía, nunca achicando |
-| Input image | `assets/sprites/characters/reference/poses/<pose>.png` (128x128, fondo blanco: la herramienta no acepta transparencia) |
-| Strength | **0.55 a 0.7**. Más bajo copia el maniquí gris; más alto se olvida de la pose y las proporciones |
+| Input image | Para el **diseño**: ninguna (ver paso 1c). Para **poses** de un personaje ya diseñado: `assets/sprites/characters/reference/poses/<pose>.png` (128x128, fondo blanco: la herramienta no acepta transparencia) |
+| Strength | Poses: **0.55 a 0.7**. Más bajo copia el maniquí gris; más alto se olvida de la pose y las proporciones. Diseño con entrada: **0.8 a 0.9** |
 | Paleta | `assets/palettes/endesga-32.png` |
 | Quitar fondo | **Sí** (remove background), para que salga transparente |
 | Semilla | Vacía la primera vez; cuando sale uno bueno, anotarla y repetirla |
@@ -213,9 +273,10 @@ es pixel art) y con la pose al final. Corto y concreto: el modelo sigue
 mejor listas de rasgos que frases largas.
 
 ```
-side view, facing right, full body street brawler, short dark hair, cyan
-headband, light skin, blue t-shirt, dark navy pants, dark shoes, athletic,
-1px dark outline, flat shading, standing idle in a relaxed fighting stance
+side view, facing right, full body, burly street boxer, broad shoulders,
+big taped fists raised, cyan headband with long tails, short dark hair,
+stubble, scar on eyebrow, blue tank top, dark navy pants, confident smirk,
+chunky proportions, bold silhouette, thick dark outline, flat shading
 ```
 
 1. Crear la cuenta (50 créditos gratis, no vencen).
