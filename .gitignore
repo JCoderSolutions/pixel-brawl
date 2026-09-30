@@ -3,6 +3,8 @@
 *.import
 # La música necesita sus opciones de import (loop + IMA-ADPCM) en el repo.
 !assets/audio/music/*.import
+# Las fuentes pixel necesitan sus opciones de import (sin antialias ni hinting).
+!assets/fonts/*.import
 export_presets.cfg.imported
 *.translation
 build/

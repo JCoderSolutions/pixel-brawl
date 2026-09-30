@@ -2,8 +2,8 @@ extends SceneTree
 
 ## Headless tests for the dive (Superfighters): crouching while running
 ## throws the fighter forward, low and briefly untouchable, and it lands into
-## a roll; crouching with a direction in the air dives once per jump;
-## standing crouch stays a crouch; a dive over a ledge lands without fall
+## a short roll that slows down; crouching with a direction in the air dives
+## once per jump; standing crouch stays a crouch; a dive over a ledge lands without fall
 ## damage; the rig shows it.
 ## Run: godot --headless --path . -s scripts/test_dive.gd
 
@@ -160,8 +160,11 @@ func _test_dive_lands_into_roll() -> void:
 	var rolled := false
 	var rolled_anim := false
 	var roll_speed := 0.0
+	var from := 0.0
 	for i in 110:
 		await physics_frame
+		if i == 30:
+			from = player.position.x
 		if player.is_rolling():
 			rolled = true
 			roll_speed = maxf(roll_speed, absf(player.velocity.x))
@@ -171,6 +174,8 @@ func _test_dive_lands_into_roll() -> void:
 	_check(roll_speed > player.run_speed, "the roll is faster than running (%.0f)" % roll_speed)
 	_check(rolled_anim, "the rig rolls")
 	_check(not player.is_rolling() and absf(player.velocity.x) < 1.0, "the roll ends and the fighter stops")
+	var travel := player.position.x - from
+	_check(travel > 50.0 and travel < 110.0, "dive and roll cover a short stretch, not a long slide (%.0f px)" % travel)
 	s[0].queue_free()
 	await process_frame
 

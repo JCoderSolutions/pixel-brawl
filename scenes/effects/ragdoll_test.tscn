@@ -21,7 +21,7 @@ offset_left = 8.0
 offset_top = 6.0
 offset_right = 472.0
 offset_bottom = 24.0
-theme_override_font_sizes/font_size = 8
+theme_type_variation = &"LabelSmall"
 text = "J golpea (3 golpes matan a un dummy) - R reinicia"
 
 [node name="Floor" type="StaticBody2D" parent="."]

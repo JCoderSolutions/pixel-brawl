@@ -16,7 +16,7 @@ enum Anim { IDLE, RUN, JUMP, FALL, CROUCH, ATTACK, HURT, AIM, VICTORY, DIVE, RID
 		UPPERCUT, KICK, AIR_KICK, GRAB, HELD, HANG }
 
 ## Seconds for one full turn of a roll.
-const ROLL_PERIOD := 0.3
+const ROLL_PERIOD := 0.25
 ## Guard energy bar over the head (shown while the guard isn't full).
 const GUARD_BAR := Vector2(12, 2)
 const GUARD_FULL := Color("63c74d")
@@ -301,11 +301,11 @@ static func pose(anim: Anim, t: float, armed := false, aim := 0.0) -> Dictionary
 			p.arm_front = 1.2
 			p.arm_back = -0.8
 		Anim.AIR_KICK:
-			# Drop kick: front leg aimed down and forward, the other tucked.
-			p.leg_front = -1.1
+			# Flying side kick: front leg straight out, the other tucked.
+			p.leg_front = -1.5
 			p.leg_back = 0.5
 			p.knee_back = 1.3
-			p.lean = -0.5
+			p.lean = -0.4
 			p.arm_front = -2.3
 			p.arm_back = 2.2
 		Anim.GRAB:

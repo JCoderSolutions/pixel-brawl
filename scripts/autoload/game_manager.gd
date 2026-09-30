@@ -39,10 +39,10 @@ const TEAM_COLORS: Array[Color] = [
 	Color("fee761"),
 ]
 const PLAYER_COLORS: Array[Color] = [
-	Color(0.2, 0.545, 0.8),
-	Color(0.894, 0.231, 0.267),
-	Color(0.388, 0.78, 0.302),
-	Color(0.996, 0.906, 0.38),
+	Color("0099db"),
+	Color("e43b44"),
+	Color("63c74d"),
+	Color("fee761"),
 ]
 
 @export var player_scene: PackedScene = preload("res://scenes/characters/player.tscn")

@@ -8,7 +8,7 @@ extends Node
 ##   Hitbox.hit_landed          -> punch / block thud, hit burst, hit-stop
 ##   Projectile.impacted        -> flesh hit or ricochet, sparks / dust
 ##   WeaponHolder.fired         -> shot, shotgun, swing or throw, muzzle spark
-##   WeaponHolder.weapon_equipped -> pickup blip
+##   WeaponHolder.weapon_equipped -> pickup blip (also on weapon_switched)
 ##   WeaponHolder.dry_fired     -> empty click, "SIN BALAS" over the fighter
 ##   WeaponHolder.weapon_thrown -> throw whoosh
 ##   PowerUpReceiver.power_up_applied -> pickup blip, sparkles, floating name
@@ -118,6 +118,7 @@ func wire(node: Node) -> void:
 	elif node is WeaponHolder:
 		node.fired.connect(_on_fired.bind(node))
 		node.weapon_equipped.connect(_on_weapon_equipped)
+		node.weapon_switched.connect(func(_w: WeaponData) -> void: _play(&"pickup"))
 		node.dry_fired.connect(_on_dry_fired.bind(node))
 		node.weapon_thrown.connect(func(_w: WeaponData) -> void: _play(&"throw"))
 	elif node is Explosion:

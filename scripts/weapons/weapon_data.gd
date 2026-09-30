@@ -6,10 +6,14 @@ extends Resource
 ## so a new gun is a new .tres, not new code.
 
 enum Kind { RANGED, MELEE }
+## Inventory slot it takes (Superfighters): a fighter carries one weapon per
+## slot and switches between them.
+enum Slot { MELEE, HANDGUN, RIFLE, THROWABLE }
 
 @export var id: StringName
 @export var display_name := ""
 @export var kind := Kind.RANGED
+@export var slot := Slot.RIFLE
 @export var damage := 10
 ## Knockback along +X; flipped by the wielder's facing when the hit lands.
 @export var knockback := Vector2(120.0, -60.0)

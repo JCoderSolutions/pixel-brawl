@@ -1,7 +1,15 @@
 ---
 type: "status-registry"
 project: "pixel-brawl"
-last_updated: "2026-09-29"
+last_updated: "2026-09-30"
+last_updated_notes: "TASK-024 fase 5: íconos, sonidos de menú, salto de foco y menú de pausa; falta prueba en dispositivos"
+last_updated_notes: "TASK-024 fase 4: todas las pantallas, HUD y táctiles con la línea gráfica"
+last_updated_notes: "TASK-024/TASK-011 bots desde las tarjetas con dificultad propia; menú Título → Luchadores → Mapa → Rondas"
+last_updated_notes: "TASK-024 decisiones aprobadas por Jose y fase 3: tarjetas de luchadores con apretá para unirte"
+last_updated_notes: "TASK-024 fase 1: tema global, fuentes pixel, tokens y test de UI (fuente y paleta provisorias)"
+last_updated_notes: "TASK-024 plan de línea gráfica y sistema de UI propuesto (espera decisiones de Jose)"
+last_updated_notes: "TASK-005 inventario por espacios (cuerpo a cuerpo, pistola, principal, arrojable) y botón Cambiar arma"
+last_updated_notes: "TASK-002/TASK-003 barrido más corto y patada aérea sin embestida (feedback de Jose)"
 last_updated_notes: "TASK-011/TASK-012 golpe final en cámara lenta y tabla de posiciones entre rondas"
 last_updated_notes: "TASK-020/TASK-021 fuego que se propaga, molotov, barriles explosivos y cajas de suministro"
 last_updated_notes: "TASK-005 apuntar a mano en 360° con Cubrirse + Saltar/Agacharse"
@@ -67,6 +75,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-010-power-ups|TASK-010 — Power-ups]] | `in-progress` | high | PHASE-3 |
 | [[project/tasks/TASK-022-fighter-animations|TASK-022 — Luchador animado (formas nativas)]] | `in-progress` | high | PHASE-3 |
 | [[project/tasks/TASK-023-art-hooks|TASK-023 — Enganches para el arte (tilesets y sprites)]] | `in-progress` | medium | PHASE-3 |
+| [[project/tasks/TASK-024-ui-style-system|TASK-024 — Línea gráfica y sistema de UI]] | `in-progress` | high | PHASE-3 |
 
 ## Tareas por desglosar (backlog)
 
@@ -89,6 +98,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | Stack: Godot 4 + Endesga 32 + pipeline AI | `approved` (ver [[PLAN-pixel-brawl|PLAN]]) |
 | Multiagente: OpenCode + Claude Code + Kiro | `approved` (ver [[docs/multi-agent-setup]]) |
 | Engram: guardado solo con aprobación humana | `approved` (ver [[docs/engram-quick-reference]]) |
+| Línea gráfica y sistema de UI (paleta por roles, Pixel Operator + Jersey 10, tarjetas) | `approved` 2026-09-30 por Jose (ver [[docs/ui-style-guide]]) |
 
 ## Descartadas
 

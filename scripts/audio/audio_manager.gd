@@ -31,6 +31,9 @@ const SFX := {
 	&"death": preload("res://assets/audio/sfx/death.wav"),
 	&"pickup": preload("res://assets/audio/sfx/pickup.wav"),
 	&"dry_fire": preload("res://assets/audio/sfx/dry_fire.wav"),
+	&"ui_move": preload("res://assets/audio/sfx/ui_move.wav"),
+	&"ui_confirm": preload("res://assets/audio/sfx/ui_confirm.wav"),
+	&"ui_back": preload("res://assets/audio/sfx/ui_back.wav"),
 }
 
 ## Looping chiptune themes (assets/audio/generate_music.py).

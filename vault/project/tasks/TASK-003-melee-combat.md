@@ -41,6 +41,11 @@ con un pipeline de daño reutilizable para armas, props y tiles destructibles.
       `AIR_KICK`, `GRAB`, `HELD`. Los bots en Normal y Difícil agarran a
       veces (15 % / 30 %) y no patean en el aire. Test
       `scripts/test_melee_moves.gd`
+- [x] Patada aérea sin embestida (feedback de Jose 2026-09-30): atacar en el
+      aire da una patada lateral y sigue el arco del salto con control
+      normal; ya no lanza al luchador hacia el piso. Pose `AIR_KICK` de
+      patada voladora. Los bots siguen sin patear en el aire (sin chequeo
+      de cornisa allá arriba perseguirían al rival fuera del mapa)
 - [ ] Test manual de sensaciones: el golpe se siente con peso y el alcance es justo
 
 ## Detalles

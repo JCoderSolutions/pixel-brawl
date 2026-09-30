@@ -61,16 +61,19 @@ extends CharacterBody2D
 ## Crouching while running this fast (share of run_speed) dives forward; in
 ## the air, crouch with a direction dives once per jump.
 @export var dive_min_speed := 0.35
-@export var dive_speed := 250.0
-@export var dive_lift := -150.0
-## Seconds before a dive can end (it lasts until the fighter lands).
-@export var dive_time := 0.4
+@export var dive_speed := 190.0
+@export var dive_lift := -130.0
+## Seconds before a dive can end: past that it ends as soon as it touches the
+## floor, so it's a short hop into a roll, not a slide.
+@export var dive_time := 0.12
 ## Seconds a dive can't be hit, from its start.
 @export var dive_dodge_time := 0.3
 @export var dive_cooldown := 0.4
-## A dive that lands turns into a roll along the floor: low and fast.
-@export var roll_time := 0.3
-@export var roll_speed := 210.0
+## A dive that lands turns into a roll along the floor: low and fast, and it
+## loses speed as it goes (down to roll_end_speed) so it settles naturally.
+@export var roll_time := 0.25
+@export var roll_speed := 170.0
+@export var roll_end_speed := 60.0
 ## Seconds of the roll that can't be hit.
 @export var roll_dodge_time := 0.15
 ## Only the controlled player reads input; others (dummies) don't.
@@ -117,11 +120,9 @@ const MOVES := {
 			"recovery": 0.25, "offset": Vector2(16, -20)},
 	&"kick": {"scale": 1.3, "knockback": Vector2(290, -150), "startup": 0.08, "active": 0.1,
 			"recovery": 0.22, "offset": Vector2(18, -8)},
-	&"air_kick": {"scale": 1.4, "knockback": Vector2(250, -60), "startup": 0.04, "active": 0.25,
-			"recovery": 0.12, "offset": Vector2(14, -8)},
+	&"air_kick": {"scale": 1.4, "knockback": Vector2(250, -60), "startup": 0.04, "active": 0.2,
+			"recovery": 0.12, "offset": Vector2(16, -10)},
 }
-## Speed a drop kick throws the fighter at (forward, downward).
-const AIR_KICK_VELOCITY := Vector2(220.0, 140.0)
 ## Chained punches step in this far (px) so the combo keeps its reach.
 const COMBO_STEP := 6.0
 
@@ -263,8 +264,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		_jump_buffer_timer = max(_jump_buffer_timer - delta, 0.0)
 
-	# Attack punches with empty hands (crouched it kicks, in the air it drop
-	# kicks); with a weapon it uses the weapon.
+	# Attack punches with empty hands (crouched it kicks, in the air it kicks
+	# without breaking the jump); with a weapon it uses the weapon.
 	if just_pressed & InputFrame.ATTACK and not weapons.has_weapon():
 		_press_attack(want_crouch)
 	_update_attack(delta)
@@ -272,8 +273,7 @@ func _physics_process(delta: float) -> void:
 
 	_set_crouching(want_crouch)
 	_apply_gravity(delta, want_crouch)
-	var drop_kicking := is_attacking() and _move == &"air_kick"
-	if _hitstun_timer == 0.0 and not _diving and not _rolling and not drop_kicking:
+	if _hitstun_timer == 0.0 and not _diving and not _rolling:
 		_apply_horizontal(input_dir, delta)
 	if not _diving and not _rolling:
 		_perform_jump(input_dir)
@@ -293,7 +293,10 @@ func _sample_input() -> InputFrame:
 ## Attack uses the weapon in hand (the fire button blocks now). Automatic weapons
 ## fire while it is held; the rest need a fresh press per shot. Pickup grabs
 ## the nearest weapon, or throws the current one when nothing is in reach.
+## Switch draws the next carried weapon (or the fists).
 func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
+	if just_pressed & InputFrame.SWITCH and not is_attacking():
+		weapons.switch_next()
 	if just_pressed & InputFrame.PICKUP and not weapons.try_pick_up():
 		if weapons.has_weapon():
 			weapons.throw_weapon()
@@ -492,8 +495,6 @@ func _begin_move(move: StringName) -> void:
 	_hitbox.position = Vector2(m.offset.x * facing, m.offset.y)
 	if move == &"cross" or move == &"uppercut":
 		move_and_collide(Vector2(facing * COMBO_STEP, 0.0))
-	if move == &"air_kick":
-		velocity = Vector2(facing * AIR_KICK_VELOCITY.x, maxf(velocity.y, AIR_KICK_VELOCITY.y))
 
 
 ## Hit window opens after startup and closes before recovery, so a swing
@@ -672,9 +673,9 @@ func _on_died(_source: Node) -> void:
 	$Hurtbox.set_deferred("monitorable", false)
 	_visual.flash = false
 	_visual.color = _base_color.darkened(0.6)
-	# Dead hands let go; deferred because physics bodies can't be added
-	# from inside the hit's physics callback.
-	weapons.drop.call_deferred()
+	# Dead hands let go of everything carried; deferred because physics
+	# bodies can't be added from inside the hit's physics callback.
+	weapons.drop_all.call_deferred()
 
 
 func _apply_gravity(delta: float, want_crouch: bool) -> void:
@@ -776,7 +777,7 @@ func _start_roll(dir: float) -> void:
 	$Hurtbox.set_deferred("monitorable", false)
 
 
-## The roll keeps its speed on the floor; rolling off a ledge just falls.
+## The roll slows down along the floor; rolling off a ledge just falls.
 func _update_roll(delta: float) -> void:
 	if not _rolling:
 		return
@@ -784,7 +785,7 @@ func _update_roll(delta: float) -> void:
 	if _roll_timer == 0.0 or not is_on_floor() or health.is_dead() or _hitstun_timer > 0.0:
 		_rolling = false
 		return
-	velocity.x = _roll_dir * roll_speed
+	velocity.x = _roll_dir * lerpf(roll_end_speed, roll_speed, _roll_timer / roll_time)
 
 
 func is_aiming() -> bool:

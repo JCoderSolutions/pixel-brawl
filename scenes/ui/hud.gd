@@ -65,17 +65,32 @@ func _on_player_spawned(id: int, player: Node) -> void:
 		panel.bar.max_value = maximum
 		panel.bar.value = current)
 	panel.weapon.text = ""
+	panel.carried.text = ""
+	panel.icon.weapon = null
 	var holder: WeaponHolder = player.get("weapons")
 	if holder != null:
-		var label: Label = panel.weapon
-		holder.weapon_equipped.connect(func(_w, _a) -> void: label.text = weapon_line(holder))
-		holder.ammo_changed.connect(func(_a) -> void: label.text = weapon_line(holder))
-		holder.weapon_dropped.connect(func(_w, _a) -> void: label.text = "")
-		holder.weapon_spent.connect(func(_w) -> void: label.text = weapon_line(holder))
+		var refresh := func() -> void:
+			panel.weapon.text = weapon_line(holder)
+			panel.carried.text = carried_line(holder)
+			panel.icon.weapon = holder.weapon
+		holder.inventory_changed.connect(refresh)
+		holder.ammo_changed.connect(func(_a) -> void: refresh.call())
+		holder.weapon_spent.connect(func(_w) -> void: refresh.call())
+		refresh.call()
 
 
 func weapon_text(id: int) -> String:
 	return _panels[id].weapon.text if _panels.has(id) else ""
+
+
+## The weapon drawn next to P(id + 1)'s weapon line, or null.
+func weapon_icon(id: int) -> WeaponData:
+	return _panels[id].icon.weapon if _panels.has(id) else null
+
+
+## The other carried weapons (the ones not in hand), for the inventory line.
+func carried_text(id: int) -> String:
+	return _panels[id].carried.text if _panels.has(id) else ""
 
 
 func weapon_line(holder: WeaponHolder) -> String:
@@ -83,6 +98,18 @@ func weapon_line(holder: WeaponHolder) -> String:
 		return ""
 	var uses := "∞" if holder.weapon.has_unlimited_ammo() else str(holder.ammo)
 	return "%s %s" % [holder.weapon.display_name, uses]
+
+
+## Weapons carried but not in hand, in slot order: "Bate · Granada 2".
+func carried_line(holder: WeaponHolder) -> String:
+	var names := PackedStringArray()
+	for slot in WeaponHolder.SLOT_COUNT:
+		var data := holder.carried(slot)
+		if data == null or slot == holder.active_slot:
+			continue
+		var left := holder.ammo_in(slot)
+		names.append(data.display_name if data.has_unlimited_ammo() else "%s %d" % [data.display_name, left])
+	return " · ".join(names)
 
 
 func _make_panel(id: int) -> Dictionary:
@@ -104,12 +131,21 @@ func _make_panel(id: int) -> Dictionary:
 	fill.bg_color = manager.player_color(id)
 	bar.add_theme_stylebox_override("fill", fill)
 	var weapon := Label.new()
-	weapon.add_theme_font_size_override("font_size", 8)
+	weapon.theme_type_variation = &"LabelSmall"
+	weapon.add_theme_color_override("font_color", UiTokens.TEXT)
+	var carried := Label.new()
+	carried.theme_type_variation = &"LabelSmall"
+	# The weapon in hand drawn small next to its name.
+	var weapon_row := HBoxContainer.new()
+	var icon := WeaponIcon.new()
+	weapon_row.add_child(icon)
+	weapon_row.add_child(weapon)
 	box.add_child(header)
 	box.add_child(bar)
-	box.add_child(weapon)
+	box.add_child(weapon_row)
+	box.add_child(carried)
 	_bars_row.add_child(box)
-	return {"bar": bar, "score": score, "weapon": weapon}
+	return {"bar": bar, "score": score, "weapon": weapon, "carried": carried, "icon": icon}
 
 
 func _on_scores_changed(scores: Array) -> void:

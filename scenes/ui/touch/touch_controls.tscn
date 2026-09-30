@@ -18,25 +18,33 @@ layout_mode = 3
 mouse_filter = 2
 script = ExtResource("3")
 label = "Golpe"
-color = Color(0.894, 0.231, 0.267, 1)
 
 [node name="Jump" type="Control" parent="."]
 layout_mode = 3
 mouse_filter = 2
 script = ExtResource("3")
 label = "Salto"
-color = Color(0.388, 0.78, 0.302, 1)
 
 [node name="Fire" type="Control" parent="."]
 layout_mode = 3
 mouse_filter = 2
 script = ExtResource("3")
 label = "Cubrir"
-color = Color(0.996, 0.682, 0.204, 1)
 
 [node name="Pickup" type="Control" parent="."]
 layout_mode = 3
 mouse_filter = 2
 script = ExtResource("3")
 label = "Tomar"
-color = Color(0.0, 0.6, 0.859, 1)
+
+[node name="Switch" type="Control" parent="."]
+layout_mode = 3
+mouse_filter = 2
+script = ExtResource("3")
+label = "Arma"
+
+[node name="Pause" type="Control" parent="."]
+layout_mode = 3
+mouse_filter = 2
+script = ExtResource("3")
+label = "II"

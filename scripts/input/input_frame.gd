@@ -13,6 +13,8 @@ const FIRE := 8
 ## hand (Superfighters); BLOCK names it where that reads better.
 const BLOCK := FIRE
 const PICKUP := 16
+## Draws the next carried weapon (inventory slots).
+const SWITCH := 32
 
 const AXIS_STEPS := 127
 

@@ -11,6 +11,8 @@ extends RefCounted
 enum Scheme { KEYS_OR_PAD, WASD, ARROWS, PAD_1, PAD_2, PAD_3, PAD_4 }
 
 const LABELS := ["WASD o mando", "WASD", "Flechas", "Mando 1", "Mando 2", "Mando 3", "Mando 4"]
+## Shorter names that fit a fighter card's device selector.
+const CARD_LABELS := ["Todos", "WASD", "Flechas", "Mando 1", "Mando 2", "Mando 3", "Mando 4"]
 const MAX_SLOTS := 4
 
 ## Shipped bindings, taken the first time they are needed:
@@ -33,6 +35,33 @@ static func pad_of(scheme: int) -> int:
 	if scheme == Scheme.KEYS_OR_PAD:
 		return 0
 	return scheme - Scheme.PAD_1 if scheme >= Scheme.PAD_1 else -1
+
+
+## Keys each keyboard half shows on its fighter card.
+const KEY_HINTS := {Scheme.WASD: "J K L I", Scheme.ARROWS: ". , / Enter", Scheme.KEYS_OR_PAD: "Teclado o mando"}
+## Actions that join a keyboard half to a fighter card. Movement and jump are
+## left out: the arrows and the space bar also move through the menu.
+const JOIN_ACTIONS := ["attack", "fire", "pickup", "switch"]
+
+
+## Scheme whose device sent `event` as a "join me" press: any button on
+## gamepads 1-4, or an attack/block/pickup/switch key of either keyboard half
+## that isn't also a menu key (Enter and Space confirm). -1 otherwise.
+static func join_scheme(event: InputEvent) -> int:
+	if event is InputEventJoypadButton and event.pressed:
+		return Scheme.PAD_1 + event.device if event.device >= 0 and event.device < MAX_SLOTS else -1
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return -1
+	for menu_action in ["ui_accept", "ui_select", "ui_cancel"]:
+		if InputMap.has_action(menu_action) and event.is_action(menu_action):
+			return -1
+	_remember_shipped()
+	for half in [1, 2]:
+		for action in JOIN_ACTIONS:
+			for shipped in _shipped.get("p%d_%s" % [half, action], []):
+				if shipped is InputEventKey and shipped.physical_keycode == event.physical_keycode:
+					return Scheme.WASD if half == 1 else Scheme.ARROWS
+	return -1
 
 
 ## Two players can't share a keyboard half or a gamepad.

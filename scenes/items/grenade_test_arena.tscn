@@ -85,5 +85,5 @@ offset_left = 6.0
 offset_top = 4.0
 offset_right = 474.0
 offset_bottom = 40.0
-theme_override_font_sizes/font_size = 8
+theme_type_variation = &"LabelSmall"
 text = "Granada"

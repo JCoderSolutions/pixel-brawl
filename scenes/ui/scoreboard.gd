@@ -6,8 +6,7 @@ extends PanelContainer
 ## map itself. Built in code so the HUD and the winner screen share it.
 
 const HEADERS := ["", "RONDAS", "KILLS", "MUERTES"]
-const FONT_SIZE := 8
-const LEADER_COLOR := Color("feae34")
+const LEADER_COLOR := UiTokens.ACCENT
 
 var _grid: GridContainer
 var _footer: Label
@@ -15,11 +14,7 @@ var _footer: Label
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.094, 0.078, 0.145, 0.85)
-	style.set_content_margin_all(6)
-	style.set_corner_radius_all(2)
-	add_theme_stylebox_override("panel", style)
+	theme_type_variation = &"PanelOverlay"
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 3)
 	add_child(box)
@@ -29,7 +24,7 @@ func _init() -> void:
 	_grid.add_theme_constant_override("v_separation", 1)
 	box.add_child(_grid)
 	_footer = Label.new()
-	_footer.add_theme_font_size_override("font_size", FONT_SIZE)
+	_footer.theme_type_variation = &"LabelSmall"
 	_footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_footer)
 
@@ -40,7 +35,7 @@ func refresh(manager: Node) -> void:
 		_grid.remove_child(child)
 		child.queue_free()
 	for header in HEADERS:
-		_grid.add_child(_cell(header, Color("8b9bb4")))
+		_grid.add_child(_cell(header, UiTokens.TEXT_MUTED))
 	var ids := order(manager)
 	for rank in ids.size():
 		var id: int = ids[rank]
@@ -89,9 +84,8 @@ static func _stat(values: Array, id: int) -> int:
 func _cell(text: String, color: Color) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
+	label.theme_type_variation = &"LabelSmall"
 	label.add_theme_color_override("font_color", color)
-	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 2)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return label

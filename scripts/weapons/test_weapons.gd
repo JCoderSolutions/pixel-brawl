@@ -7,6 +7,7 @@ extends SceneTree
 const PISTOL := preload("res://scripts/weapons/data/pistol.tres")
 const SHOTGUN := preload("res://scripts/weapons/data/shotgun.tres")
 const KATANA := preload("res://scripts/weapons/data/katana.tres")
+const SAWED_OFF := preload("res://scripts/weapons/data/sawed_off.tres")
 const DUMMY_SCENE := preload("res://scenes/items/target_dummy.tscn")
 const PICKUP_SCENE := preload("res://scenes/items/weapon_pickup.tscn")
 const SPAWNER_SCENE := preload("res://scenes/items/weapon_spawner.tscn")
@@ -253,10 +254,17 @@ func _test_pickup_and_swap() -> void:
 	_add_pickup(setup.arena, KATANA, Vector2(8, -4))
 	await _frames(3)
 	_check(holder.try_pick_up(), "second pickup is grabbed")
-	_check(holder.weapon == KATANA, "holding a gun swaps to the new weapon")
+	_check(holder.weapon == KATANA and holder.carried(WeaponData.Slot.HANDGUN) == PISTOL,
+			"a weapon for another slot is drawn and the gun stays carried")
+	await _frames(1)
+	_check(_pickups(setup.arena).is_empty(), "nothing is dropped")
+
+	_add_pickup(setup.arena, SAWED_OFF, Vector2(8, -4))
+	await _frames(3)
+	_check(holder.try_pick_up() and holder.weapon == SAWED_OFF, "a weapon for a taken slot is grabbed")
 	await _frames(1)
 	var dropped := _pickups(setup.arena)
-	_check(dropped.size() == 1 and dropped[0].weapon == PISTOL, "swapped-out gun is dropped as a pickup")
+	_check(dropped.size() == 1 and dropped[0].weapon == PISTOL, "and swaps out the one in that slot as a pickup")
 	await _free(setup)
 
 

@@ -1,0 +1,392 @@
+---
+type: "plan"
+status: "approved"        # proposed | approved | discarded — solo Jose aprueba
+approved: "2026-09-30"
+topic_key: "ui-style-guide"
+created: "2026-09-30"
+task: "TASK-024"
+---
+
+# Línea gráfica y sistema de UI — plan
+
+Pedido de Jose (2026-09-30): en la pantalla de personajes y controles, según
+lo que se elija, la fila se deforma y las columnas se desalinean. Quiere que se
+investigue como dev de juegos, como diseñador y como jugador, que se elija la
+mejor estructura y que quede una **línea gráfica única para todo el juego**
+(fuentes, colores, tipos de botón, etc.) que se pueda ir definiendo por partes.
+
+Página visual (paleta, fuentes, componentes y maquetas interactivas):
+https://claude.ai/artifact/6QCn3nsiEzftJPw2wzbRoc (privada de Jose).
+
+Este documento es la propuesta. Nada de acá está aprobado todavía: las
+decisiones marcadas **[DECIDIR]** esperan a Jose.
+
+---
+
+## 1. Qué hay hoy (auditoría)
+
+**No hay nada definido.** No existe un `Theme` de Godot, no hay fuente propia
+(se usa la fuente por defecto de Godot, suave, que no es pixel art),
+`assets/palettes/` está vacía y cada pantalla pone sus colores y tamaños a mano.
+
+| Tema | Estado actual |
+| --- | --- |
+| Tema de Godot | No existe. Botones, sliders y desplegables usan el look por defecto del motor |
+| Fuente | La de Godot por defecto. Se ve nítida y suave, no pixelada: choca con los sprites |
+| Tamaños de texto | 8 distintos (6, 8, 11, 16, 20, 24, 32, 40) sin una escala |
+| Colores | Mezcla de colores de Endesga 32 (`fee761`, `e43b44`...) con colores sueltos que no son de la paleta (`#1a1c2b` del fondo, `#338bcc` del jugador 1, grises `#595c6b`) |
+| Botones | Rectángulos oscuros del motor. La opción elegida solo cambia el color del texto a amarillo; el foco es un borde blanco redondeado |
+| Superposiciones | Opciones es casi transparente: se ve el título "PIXEL BRAWL" detrás |
+
+### El problema de la pantalla de personajes
+
+![[img/ui-audit/fighters-mixto.png]]
+
+- Cada fila es un `HBoxContainer` **centrado por su cuenta**. Los botones
+  tienen un ancho *mínimo*, no fijo: "WASD o mando" es más ancho que
+  "Flechas" y "Sin equipo" más que "Verde". Así cada fila mide distinto y las
+  columnas no quedan alineadas (P1 empieza más a la izquierda que P2).
+- Las filas de bots muestran "CPU" como texto suelto en lugar de un botón, así
+  que también cambian de ancho.
+- El texto del control ("WASD o mando", "Mando 1") no dice qué teclas son y
+  no hay íconos. El mando desconectado se marca solo con texto gris.
+- El error "Dos jugadores con el mismo teclado o mando" aparece **después** de
+  elegir mal: la pantalla deja elegir algo inválido y recién después avisa.
+
+Otras capturas: [[img/ui-audit/fighters-3-humanos.png]],
+[[img/ui-audit/opciones.png]], [[img/ui-audit/titulo.png]].
+
+---
+
+## 2. Investigación
+
+### 2.1 Como dev de juegos (Godot 4)
+
+- **Un solo `Theme` para todo el juego.** Godot permite fijar un tema global
+  (`gui/theme/custom` en `project.godot`). Todo control lo hereda. Las
+  variantes se hacen con *type variations* (`ButtonPrimary`, `LabelTitle`,
+  `PanelCard`...) en vez de `theme_override_*` sueltos en cada escena. Cambiar
+  el look de todo el juego pasa a ser editar un archivo.
+- **Tokens en código.** Una clase `UiTokens` (constantes: colores, espacios,
+  tamaños) para lo que se dibuja por código (HUD, textos flotantes, escenas de
+  prueba). El `Theme` y `UiTokens` salen de los mismos valores.
+- **Fuente pixel a tamaño entero.** El proyecto escala `canvas_items` desde
+  480x270. Una fuente bitmap se ve nítida solo si se usa a su tamaño de diseño
+  o a múltiplos enteros, sin antialias ni hinting. Por eso la escala de texto
+  tiene que ser de pocos tamaños múltiplos (ver §3.2).
+- **Anchos fijos por columna, no mínimos.** Las filas que forman una tabla van
+  en un `GridContainer` o con anchos fijos por columna; el texto largo se
+  recorta o se abrevia, nunca estira la fila.
+- **Sin esquinas redondeadas ni antialias.** `StyleBoxFlat` con
+  `anti_aliasing = false`, radio 0 y bordes de 1 px (2 px al tener foco). Más
+  adelante se puede pasar a `StyleBoxTexture` con 9-slice cuando haya arte.
+- **Verificable.** Un test headless que recorra `scenes/ui` y falle si
+  aparece un `Color(...)` o un `font_size` fuera de los tokens, y capturas con
+  Xvfb (`xvfb-run godot --rendering-driver opengl3`) de cada pantalla para
+  revisar en cada PR. Ya se comprobó que las capturas funcionan en la nube.
+
+### 2.2 Como diseñador
+
+- **Una sola familia tipográfica pixel**, con dos pesos como mucho. Un
+  "display" opcional solo para el logo y los carteles grandes ("¡PELEA!").
+- **Colores por rol, no por pantalla.** Fondo, superficie, borde, texto,
+  texto apagado, acento, peligro, éxito. Todos de Endesga 32, que ya es la
+  paleta del proyecto.
+- **Grilla de 4 px** en la resolución base 480x270: márgenes, separaciones y
+  alturas son múltiplos de 4.
+- **Pocos componentes, siempre iguales:** botón primario, botón secundario,
+  selector "‹ valor ›", chip (etiqueta de color), panel/tarjeta, barra. Cada
+  uno con los mismos cinco estados: normal, foco, presionado, elegido,
+  deshabilitado.
+- **El estado no depende solo del color.** Elegido = fondo lleno de acento más
+  un marcador; foco = borde grueso más un leve "salto" de 1 px. Así se
+  entiende con daltonismo y en pantallas chicas.
+- **Jerarquía clara por pantalla:** título arriba, contenido al centro,
+  navegación siempre en el mismo lugar (Atrás abajo a la izquierda, acción
+  principal abajo a la derecha).
+
+### 2.3 Como jugador
+
+- En juegos de pelea de sillón (Smash, Brawlhalla, TowerFall, Duck Game) el
+  control **no se elige de una lista**: cada jugador **aprieta un botón en su
+  teclado o mando para unirse** y el juego ya sabe qué dispositivo usa. Sin
+  errores de "mismo mando" posibles.
+- Cada jugador quiere ver **su propia columna**: su personaje grande, su
+  color, su equipo y su dispositivo, sin buscar en una tabla.
+- Tiene que quedar claro **qué teclas usa**: "WASD · J K L I" o el ícono del
+  mando con su número, no solo "WASD o mando".
+- En el teléfono juega uno solo contra bots: la pantalla tiene que andar
+  con toques grandes (mínimo 24 px base, ~1 cm en un teléfono).
+- Navegable con teclado, mando y táctil. El foco siempre visible.
+
+---
+
+## 3. Propuesta
+
+### 3.1 Estructura de la pantalla de luchadores (recomendada)
+
+**Tarjetas por jugador, lado a lado, de ancho fijo, con "apretá para
+unirte".** Es lo que hacen los juegos de pelea de referencia y resuelve de raíz
+el problema: cada tarjeta mide lo mismo sin importar el texto.
+
+```
+ LUCHADORES                                              (480x270 base)
+┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+│ P1       │ │ P2       │ │ BOT 1    │ │    +     │
+│   (rig   │ │   (rig   │ │   (rig   │ │ Apretá   │
+│  grande) │ │  grande) │ │  grande) │ │ un botón │
+│ ‹ Bruno ›│ │ ‹ Roja  ›│ │ ‹  Kai  ›│ │ para     │
+│ [■ Rojo ]│ │ [■ Azul ]│ │ [  —    ]│ │ unirte   │
+│ ⌨ WASD   │ │ 🎮 1     │ │ CPU Norm.│ │          │
+└──────────┘ └──────────┘ └──────────┘ └──────────┘
+ Hacen equipo los del mismo color
+ [Atrás]                                     [Siguiente]
+```
+
+- 4 tarjetas de 112 px + 3 separaciones de 4 px = 460 px: entran en 480.
+- Cada campo de la tarjeta tiene ancho fijo; los textos largos se abrevian
+  ("Mando 1" → ícono + "1").
+- **Unirse:** apretar Ataque o Saltar en un teclado o mando libre toma la
+  próxima tarjeta vacía con ese dispositivo. Salir = Atrás en ese dispositivo.
+  Los bots se suman con un botón "+ Bot".
+- **Sin estados inválidos:** un dispositivo ya tomado no se puede elegir
+  (desaparece o queda deshabilitado), así que el error "mismo mando" deja de
+  existir.
+- **Un jugador solo (teléfono o PC):** su tarjeta ya está unida con el
+  dispositivo que usó para navegar el menú; no tiene que hacer nada extra.
+
+**Alternativa más barata [DECIDIR]:** mantener la lista de filas pero como
+tabla (`GridContainer`) con anchos fijos por columna y el control como selector
+"‹ WASD ›" que saltee dispositivos tomados. Arregla la alineación en poco
+tiempo, pero no mejora la experiencia de juntarse a jugar.
+
+Recomendación: hacer primero la alternativa barata como arreglo inmediato
+(Fase 2) y después las tarjetas con "apretá para unirte" (Fase 3), porque la
+fase 3 también sirve para el online (TASK-013/014).
+
+### 3.2 Tipografía [DECIDIR]
+
+**Comparación (2026-09-30).** Cada candidata renderizada en Godot a 480x270
+(sin antialias, captura a 2x) con la misma pantalla de prueba: título, frase
+con acentos, HUD, tarjetas y botones. Imágenes en `img/fonts/`.
+
+| Fuente | Licencia | Acentos | Tamaño de diseño | Resultado |
+| --- | --- | --- | --- | --- |
+| **Pixel Operator** | CC0 | Completos | 16 px | La más limpia y legible. **Elegida para texto** (provisoria) |
+| **Pixel Operator 8** | CC0 | Completos | 8 px | Misma familia a 8 px. **Elegida para textos chicos** (HUD, pistas) |
+| **Jersey 10** | OFL | Completos | 19 px | Gruesa, con cara de juego de pelea. **Elegida para títulos y carteles** |
+| Pixelify Sans | OFL | Completos | — | No cae en la grilla: la B parece G, el 2 parece 8 y el 5 parece 3. Descartada |
+| Press Start 2P | OFL | Completos | 8 px | Tan ancha que "WASD · J K L I" se sale de la tarjeta. Solo serviría para un logo |
+| Silkscreen | OFL | Completos | 8 px | Todo en mayúsculas y muy chica para leer frases |
+| Tiny5 / Micro 5 | OFL | Completos | 8 / 11 px | Muy chicas para texto corrido |
+| monogram | CC0 | Completos (extended) | 16 px | No se pudo bajar desde la nube (itch.io bloqueado). Se puede probar en local |
+
+![[img/fonts/pixeloperator.png]]
+![[img/fonts/jersey10-regular.png]]
+
+Otras: [[img/fonts/pixeloperator8.png]], [[img/fonts/pixelifysans.png]],
+[[img/fonts/pressstart2p-regular.png]], [[img/fonts/silkscreen-regular.png]],
+[[img/fonts/tiny5-regular.png]], [[img/fonts/micro5-regular.png]],
+[[img/fonts/default.png]] (la de Godot, la de antes).
+
+**Escala (solo estos tamaños, en `UiTokens`):**
+
+| Token | Fuente | Tamaño | Uso | Estilo del tema |
+| --- | --- | --- | --- | --- |
+| `TEXT_SMALL` | Pixel Operator 8 | 8 | pistas, HUD, textos flotantes, tabla | `LabelSmall` |
+| `TEXT_BODY` | Pixel Operator | 16 | botones, filas, texto normal | por defecto |
+| `TEXT_TITLE` | Jersey 10 | 19 | título de cada pantalla | `LabelTitle` |
+| `TEXT_DISPLAY` | Jersey 10 | 38 | logo, "¡PELEA!", ganador | `LabelDisplay` |
+
+Las fuentes se importan sin antialias ni hinting. Texto sobre el juego con
+contorno de 2 px `bg`.
+
+### 3.3 Colores por rol (todos Endesga 32)
+
+| Token | Hex | Uso |
+| --- | --- | --- |
+| `bg` | `#181425` | Fondo de menús |
+| `surface` | `#262b44` | Paneles, tarjetas, botones en reposo |
+| `surface_hi` | `#3a4466` | Botón con el mouse encima / campo |
+| `border` | `#5a6988` | Bordes de 1 px |
+| `text_muted` | `#8b9bb4` | Pistas, deshabilitado |
+| `text` | `#c0cbdc` | Texto normal |
+| `text_strong` | `#ffffff` | Títulos, texto elegido |
+| `accent` | `#feae34` | Foco, acción principal ("¡A pelear!") |
+| `accent_hi` | `#fee761` | Elegido, ganador, líder |
+| `danger` | `#e43b44` | Errores, vida baja |
+| `success` | `#63c74d` | Confirmaciones, vida |
+| `info` | `#0099db` | Avisos neutros |
+| `shade` | `#181425` al 85 % | Fondo detrás de paneles superpuestos (opciones, pausa) |
+
+Equipos: rojo `#e43b44`, azul `#0099db`, verde `#63c74d`, amarillo `#fee761`
+(ya son de la paleta). **Pendiente:** `GameManager.PLAYER_COLORS` y el fondo
+del menú usan colores fuera de Endesga 32; pasarlos a la paleta. Cargar
+`endesga-32.hex` en `assets/palettes/`.
+
+### 3.4 Espaciado y forma
+
+- Grilla de 4 px. Separación entre elementos: 4; entre grupos: 8; margen
+  de pantalla: 16.
+- Alturas: botón 24, selector 20, chip 16, zona táctil mínima 24.
+- Esquinas rectas; bordes de 1 px, 2 px con foco.
+
+### 3.5 Componentes (type variations del Theme)
+
+| Componente | Normal | Foco | Presionado | Elegido | Deshabilitado |
+| --- | --- | --- | --- | --- | --- |
+| Botón primario | fondo `accent`, texto `bg` | borde 2 px `text_strong` | baja 1 px | — | fondo `surface`, texto `text_muted` |
+| Botón secundario | fondo `surface`, borde `border` | borde 2 px `accent` | fondo `bg` | fondo `accent_hi`, texto `bg`, marcador ▸ | texto `text_muted` |
+| Selector ‹ valor › | flechas + valor de ancho fijo | flechas en `accent` | flecha baja 1 px | — | flechas `text_muted` |
+| Chip | fondo del color del equipo, texto `bg` | — | — | — | contorno `border` sin relleno |
+| Panel / tarjeta | fondo `surface`, borde `border` | borde `accent` (tarjeta activa) | — | — | — |
+| Barra (vida, volumen) | fondo `bg`, relleno según rol, borde 1 px | — | — | — | — |
+
+### 3.6 Íconos
+
+Íconos pixel de 8x8 o 16x16 para: teclado, mando (con número), táctil, bot,
+equipo y armas del HUD. Hacerlos con LibreSprite en la paleta y guardarlos en
+`assets/sprites/ui/`. Hasta tenerlos, texto corto de ancho fijo.
+
+### 3.7 Movimiento y sonido de UI
+
+- Foco: el botón sube 1 px y suena un "tic" corto.
+- Confirmar: "blip" (ya existe `pickup`). Volver: tono más grave.
+- Cambio de pantalla: fundido de 0.1 s, sin animaciones largas.
+
+### 3.8 Textos
+
+Español rioplatense (como el resto del juego). Títulos en mayúscula sostenida
+("LUCHADORES", "MAPA"), botones en tipo oración ("Siguiente"), mensajes cortos
+y en positivo ("Elegí otro equipo" en vez de "Todos en el mismo equipo").
+
+---
+
+## 4. Plan por fases
+
+Cada fase es un PR que se puede probar solo. Las capturas de antes y después
+van en el PR.
+
+### Fase 0 — Decidir (Jose, aprobado 2026-09-30)
+- [x] Paleta por roles (§3.3): aprobada
+- [x] Fuente: Pixel Operator + Jersey 10, quedan las aplicadas (§3.2)
+- [x] Pantalla de luchadores: tarjetas con "apretá para unirte" (opción A, §3.1)
+
+### Fase 1 — Cimientos (hecha 2026-09-30)
+- [x] `assets/palettes/endesga-32.hex` y clase `UiTokens`
+      (`scripts/ui/ui_tokens.gd`: colores por rol, fuentes, tamaños, espacios)
+- [x] Fuentes en `assets/fonts/` con licencias y `assets/fonts/CREDITS.md`
+- [x] `UiTheme.build()` (`scripts/ui/ui_theme.gd`) arma el tema desde los
+      tokens; `tools/build_ui_theme.gd` lo guarda en `assets/ui/theme.tres`,
+      que es el tema global (`gui/theme/custom`). Estilos: `Button`,
+      `ButtonPrimary`, `LabelSmall`, `LabelTitle`, `LabelDisplay`,
+      `PanelCard`, `PanelOverlay`, barras, sliders, interruptor y desplegable
+- [x] Todos los tamaños de letra sueltos pasaron a esos estilos
+- [x] Test `scripts/ui/test_ui_theme.gd`: tema del proyecto, tema guardado
+      igual al de los tokens, roles dentro de Endesga 32, fuentes con acentos
+      e importadas sin antialias, ningún `font_size` suelto y colores sueltos
+      que solo pueden bajar (desde la Fase 4 no queda ninguno)
+- [x] Capturas: `tools/ui_screenshots.sh [carpeta]` (Xvfb si no hay pantalla)
+
+Cómo se ve después de la Fase 1 (la pantalla de luchadores sigue
+desalineada: es la Fase 2):
+
+![[img/ui-fase1/01_titulo.png]]
+![[img/ui-fase1/05_luchadores_mixto.png]]
+
+Otras: [[img/ui-fase1/08_rondas.png]], [[img/ui-fase1/09_opciones.png]].
+
+Para cambiar un color, una fuente o un tamaño: editar `UiTokens`, correr
+`godot --headless --path . -s tools/build_ui_theme.gd` y commitear el
+`theme.tres` regenerado (el test falla si quedan distintos).
+
+### Fase 2 — Arreglo inmediato (descartada)
+Con la opción A elegida se fue directo a las tarjetas: la tabla alineada ya
+no hacía falta. Lo que tenía (selector que saltea dispositivos tomados, texto
+con las teclas, bots del mismo ancho) quedó dentro de la Fase 3.
+
+### Fase 3 — Tarjetas y "apretá para unirte" (hecha 2026-09-30)
+- [x] Una tarjeta de ancho fijo (108 px) por luchador: etiqueta, luchador al
+      doble de tamaño, "‹ personaje ›", equipo como chip de color y
+      "‹ dispositivo ›" con sus teclas. Los textos se recortan, nunca estiran
+      la tarjeta
+- [x] Unirse: Ataque/Cubrirse/Tomar/Cambiar en una mitad del teclado libre
+      (J K L I en WASD; . , / en las flechas) o cualquier botón de un mando
+      libre toma la próxima tarjeta (`ControlSchemes.join_scheme`). Moverse,
+      saltar, Enter y Espacio no unen porque también manejan el menú. El
+      botón "Unirse" hace lo mismo con mouse o táctil. Con las cuatro
+      tarjetas ocupadas, el último bot le deja el lugar (como el drop-in de
+      Superfighters)
+- [x] Salir: "×" en la tarjeta de un jugador (P1 no sale). Las flechas de
+      dispositivo saltean los que ya tiene otro, así que no puede haber dos
+      jugadores con el mismo mando
+- [x] P1 queda unido solo, con el teclado y el primer mando
+- [x] Bots desde las tarjetas (pedido de Jose 2026-09-30). Referencias:
+      Superfighters Deluxe llena los lugares libres ("Open") con bots de
+      Fácil a Experto; Smash Ultimate pone el nivel de la CPU en su tarjeta;
+      Brawlhalla suma y saca bots en el lobby del modo sillón. Acá: cada
+      tarjeta libre tiene "+ Bot" (y "Unirse"), la tarjeta del bot trae
+      "‹ dificultad ›" propia y "×" para sacarlo. Un bot nuevo arranca con la
+      dificultad del anterior y con un personaje que nadie usa
+- [x] Menú más corto: Título → Luchadores → Mapa → Rondas. Los pasos
+      "¿Contra quién?", "¿Cuántos?" y "Dificultad" desaparecen porque todo
+      eso se hace en las tarjetas. "Siguiente" pide al menos dos luchadores
+
+![[img/ui-fase3/02_luchadores_solo.png]]
+![[img/ui-fase3/03_luchadores_2_y_bot.png]]
+![[img/ui-fase3/04_luchadores_llenas.png]]
+
+### Fase 4 — Pasar todo al sistema (hecha 2026-09-30)
+- [x] Título, mapa y rondas: fondo `PanelScreen` (`bg`), "Jugar" y
+      "Siguiente" como `ButtonPrimary`, títulos en mayúscula, el mapa elegido
+      relleno igual que las rondas (sin texto amarillo suelto)
+- [x] Opciones: fondo opaco (ya no se ve el título detrás) y "Pantalla
+      completa" dentro de la grilla, alineada con el resto. No hay pausa
+      todavía
+- [x] HUD, tabla de posiciones (`PanelOverlay`) y pantalla de ganador
+      (`PanelDim`, "Revancha" principal, por encima de los controles
+      táctiles). Los textos flotantes ya usaban `LabelSmall`
+- [x] Controles táctiles: colores por rol desde `UiTokens` (Golpe `danger`,
+      Salto `success`, Cubrir `accent`, Tomar `info`, Arma `special`) y
+      Pixel Operator 8 a múltiplos exactos
+- [x] Colores de jugadores y fondo en Endesga 32 (el azul de P1/Bruno pasó
+      a `#0099db`)
+- [x] Ningún color suelto en `scenes/ui`: el test ya no permite ninguno
+
+![[img/ui-fase4/08_partida.png]]
+![[img/ui-fase4/10_ganador.png]]
+
+Otras: [[img/ui-fase4/01_titulo.png]], [[img/ui-fase4/05_mapa.png]],
+[[img/ui-fase4/07_opciones.png]].
+
+### Fase 5 — Pulido (hecha 2026-09-30, falta la prueba en dispositivos)
+- [x] Íconos pixel de 8x8 dibujados desde mapas de texto en la paleta
+      (`UiIcons`: teclado, mando, bot). Cada tarjeta muestra el de su
+      dispositivo o el del bot. El HUD dibuja el arma en mano al lado de su
+      nombre con su propio arte (`WeaponIcon` usa `WeaponArt`). Cuando llegue
+      arte real se cambia el mapa por una imagen
+- [x] Sonido y movimiento de foco (autoload `UiFeedback`): mover el foco
+      suena `ui_move` y el control salta 1 px por 0.06 s; cualquier botón
+      suena `ui_confirm`; Atrás, cerrar Opciones y seguir de la pausa suenan
+      `ui_back`. Los tres sonidos se generan en `generate_sfx.py` (CC0)
+- [x] Menú de pausa (`PauseMenu`, lo agrega la arena sola): Esc o Start en
+      cualquier mando, o el botón táctil "II" arriba al centro. Congela la
+      partida y ofrece Seguir, Reiniciar partida y Menú. No se abre con la
+      pantalla de ganador
+- [x] Test `scripts/ui/test_ui_polish.gd`
+- [ ] Revisión en teléfono, TV con mando y PC (Jose: no se puede desde la
+      nube)
+
+![[img/ui-fase5/04_luchadores_llenas.png]]
+![[img/ui-fase5/10_pausa.png]]
+
+Otra: [[img/ui-fase5/08_partida.png]] (HUD con el arma).
+
+---
+
+## Fuentes consultadas
+
+- [monogram — datagoblin (itch.io)](https://datagoblin.itch.io/monogram)
+- [Pixel Operator — Font Library](https://fontlibrary.org/en/font/pixel-operator)
+- Código del repo: `scenes/ui/main_menu.gd`, `scenes/ui/options_menu.tscn`,
+  `scenes/ui/hud.gd`, `scripts/autoload/game_manager.gd`, `project.godot`

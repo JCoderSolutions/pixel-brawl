@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = &"pistol"
 display_name = "Pistola"
 kind = 0
+slot = 1
 damage = 12
 knockback = Vector2(90, -40)
 cooldown = 0.3

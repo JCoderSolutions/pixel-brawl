@@ -2,10 +2,15 @@ class_name WeaponHolder
 extends Node2D
 
 ## Hand of a fighter. Add it as a child of any body (player, bot, remote peer)
-## at hand height and drive it with `facing`, `try_use()`, `try_pick_up()`
-## and `drop()`. Ranged weapons spawn Projectiles, grenades are thrown as
-## Grenade bodies and melee weapons reuse the same Hitbox as punches, so every
-## hit goes through Hurtbox -> HealthComponent.
+## at hand height and drive it with `facing`, `try_use()`, `try_pick_up()`,
+## `switch_next()` and `drop()`. Ranged weapons spawn Projectiles, grenades
+## are thrown as Grenade bodies and melee weapons reuse the same Hitbox as
+## punches, so every hit goes through Hurtbox -> HealthComponent.
+##
+## Inventory (Superfighters): one weapon per WeaponData.Slot (melee, handgun,
+## rifle, throwable). `weapon` and `ammo` are the ones in hand; the rest are
+## carried until switched to. When the weapon in hand leaves it (dropped,
+## thrown, used up) the best carried one is drawn.
 
 signal weapon_equipped(weapon: WeaponData, ammo: int)
 signal weapon_dropped(weapon: WeaponData, ammo: int)
@@ -15,6 +20,10 @@ signal fired(weapon: WeaponData, projectile_count: int)
 ## The trigger was pulled on an empty gun: it only clicks.
 signal dry_fired(weapon: WeaponData)
 signal weapon_thrown(weapon: WeaponData)
+## Another carried weapon (or the fists, null) was drawn.
+signal weapon_switched(weapon: WeaponData)
+## Anything carried changed: picked up, dropped, used up or switched.
+signal inventory_changed
 
 const PROJECTILE_SCENE := preload("res://scenes/items/projectile.tscn")
 const PICKUP_SCENE := preload("res://scenes/items/weapon_pickup.tscn")
@@ -34,8 +43,19 @@ var facing := 1:
 		rotation = aim_angle * facing
 		queue_redraw()
 
-var weapon: WeaponData
-var ammo := -1
+## The weapon in hand; null means fists.
+var weapon: WeaponData:
+	get:
+		return _carried[active_slot] if active_slot >= 0 else null
+## Uses left of the weapon in hand (-1 with nothing in hand).
+var ammo: int:
+	get:
+		return _ammo_left[active_slot] if active_slot >= 0 else -1
+	set(value):
+		if active_slot >= 0:
+			_ammo_left[active_slot] = value
+## WeaponData.Slot in hand, or -1 for the fists.
+var active_slot := -1
 ## Scales bullet and blade damage (strength power-up); 1 = normal.
 var damage_multiplier := 1.0
 ## Manual aim (Superfighters): radians off the facing side, negative = up.
@@ -54,6 +74,15 @@ var aiming := false:
 
 const MAX_AIM := PI * 0.45
 const SIGHT_LENGTH := 90.0
+const SLOT_COUNT := 4
+## Seconds a freshly drawn weapon takes before it can be used.
+const SWITCH_TIME := 0.15
+## What gets drawn when the hand empties: the heaviest firepower first.
+const DRAW_ORDER := [WeaponData.Slot.RIFLE, WeaponData.Slot.HANDGUN,
+		WeaponData.Slot.MELEE, WeaponData.Slot.THROWABLE]
+
+var _carried: Array[WeaponData] = [null, null, null, null]
+var _ammo_left: Array[int] = [-1, -1, -1, -1]
 
 var _cooldown := 0.0
 var _swing_timer := 0.0
@@ -91,15 +120,42 @@ static func keeps_when_empty(data: WeaponData) -> bool:
 	return data.is_ranged()
 
 
-## Equips `data`. `with_ammo` < 0 means a fresh weapon with full ammo.
+## Puts `data` in its slot (replacing what was there) and in hand.
+## `with_ammo` < 0 means a fresh weapon with full ammo.
 func equip(data: WeaponData, with_ammo := -1) -> void:
-	weapon = data
-	ammo = data.max_ammo if with_ammo < 0 or data.has_unlimited_ammo() else with_ammo
+	_carried[data.slot] = data
+	_ammo_left[data.slot] = data.max_ammo if with_ammo < 0 or data.has_unlimited_ammo() else with_ammo
+	_select(data.slot)
 	_cooldown = 0.0
-	_cancel_swing()
 	weapon_equipped.emit(weapon, ammo)
 	ammo_changed.emit(ammo)
-	queue_redraw()
+
+
+## The weapon carried in `slot` (WeaponData.Slot), in hand or not.
+func carried(slot: int) -> WeaponData:
+	return _carried[slot]
+
+
+func ammo_in(slot: int) -> int:
+	return _ammo_left[slot]
+
+
+func carried_count() -> int:
+	return SLOT_COUNT - _carried.count(null)
+
+
+## Draws the next carried weapon, cycling fists -> melee -> handgun -> rifle
+## -> throwable. Returns false if there is nothing else to draw.
+func switch_next() -> bool:
+	for step in range(1, SLOT_COUNT + 1):
+		var slot := (active_slot + 1 + step) % (SLOT_COUNT + 1) - 1
+		if slot == -1 or _carried[slot] != null:
+			_select(slot)
+			_cooldown = SWITCH_TIME
+			weapon_switched.emit(weapon)
+			ammo_changed.emit(ammo)
+			return true
+	return false
 
 
 ## Fires or swings the current weapon. Returns false if nothing happened.
@@ -124,36 +180,59 @@ func try_use() -> bool:
 		if ammo <= 0:
 			if not keeps_when_empty(used):
 				_clear()
+				_draw_best()
 			weapon_spent.emit(used)
 	return true
 
 
-## Grabs the nearest pickup in reach, dropping the current weapon first.
+## Grabs the nearest pickup in reach into its slot and draws it. The same
+## weapon tops up the ammo of the one carried; a different one swaps it out
+## (dropped where the fighter stands).
 func try_pick_up() -> bool:
 	var pickup := _nearest_pickup()
 	if pickup == null:
 		return false
+	var data := pickup.weapon
+	var mine := _carried[data.slot]
+	if mine != null and mine.id == data.id and not data.has_unlimited_ammo() \
+			and _ammo_left[data.slot] < data.max_ammo:
+		var extra: int = pickup.take()[1]
+		_ammo_left[data.slot] = mini(_ammo_left[data.slot] + (data.max_ammo if extra < 0 else extra), data.max_ammo)
+		_select(data.slot)
+		weapon_equipped.emit(weapon, ammo)
+		ammo_changed.emit(ammo)
+		return true
 	var taken := pickup.take()
-	drop()
+	if mine != null:
+		var swapped := _release(data.slot, Vector2(drop_velocity.x * facing, drop_velocity.y))
+		weapon_dropped.emit(swapped.weapon, swapped.ammo)
 	equip(taken[0], taken[1])
 	return true
 
 
-## Throws the current weapon into the world with its remaining ammo.
+## Throws the weapon in hand into the world with its remaining ammo and
+## draws the next carried one.
 func drop() -> WeaponPickup:
 	if not has_weapon():
 		return null
-	var pickup: WeaponPickup = PICKUP_SCENE.instantiate()
-	pickup.weapon = weapon
-	pickup.ammo = ammo
-	pickup.linear_velocity = Vector2(drop_velocity.x * facing, drop_velocity.y)
-	_world().add_child(pickup)
-	pickup.global_position = global_position
-	var dropped := weapon
-	var left := ammo
-	_clear()
-	weapon_dropped.emit(dropped, left)
+	var pickup := _release(active_slot, Vector2(drop_velocity.x * facing, drop_velocity.y))
+	_draw_best()
+	weapon_dropped.emit(pickup.weapon, pickup.ammo)
 	return pickup
+
+
+## Lets go of everything carried (a fighter going down), fanned out a bit so
+## the pickups don't stack.
+func drop_all() -> Array[WeaponPickup]:
+	var dropped: Array[WeaponPickup] = []
+	for slot in SLOT_COUNT:
+		if _carried[slot] == null:
+			continue
+		var spread := 0.5 + 0.35 * dropped.size()
+		var pickup := _release(slot, Vector2(drop_velocity.x * facing * spread, drop_velocity.y))
+		dropped.append(pickup)
+		weapon_dropped.emit(pickup.weapon, pickup.ammo)
+	return dropped
 
 
 ## Throws the weapon in hand at whoever stands in front: it flies fast and
@@ -161,15 +240,10 @@ func drop() -> WeaponPickup:
 func throw_weapon() -> WeaponPickup:
 	if not has_weapon():
 		return null
-	var pickup: WeaponPickup = PICKUP_SCENE.instantiate()
-	pickup.weapon = weapon
-	pickup.ammo = ammo
-	pickup.linear_velocity = Vector2(throw_velocity.x * facing, throw_velocity.y)
-	_world().add_child(pickup)
-	pickup.global_position = global_position
-	var thrown := weapon
+	var pickup := _release(active_slot, Vector2(throw_velocity.x * facing, throw_velocity.y))
+	var thrown := pickup.weapon
 	pickup.start_throw(_wielder(), roundi(thrown.throw_damage * damage_multiplier), facing)
-	_clear()
+	_draw_best()
 	weapon_thrown.emit(thrown)
 	return pickup
 
@@ -231,11 +305,49 @@ func _cancel_swing() -> void:
 		_melee_hitbox.deactivate()
 
 
+## Empties the slot in hand; the fists are left until something is drawn.
 func _clear() -> void:
-	weapon = null
-	ammo = -1
+	if active_slot >= 0:
+		_carried[active_slot] = null
+		_ammo_left[active_slot] = -1
+	_select(-1)
+
+
+func _select(slot: int) -> void:
+	active_slot = slot
 	_cancel_swing()
 	queue_redraw()
+	inventory_changed.emit()
+
+
+## Draws the best carried weapon, or leaves the fists.
+func _draw_best() -> void:
+	for slot in DRAW_ORDER:
+		if _carried[slot] != null:
+			_select(slot)
+			_cooldown = SWITCH_TIME
+			weapon_switched.emit(weapon)
+			ammo_changed.emit(ammo)
+			return
+	_select(-1)
+
+
+## Takes the weapon out of `slot` and into the world as a pickup flying at
+## `launch`. Doesn't draw anything else.
+func _release(slot: int, launch: Vector2) -> WeaponPickup:
+	var pickup: WeaponPickup = PICKUP_SCENE.instantiate()
+	pickup.weapon = _carried[slot]
+	pickup.ammo = _ammo_left[slot]
+	pickup.linear_velocity = launch
+	_world().add_child(pickup)
+	pickup.global_position = global_position
+	_carried[slot] = null
+	_ammo_left[slot] = -1
+	if slot == active_slot:
+		_select(-1)
+	else:
+		inventory_changed.emit()
+	return pickup
 
 
 func _build_melee_hitbox() -> void:

@@ -24,10 +24,12 @@ func _ready() -> void:
 	_effects.value_changed.connect(_on_effects)
 	_fullscreen.toggled.connect(_on_fullscreen)
 	_touch.item_selected.connect(_on_touch)
+	_back.set_meta("silent", true)
 	_back.pressed.connect(close)
 	# Native phone apps are always full screen. Browsers allow it because the
 	# switch happens inside the click that toggles it.
 	_fullscreen.visible = not OS.has_feature("mobile")
+	%FullscreenLabel.visible = _fullscreen.visible
 
 
 ## Shows the stored options and takes the focus for keyboards and pads.
@@ -41,6 +43,10 @@ func open() -> void:
 
 
 func close() -> void:
+	# By path: scripts that preload this one compile before the autoloads.
+	var feedback := get_node_or_null("/root/UiFeedback")
+	if feedback != null:
+		feedback.back()
 	hide()
 	closed.emit()
 
