@@ -98,6 +98,9 @@ static func _panels(theme: Theme) -> void:
 	theme.set_stylebox("panel", "PanelContainer", _box(UiTokens.SURFACE, UiTokens.BORDER, UiTokens.BORDER_WIDTH, true, UiTokens.GROUP_GAP))
 	theme.set_type_variation("PanelCard", "PanelContainer")
 	theme.set_stylebox("panel", "PanelCard", _box(UiTokens.SURFACE, UiTokens.BORDER, UiTokens.BORDER_WIDTH, true, UiTokens.GAP))
+	# A free card waiting for someone: no fill, just the outline.
+	theme.set_type_variation("PanelOpen", "PanelContainer")
+	theme.set_stylebox("panel", "PanelOpen", _box(Color(0, 0, 0, 0), UiTokens.SURFACE_HI, UiTokens.BORDER_WIDTH, false, UiTokens.GAP))
 	theme.set_type_variation("PanelOverlay", "PanelContainer")
 	theme.set_stylebox("panel", "PanelOverlay", _box(UiTokens.SHADE, Color(0, 0, 0, 0), 0, true, UiTokens.SCREEN_MARGIN))
 	for container in ["BoxContainer", "HBoxContainer", "VBoxContainer"]:

@@ -310,25 +310,34 @@ con las teclas, bots del mismo ancho) quedó dentro de la Fase 3.
       doble de tamaño, "‹ personaje ›", equipo como chip de color y
       "‹ dispositivo ›" con sus teclas. Los textos se recortan, nunca estiran
       la tarjeta
-- [x] Unirse: en una tarjeta que espera, Ataque/Cubrirse/Tomar/Cambiar en una
-      mitad del teclado libre (J K L I en WASD; . , / en las flechas) o
-      cualquier botón de un mando libre la toma
-      (`ControlSchemes.join_scheme`). Moverse, saltar, Enter y Espacio no
-      unen porque también manejan el menú. El botón "Unirse" hace lo mismo
-      con mouse o táctil
-- [x] Salir: "×" en la tarjeta libera el lugar. Las flechas de dispositivo
-      saltean los que ya tiene otro, así que no puede haber dos jugadores con
-      el mismo mando; "Siguiente" espera a que todos se unan
-- [x] P1 queda unido solo: con el teclado y el primer mando si juega solo
-      (teléfono, PC), o con el dispositivo que venía usando en el menú
-- [ ] Sumar o quitar bots desde las tarjetas: por ahora la cantidad se sigue
-      eligiendo en el paso "¿Cuántos?"
+- [x] Unirse: Ataque/Cubrirse/Tomar/Cambiar en una mitad del teclado libre
+      (J K L I en WASD; . , / en las flechas) o cualquier botón de un mando
+      libre toma la próxima tarjeta (`ControlSchemes.join_scheme`). Moverse,
+      saltar, Enter y Espacio no unen porque también manejan el menú. El
+      botón "Unirse" hace lo mismo con mouse o táctil. Con las cuatro
+      tarjetas ocupadas, el último bot le deja el lugar (como el drop-in de
+      Superfighters)
+- [x] Salir: "×" en la tarjeta de un jugador (P1 no sale). Las flechas de
+      dispositivo saltean los que ya tiene otro, así que no puede haber dos
+      jugadores con el mismo mando
+- [x] P1 queda unido solo, con el teclado y el primer mando
+- [x] Bots desde las tarjetas (pedido de Jose 2026-09-30). Referencias:
+      Superfighters Deluxe llena los lugares libres ("Open") con bots de
+      Fácil a Experto; Smash Ultimate pone el nivel de la CPU en su tarjeta;
+      Brawlhalla suma y saca bots en el lobby del modo sillón. Acá: cada
+      tarjeta libre tiene "+ Bot" (y "Unirse"), la tarjeta del bot trae
+      "‹ dificultad ›" propia y "×" para sacarlo. Un bot nuevo arranca con la
+      dificultad del anterior y con un personaje que nadie usa
+- [x] Menú más corto: Título → Luchadores → Mapa → Rondas. Los pasos
+      "¿Contra quién?", "¿Cuántos?" y "Dificultad" desaparecen porque todo
+      eso se hace en las tarjetas. "Siguiente" pide al menos dos luchadores
 
-![[img/ui-fase3/04_luchadores_3_humanos.png]]
-![[img/ui-fase3/05_luchadores_mixto.png]]
+![[img/ui-fase3/02_luchadores_solo.png]]
+![[img/ui-fase3/03_luchadores_2_y_bot.png]]
+![[img/ui-fase3/04_luchadores_llenas.png]]
 
 ### Fase 4 — Pasar todo al sistema
-- [ ] Título, modo, cantidad, mapa, dificultad, rondas
+- [ ] Título, mapa, rondas
 - [ ] Opciones (panel opaco con `shade`), pausa
 - [ ] HUD, tabla de posiciones, pantalla de ganador, textos flotantes
 - [ ] Controles táctiles con los colores y la fuente del sistema

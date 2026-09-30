@@ -25,7 +25,7 @@ componentes) y aplicarlo a todo el juego. Plan completo y auditoría en
       `theme.tres` global generado desde los tokens, test
       `scripts/ui/test_ui_theme.gd`, capturas con `tools/ui_screenshots.sh`
 - [x] Fase 2: descartada, sus puntos entraron en la Fase 3
-- [x] Fase 3: tarjetas de ancho fijo con "apretá para unirte" (sumar bots desde las tarjetas queda pendiente)
+- [x] Fase 3: tarjetas de ancho fijo con "apretá para unirte", "+ Bot" y dificultad por bot en cada tarjeta; el menú queda Título → Luchadores → Mapa → Rondas
 - [ ] Fase 4: todas las pantallas y el HUD con el sistema
 - [ ] Fase 5: íconos, sonido y movimiento de foco, revisión en teléfono/TV/PC
 

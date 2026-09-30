@@ -56,6 +56,12 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
       `GameManager.configure_match(humanos, bots, dificultad)` y `match_size`:
       N jugadores locales repartidos en los spawns del mapa. Test
       `scripts/test_main_menu.gd`; capturas en el PR
+- [x] Menú con tarjetas (pedido de Jose 2026-09-30, TASK-024): Jugar →
+      Luchadores → Mapa → Rondas. En las cuatro tarjetas de Luchadores cada
+      jugador se une apretando un botón en su teclado o mando, "+ Bot" suma
+      bots y cada bot elige su dificultad en su tarjeta
+      (`GameManager.bot_difficulties` por bot). Reemplaza a "¿contra quién?",
+      "¿cuántos?" y "dificultad". Detalle en [[docs/ui-style-guide]]
 - [x] Tabla de posiciones (punto 5 del orden acordado con Jose 2026-09-29,
       como la pantalla de fin de ronda de Superfighters): el `GameManager`
       cuenta kills, muertes y muertes por el entorno (trampas, caídas, fuego

@@ -16,7 +16,6 @@ const SIZE_LINT_SKIP := ["ui_theme.gd", "touch_action_button.gd"]
 ## Color literals still left in the UI screens, per file. Fase 4 of TASK-024
 ## moves them to UiTokens; the count may only go down.
 const COLOR_BASELINE := {
-	"res://scenes/ui/main_menu.gd": 1,
 	"res://scenes/ui/scoreboard.gd": 3,
 	"res://scenes/ui/main_menu.tscn": 1,
 	"res://scenes/ui/options_menu.tscn": 1,

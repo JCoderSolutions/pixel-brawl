@@ -246,9 +246,8 @@ func _test_menu_map_choice() -> void:
 	var menu = load(MENU_PATH).instantiate()
 	root.add_child(menu)
 	await process_frame
+	menu.set_counts(1, 1)
 	menu.open_setup()
-	menu.next()
-	menu.next()
 	menu.next()
 	_check(menu.step == menu.Step.MAP, "the setup reaches the map step")
 	_check(menu.get_node("%Content").get_child(0).get_child_count() == MapCatalog.size() + 1,

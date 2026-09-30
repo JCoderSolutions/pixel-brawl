@@ -1,39 +1,40 @@
 extends Control
 
-## Title screen and match setup. "Jugar" walks through the setup one step at
-## a time, like Superfighters' local game screen:
-##   mode (bots or local players) -> how many -> character and team per
-##   fighter -> map -> bot difficulty (only with bots) -> rounds to win.
+## Title screen and match setup. "Jugar" opens the fighters screen, a lobby of
+## four fixed-width cards like Superfighters' local game (open slots you fill
+## with players or bots of any difficulty) and Brawlhalla's couch party:
+##   fighters (join with a button, add bots, pick characters, teams, devices
+##   and each bot's difficulty) -> map -> rounds to win.
 ## "Atrás" (or cancel) goes back a step; the last step starts the match.
 ## Choices are kept between visits to the menu. "Opciones" opens the options
 ## panel; the saved options are loaded and applied every time the menu shows
 ## up (it is the first scene). "Salir" is hidden on web, where closing the
 ## tab is the only way out.
 
-enum Step { TITLE, MODE, COUNT, FIGHTERS, MAP, DIFFICULTY, ROUNDS }
+enum Step { TITLE, FIGHTERS, MAP, ROUNDS }
 
 const MAX_FIGHTERS := 4
 const ROUND_CHOICES: Array[int] = [1, 2, 3, 5]
 const TEAM_LABELS := ["Sin equipo", "Rojo", "Azul", "Verde", "Amarillo"]
+## Fighter cards have a fixed width so long names never push the columns.
+const CARD_WIDTH := 108
 
 ## The scene the match loads; apply_selection() sets it from the map choice.
 @export_file("*.tscn") var match_scene := "res://scenes/maps/test_arena.tscn"
 
-## The setup, kept between visits to the menu. Map 0 = a random map.
+## The setup, kept between visits to the menu. Fighters are humans first, then
+## bots: slot i < humans is P(i + 1), the rest are bots. Map 0 = random.
 static var _setup := {
-	vs_bots = true, humans = 1, bots = 1, difficulty = BotProfile.Difficulty.NORMAL,
+	humans = 1, bot_levels = [BotProfile.Difficulty.NORMAL],
 	looks = [0, 1, 2, 3], teams = [0, 0, 0, 0], map = 0, rounds = 3,
-	# ControlSchemes.Scheme per human; `auto` until someone picks one.
+	# ControlSchemes.Scheme per human; `auto` follows the defaults until
+	# someone joins, leaves or picks.
 	controls = [0, 1, 2, 3], controls_auto = true,
-	# Human cards that have a device: someone pressed a button on it.
-	joined = [false, false, false, false],
 }
-## Fighter cards have a fixed width so long names never push the columns.
-const CARD_WIDTH := 108
-## The device the menu was last driven with: P1's when several play.
-var _menu_scheme: int = ControlSchemes.Scheme.WASD
 
 var step: int = Step.TITLE
+## Card and control to focus after the cards are rebuilt ("Card2/AddBot").
+var _focus_after := ""
 
 @onready var _title_box: Control = %TitleBox
 @onready var _setup_box: Control = %SetupBox
@@ -65,10 +66,6 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventJoypadButton and event.pressed and event.device < ControlSchemes.MAX_SLOTS:
-		_menu_scheme = ControlSchemes.Scheme.PAD_1 + event.device
-	elif event is InputEventKey and event.pressed:
-		_menu_scheme = ControlSchemes.Scheme.WASD
 	if step == Step.FIGHTERS and try_join(event):
 		get_viewport().set_input_as_handled()
 
@@ -82,28 +79,19 @@ func _unhandled_input(event: InputEvent) -> void:
 # --- The setup, as values (tests and the step screens use these) ---
 
 func open_setup() -> void:
-	_show(Step.MODE)
+	_show(Step.FIGHTERS)
 
 
-## Local players only (2-4, P3 and P4 on gamepads) or against the computer.
-func choose_mode(vs_bots: bool) -> void:
-	_setup.vs_bots = vs_bots
-	set_counts(_setup.humans, _setup.bots)
-
-
-## Clamps to what the mode allows: 2-4 humans alone, or 1-3 humans and at
-## least one bot, never more than MAX_FIGHTERS in total.
+## Sets the lineup directly: 1-4 humans and the bots that fit. New bots take
+## the last bot's difficulty. The humans' devices go back to the defaults.
 func set_counts(humans: int, bots: int) -> void:
-	var before: int = _setup.humans
-	if _setup.vs_bots:
-		_setup.humans = clampi(humans, 1, MAX_FIGHTERS - 1)
-		_setup.bots = clampi(bots, 1, MAX_FIGHTERS - _setup.humans)
-	else:
-		_setup.humans = clampi(humans, 2, MAX_FIGHTERS)
-		_setup.bots = 0
-	if _setup.humans != before:
-		_setup.controls_auto = true
-		_setup.joined = [false, false, false, false]
+	_setup.humans = clampi(humans, 1, MAX_FIGHTERS)
+	var level := _last_level()
+	_setup.bot_levels.resize(clampi(bots, 0, MAX_FIGHTERS - _setup.humans))
+	for index in _setup.bot_levels.size():
+		if _setup.bot_levels[index] == null:
+			_setup.bot_levels[index] = level
+	_setup.controls_auto = true
 
 
 func humans() -> int:
@@ -111,15 +99,51 @@ func humans() -> int:
 
 
 func bots() -> int:
-	return _setup.bots
+	return _setup.bot_levels.size()
 
 
 func fighters() -> int:
-	return _setup.humans + _setup.bots
+	return _setup.humans + bots()
 
 
-func is_vs_bots() -> bool:
-	return _setup.vs_bots
+## Adds a bot after the others, if a card is free. Returns whether it did.
+func add_bot(level := -1) -> bool:
+	if fighters() >= MAX_FIGHTERS:
+		return false
+	var fresh := _free_look()
+	_setup.bot_levels.append(_last_level() if level < 0 else level)
+	_setup.looks[fighters() - 1] = fresh
+	return true
+
+
+## Takes bot `index` (0 = BOT 1) out; the fighters after it move up a card.
+func remove_bot(index: int) -> void:
+	if index < 0 or index >= bots():
+		return
+	_setup.bot_levels.remove_at(index)
+	_remove_slot(_setup.humans + index)
+
+
+func set_bot_level(index: int, level: int) -> void:
+	_setup.bot_levels[index] = clampi(level, 0, BotProfile.NAMES.size() - 1)
+
+
+func bot_level(index: int) -> int:
+	return _setup.bot_levels[index]
+
+
+## Every bot at `level` (the old single difficulty; select() uses it).
+func set_difficulty(level: int) -> void:
+	for index in bots():
+		set_bot_level(index, level)
+
+
+func difficulty() -> int:
+	return _last_level()
+
+
+func _last_level() -> int:
+	return _setup.bot_levels.back() if bots() > 0 else BotProfile.Difficulty.NORMAL
 
 
 ## Character (FighterLook preset) for fighter `slot` (humans first, then bots).
@@ -140,56 +164,63 @@ func team(slot: int) -> int:
 	return _setup.teams[slot]
 
 
-## Keyboard half or gamepad for human `slot` (ControlSchemes.Scheme); the
-## card counts as joined.
+## Keyboard half or gamepad for human `slot` (ControlSchemes.Scheme).
 func set_control(slot: int, scheme: int) -> void:
 	_auto_controls()
 	_setup.controls[slot] = posmod(scheme, ControlSchemes.LABELS.size())
 	_setup.controls_auto = false
-	_setup.joined[slot] = true
 
 
-## Human `slot` takes `scheme` unless another joined player already has that
-## keyboard half or pad. Returns whether it joined.
-func join(slot: int, scheme: int) -> bool:
-	if slot < 0 or slot >= _setup.humans or scheme_taken(scheme, slot):
+func control(slot: int) -> int:
+	_auto_controls()
+	return _setup.controls[slot]
+
+
+## A new player with `scheme` takes the next card: after the other humans,
+## pushing the bots one card over. With every card taken, the last bot makes
+## room (Superfighters' drop-in replaces bots). Returns whether they joined.
+func join(scheme: int) -> bool:
+	if scheme_taken(scheme) or _setup.humans >= MAX_FIGHTERS:
 		return false
-	set_control(slot, scheme)
+	if fighters() >= MAX_FIGHTERS:
+		remove_bot(bots() - 1)
+	_auto_controls()
+	_insert_slot(_setup.humans)
+	_setup.controls.insert(_setup.humans, scheme)
+	_setup.controls.resize(MAX_FIGHTERS)
+	_setup.humans += 1
+	_setup.controls_auto = false
 	return true
 
 
-## Frees human `slot`'s card for another device.
+## Human `slot` leaves (P1 stays); the fighters after it move up a card.
 func leave(slot: int) -> void:
-	_setup.joined[slot] = false
+	if slot <= 0 or slot >= _setup.humans:
+		return
+	_auto_controls()
+	_setup.controls.remove_at(slot)
+	_setup.controls.append(0)
+	_setup.humans -= 1
+	_setup.controls_auto = false
+	_remove_slot(slot)
 
 
-func is_joined(slot: int) -> bool:
-	return _setup.joined[slot]
-
-
-## True if a joined player other than `except` uses the same device.
+## True if a human other than `except` already uses that keyboard half or pad.
 func scheme_taken(scheme: int, except := -1) -> bool:
+	_auto_controls()
 	for slot in _setup.humans:
-		if slot != except and _setup.joined[slot] and ControlSchemes.clash(scheme, _setup.controls[slot]):
+		if slot != except and ControlSchemes.clash(scheme, _setup.controls[slot]):
 			return true
 	return false
 
 
-## First human card still waiting for a device, or -1.
-func open_slot() -> int:
-	for slot in _setup.humans:
-		if not _setup.joined[slot]:
-			return slot
-	return -1
-
-
-## A button pressed on a device nobody has joins the next open card
-## ("apretá para unirte"). Returns whether it did.
+## A button pressed on a device nobody has joins as a new player ("apretá
+## para unirte"). Returns whether it did.
 func try_join(event: InputEvent) -> bool:
 	var scheme := ControlSchemes.join_scheme(event)
-	var slot := open_slot()
-	if scheme == -1 or slot == -1 or not join(slot, scheme):
+	if scheme == -1 or not join(scheme):
 		return false
+	_focus_after = "Card%d/Pick/Next" % (_setup.humans - 1)
 	if step == Step.FIGHTERS:
 		_show(Step.FIGHTERS)
 	return true
@@ -208,18 +239,43 @@ func _next_free_scheme(slot: int, scheme: int, dir: int) -> int:
 	return scheme
 
 
-func control(slot: int) -> int:
-	_auto_controls()
-	return _setup.controls[slot]
+## Opens card `at`: the looks and teams from there on move one card right.
+func _insert_slot(at: int) -> void:
+	var fresh := _free_look()
+	_setup.looks.pop_back()
+	_setup.looks.insert(at, fresh)
+	_setup.teams.pop_back()
+	_setup.teams.insert(at, 0)
 
 
-## Every human has joined with a device, and no two share one.
+## Closes card `at`: the looks and teams after it move one card left.
+func _remove_slot(at: int) -> void:
+	_setup.looks.append(_setup.looks.pop_at(at))
+	_setup.teams.remove_at(at)
+	_setup.teams.append(0)
+
+
+## A character nobody on the cards wears yet (or the first one).
+func _free_look() -> int:
+	var worn: Array = _setup.looks.slice(0, fighters())
+	for index in FighterLook.presets().size():
+		if not index in worn:
+			return index
+	return 0
+
+
+## Fighters with devices that don't clash, and at least two to fight.
 func controls_valid() -> bool:
 	_auto_controls()
-	return open_slot() == -1 and ControlSchemes.all_distinct(_setup.controls.slice(0, _setup.humans))
+	return ControlSchemes.all_distinct(_setup.controls.slice(0, _setup.humans))
 
 
-## Until someone picks, controls follow the players and the pads plugged in.
+func can_start() -> bool:
+	return fighters() >= 2 and teams_valid() and controls_valid()
+
+
+## Until someone joins, leaves or picks, controls follow the players and the
+## pads plugged in.
 func _auto_controls() -> void:
 	if not _setup.controls_auto:
 		return
@@ -248,14 +304,6 @@ func map_choice() -> int:
 	return _setup.map
 
 
-func set_difficulty(level: int) -> void:
-	_setup.difficulty = clampi(level, 0, BotProfile.NAMES.size() - 1)
-
-
-func difficulty() -> int:
-	return _setup.difficulty
-
-
 ## Rounds a fighter (or team) needs to win the match.
 func set_rounds(rounds: int) -> void:
 	_setup.rounds = maxi(rounds, 1)
@@ -267,7 +315,6 @@ func rounds() -> int:
 
 ## Shortcut of the old one-screen menu: 0 bots = local 2P, n = P1 vs n bots.
 func select(bot_count: int, level: int) -> void:
-	choose_mode(bot_count > 0)
 	set_counts(1 if bot_count > 0 else 2, bot_count)
 	set_difficulty(level)
 
@@ -276,7 +323,8 @@ func select(bot_count: int, level: int) -> void:
 func apply_selection() -> void:
 	var manager := _manager()
 	if manager != null:
-		manager.configure_match(_setup.humans, _setup.bots, _setup.difficulty)
+		manager.configure_match(_setup.humans, bots(), difficulty())
+		manager.bot_difficulties.assign(_setup.bot_levels)
 		manager.looks.assign(_setup.looks.slice(0, fighters()))
 		manager.teams.assign(_setup.teams.slice(0, fighters()) if teams_valid() else [])
 		manager.rounds_to_win = _setup.rounds
@@ -295,32 +343,19 @@ func start_match() -> void:
 func next() -> void:
 	match step:
 		Step.TITLE:
-			_show(Step.MODE)
-		Step.MODE:
-			_show(Step.COUNT)
-		Step.COUNT:
 			_show(Step.FIGHTERS)
 		Step.FIGHTERS:
-			if teams_valid() and controls_valid():
+			if can_start():
 				_show(Step.MAP)
 		Step.MAP:
-			_show(Step.DIFFICULTY if _setup.vs_bots else Step.ROUNDS)
-		Step.DIFFICULTY:
 			_show(Step.ROUNDS)
 		Step.ROUNDS:
 			start_match()
 
 
 func back() -> void:
-	match step:
-		Step.MODE:
-			_show(Step.TITLE)
-		Step.ROUNDS:
-			_show(Step.DIFFICULTY if _setup.vs_bots else Step.MAP)
-		Step.TITLE:
-			pass
-		_:
-			_show(step - 1)
+	if step != Step.TITLE:
+		_show(step - 1)
 
 
 func _show(to: int) -> void:
@@ -339,31 +374,22 @@ func _show(to: int) -> void:
 		Step.TITLE:
 			_focus.call_deferred(_play_button)
 			return
-		Step.MODE:
-			_step_title.text = "¿Contra quién?"
-			_next_button.visible = false
-			var bots_button := _choice("Contra bots", _setup.vs_bots, func() -> void:
-				choose_mode(true)
-				next())
-			var local_button := _choice("Jugadores locales", not _setup.vs_bots, func() -> void:
-				choose_mode(false)
-				next())
-			focus = bots_button if _setup.vs_bots else local_button
-		Step.COUNT:
-			_step_title.text = "¿Cuántos?"
-			_build_counts()
-			_hint.text = "En el paso siguiente cada jugador elige teclado o mando"
 		Step.FIGHTERS:
 			_step_title.text = "LUCHADORES"
-			_auto_join_first()
 			var cards := HBoxContainer.new()
+			cards.name = "Cards"
 			cards.alignment = BoxContainer.ALIGNMENT_CENTER
 			_content.add_child(cards)
-			for slot in fighters():
-				cards.add_child(_fighter_card(slot))
-			_refresh_teams_hint()
-			if _next_button.disabled:
-				focus = cards.get_child(0).find_child("Prev", true, false)
+			for slot in MAX_FIGHTERS:
+				cards.add_child(_fighter_card(slot) if slot < fighters() else _open_card(slot))
+			_refresh_hint()
+			var wanted := cards.get_node_or_null(_focus_after) as Control if _focus_after != "" else null
+			_focus_after = ""
+			if wanted != null:
+				focus = wanted
+			elif _next_button.disabled:
+				focus = cards.get_child(fighters()).find_child("AddBot", true, false) \
+						if fighters() < MAX_FIGHTERS else cards.get_child(0).find_child("Prev", true, false)
 		Step.MAP:
 			_step_title.text = "Mapa"
 			_next_button.visible = false
@@ -379,15 +405,6 @@ func _show(to: int) -> void:
 					next()
 				var button := _choice(label, index == _setup.map, pick, grid)
 				if index == _setup.map:
-					focus = button
-		Step.DIFFICULTY:
-			_step_title.text = "Dificultad de los bots"
-			_next_button.visible = false
-			for level in BotProfile.NAMES.size():
-				var button := _choice(BotProfile.display_name(level), level == _setup.difficulty, func() -> void:
-					set_difficulty(level)
-					next())
-				if level == _setup.difficulty:
 					focus = button
 		Step.ROUNDS:
 			_step_title.text = "Rondas para ganar"
@@ -421,8 +438,11 @@ func _focus(control: Control) -> void:
 ## One line with the whole setup, shown before starting.
 func _summary() -> String:
 	var who := "%d jugador%s" % [_setup.humans, "" if _setup.humans == 1 else "es"]
-	if _setup.bots > 0:
-		who += " + %d bot%s (%s)" % [_setup.bots, "" if _setup.bots == 1 else "s", BotProfile.display_name(_setup.difficulty)]
+	if bots() > 0:
+		var levels := PackedStringArray()
+		for level in _setup.bot_levels:
+			levels.append(BotProfile.display_name(level))
+		who += " + %d bot%s (%s)" % [bots(), "" if bots() == 1 else "s", ", ".join(levels)]
 	var map_name := "mapa aleatorio" if _setup.map == 0 else MapCatalog.display_name(_setup.map - 1)
 	var rounds_text := "%d ronda%s" % [_setup.rounds, "" if _setup.rounds == 1 else "s"]
 	return "%s  ·  %s  ·  gana con %s" % [who, map_name, rounds_text]
@@ -435,102 +455,59 @@ func _choice(text: String, current: bool, on_press: Callable, parent: Control = 
 	button.text = text
 	button.custom_minimum_size = Vector2(160, 30)
 	if current:
-		button.add_theme_color_override("font_color", Color("fee761"))
+		button.add_theme_color_override("font_color", UiTokens.ACCENT_HI)
 	button.pressed.connect(on_press)
 	(parent if parent != null else _content).add_child(button)
 	return button
 
 
-func _build_counts() -> void:
-	_content.add_child(_stepper("Jugadores", func() -> int: return _setup.humans,
-			func(delta: int) -> void: set_counts(_setup.humans + delta, _setup.bots)))
-	if _setup.vs_bots:
-		_content.add_child(_stepper("Bots", func() -> int: return _setup.bots,
-				func(delta: int) -> void: set_counts(_setup.humans, _setup.bots + delta)))
-
-
-## "Label  <  n  >": the arrows change a count through `change`, which clamps.
-func _stepper(text: String, value: Callable, change: Callable) -> Control:
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 6)
-	var label := Label.new()
-	label.text = text
-	label.custom_minimum_size.x = 80
-	row.add_child(label)
-	var shown := Label.new()
-	shown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shown.custom_minimum_size.x = 28
-	shown.text = str(value.call())
-	var refresh := func() -> void:
-		for other in _content.get_children():
-			if other.has_meta("refresh"):
-				other.get_meta("refresh").call()
-	row.set_meta("refresh", func() -> void: shown.text = str(value.call()))
-	row.add_child(_arrow("<", func() -> void:
-		change.call(-1)
-		refresh.call()))
-	row.add_child(shown)
-	row.add_child(_arrow(">", func() -> void:
-		change.call(1)
-		refresh.call()))
-	return row
-
-
 func _arrow(text: String, on_press: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(28, 28)
 	button.pressed.connect(on_press)
 	return button
 
 
-## P1 always has a device: alone, the keyboard and any pad; with others,
-## the one that has been driving the menu.
-func _auto_join_first() -> void:
-	_auto_controls()
-	if _setup.joined[0]:
-		return
-	_setup.joined[0] = true
-	_setup.controls[0] = ControlSchemes.Scheme.KEYS_OR_PAD if _setup.humans == 1 else _menu_scheme
+## Rebuilds the cards, then focuses `focus_path` inside them.
+func _rebuild(focus_path := "") -> void:
+	_focus_after = focus_path
+	_show(Step.FIGHTERS)
 
 
-## One fixed-width card per fighter: tag, preview, character, team and
-## device. A human card without a device waits for someone to press a button.
+## A fighter's card: tag, preview, character, team and, for players, their
+## device or, for bots, their difficulty. Fixed width: text clips, never grows.
 func _fighter_card(slot: int) -> Control:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"PanelCard"
-	card.custom_minimum_size = Vector2(CARD_WIDTH, 0)
-	card.name = "Card%d" % slot
-	var box := VBoxContainer.new()
-	card.add_child(box)
+	var card := _card(slot)
+	var box: VBoxContainer = card.get_child(0)
 	var human: bool = slot < _setup.humans
+	var bot_index: int = slot - _setup.humans
 	var header := HBoxContainer.new()
 	var tag := Label.new()
 	tag.name = "Tag"
-	tag.text = "P%d" % (slot + 1) if human else "BOT %d" % (slot - _setup.humans + 1)
+	tag.text = "P%d" % (slot + 1) if human else "BOT %d" % (bot_index + 1)
 	tag.add_theme_color_override("font_color", UiTokens.TEXT_STRONG)
 	tag.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(tag)
 	box.add_child(header)
-	if human and not _setup.joined[slot]:
-		_waiting_card(box, slot)
-		return card
-	if human and slot > 0:
-		var leave_button := Button.new()
-		leave_button.name = "Leave"
-		leave_button.text = "×"
-		leave_button.tooltip_text = "Liberar la tarjeta"
-		leave_button.theme_type_variation = &"ButtonSmall"
-		leave_button.custom_minimum_size = Vector2(UiTokens.CHIP_HEIGHT, UiTokens.CHIP_HEIGHT)
-		leave_button.pressed.connect(func() -> void:
-			leave(slot)
-			_show(Step.FIGHTERS))
-		header.add_child(leave_button)
+	if slot > 0:
+		# × frees the card: a player leaves, a bot is taken out.
+		var remove := Button.new()
+		remove.name = "Remove"
+		remove.text = "×"
+		remove.tooltip_text = "Salir" if human else "Quitar bot"
+		remove.theme_type_variation = &"ButtonSmall"
+		remove.custom_minimum_size = Vector2(UiTokens.CHIP_HEIGHT, UiTokens.CHIP_HEIGHT)
+		remove.pressed.connect(func() -> void:
+			if human:
+				leave(slot)
+			else:
+				remove_bot(bot_index)
+			_rebuild("Card%d/AddBot" % (fighters()) if fighters() < MAX_FIGHTERS else ""))
+		header.add_child(remove)
 	else:
 		var status := Label.new()
 		status.theme_type_variation = &"LabelSmall"
-		status.text = "LISTO" if human else "CPU"
+		status.text = "LISTO"
 		header.add_child(status)
 
 	# Preview at twice the game's size, standing on the card's floor line.
@@ -545,8 +522,8 @@ func _fighter_card(slot: int) -> Control:
 	box.add_child(stage)
 
 	var name_label := Label.new()
-	name_label.name = "Name"
-	var pick := _selector(name_label, func(dir: int) -> void: set_look(slot, _setup.looks[slot] + dir))
+	name_label.name = "Value"
+	var pick := _selector(name_label, func(dir: int) -> void: set_look(slot, _setup.looks[slot] + dir), "Pick")
 	box.add_child(pick)
 	var team_button := Button.new()
 	team_button.name = "Team"
@@ -554,26 +531,28 @@ func _fighter_card(slot: int) -> Control:
 	team_button.custom_minimum_size = Vector2(0, UiTokens.SELECTOR_HEIGHT)
 	team_button.pressed.connect(func() -> void:
 		set_team(slot, _setup.teams[slot] + 1)
-		_refresh_teams_hint())
+		_refresh_hint())
 	box.add_child(team_button)
 
-	var device := Label.new()
-	device.name = "Value"
-	device.theme_type_variation = &"LabelSmall"
+	# Players: "‹ device ›" and its keys. Bots: "‹ difficulty ›" (like
+	# Smash's CPU level on the card).
+	var value := Label.new()
+	value.name = "Value"
+	value.theme_type_variation = &"LabelSmall"
 	var hint := Label.new()
 	hint.name = "Keys"
 	hint.theme_type_variation = &"LabelSmall"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.clip_text = true
+	var setting: HBoxContainer
 	if human:
-		box.add_child(_selector(device, func(dir: int) -> void:
-			set_control(slot, _next_free_scheme(slot, _setup.controls[slot], dir))
-			_refresh_teams_hint(), "Device"))
+		setting = _selector(value, func(dir: int) -> void:
+			set_control(slot, _next_free_scheme(slot, control(slot), dir))
+			_refresh_hint(), "Device")
 	else:
-		device.text = "CPU · %s" % BotProfile.display_name(_setup.difficulty)
-		device.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		device.clip_text = true
-		box.add_child(device)
+		setting = _selector(value, func(dir: int) -> void:
+			set_bot_level(bot_index, posmod(bot_level(bot_index) + dir, BotProfile.NAMES.size())), "Level")
+	box.add_child(setting)
 	box.add_child(hint)
 
 	var refresh := func() -> void:
@@ -584,29 +563,35 @@ func _fighter_card(slot: int) -> Control:
 		name_label.text = character.name
 		_paint_team(team_button, _setup.teams[slot])
 		if not human:
+			value.text = BotProfile.display_name(bot_level(bot_index))
+			value.add_theme_color_override("font_color", UiTokens.TEXT)
+			hint.text = "CPU"
 			return
-		var scheme: int = _setup.controls[slot]
-		device.text = ControlSchemes.LABELS[scheme]
+		var scheme := control(slot)
+		value.text = ControlSchemes.CARD_LABELS[scheme]
 		hint.text = ControlSchemes.KEY_HINTS.get(scheme, "Cualquier botón")
 		# A pad that isn't plugged in still counts: it can be plugged in later.
 		var pad := ControlSchemes.pad_of(scheme)
 		var missing := pad >= 0 and scheme != ControlSchemes.Scheme.KEYS_OR_PAD \
 				and not pad in Input.get_connected_joypads()
-		device.add_theme_color_override("font_color", UiTokens.TEXT_MUTED if missing else UiTokens.TEXT)
+		value.add_theme_color_override("font_color", UiTokens.TEXT_MUTED if missing else UiTokens.TEXT)
 		if missing:
 			hint.text = "Sin conectar"
-	var buttons: Array = [pick.get_node("Prev"), pick.get_node("Next"), team_button]
-	if human:
-		buttons.append_array([box.get_node("Device/Prev"), box.get_node("Device/Next")])
-	for button in buttons:
+	for button in [pick.get_node("Prev"), pick.get_node("Next"), team_button,
+			setting.get_node("Prev"), setting.get_node("Next")]:
 		button.pressed.connect(refresh)
 	refresh.call()
 	return card
 
 
-## "Apretá un botón para unirte", blinking; the button joins with the next
-## free device, for mouse and touch.
-func _waiting_card(box: VBoxContainer, slot: int) -> void:
+## A free card: a player joins by pressing a button on a free keyboard half
+## or pad ("apretá para unirte", blinking), or "+ Bot" adds a bot (like
+## Superfighters' open slots). "Unirse" joins with the next free device for
+## mouse and touch.
+func _open_card(slot: int) -> Control:
+	var card := _card(slot)
+	card.theme_type_variation = &"PanelOpen"
+	var box: VBoxContainer = card.get_child(0)
 	var plus := Label.new()
 	plus.theme_type_variation = &"LabelDisplay"
 	plus.text = "+"
@@ -632,20 +617,40 @@ func _waiting_card(box: VBoxContainer, slot: int) -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(spacer)
-	var button := Button.new()
-	button.name = "Join"
-	button.text = "Unirse"
-	button.custom_minimum_size = Vector2(0, UiTokens.SELECTOR_HEIGHT)
-	button.pressed.connect(func() -> void:
-		if join(slot, _next_free_scheme(slot, ControlSchemes.Scheme.KEYS_OR_PAD, 1)):
-			_show(Step.FIGHTERS))
-	box.add_child(button)
+	var add := Button.new()
+	add.name = "AddBot"
+	add.text = "+ Bot"
+	add.custom_minimum_size = Vector2(0, UiTokens.SELECTOR_HEIGHT)
+	add.pressed.connect(func() -> void:
+		if add_bot():
+			_rebuild("Card%d/Level/Next" % (fighters() - 1)))
+	box.add_child(add)
+	var join_button := Button.new()
+	join_button.name = "Join"
+	join_button.text = "Unirse"
+	join_button.custom_minimum_size = Vector2(0, UiTokens.SELECTOR_HEIGHT)
+	join_button.disabled = _setup.humans >= MAX_FIGHTERS
+	join_button.pressed.connect(func() -> void:
+		if join(_next_free_scheme(-1, ControlSchemes.Scheme.KEYS_OR_PAD, 1)):
+			_rebuild("Card%d/Pick/Next" % (_setup.humans - 1)))
+	box.add_child(join_button)
+	return card
+
+
+func _card(slot: int) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.theme_type_variation = &"PanelCard"
+	card.custom_minimum_size = Vector2(CARD_WIDTH, 0)
+	card.name = "Card%d" % slot
+	card.add_child(VBoxContainer.new())
+	return card
 
 
 ## "‹ value ›" with a fixed-width value that clips instead of growing.
-func _selector(value: Label, change: Callable, node_name := "Pick") -> HBoxContainer:
+func _selector(value: Label, change: Callable, node_name: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.name = node_name
+	value.name = "Value"
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value.clip_text = true
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -682,21 +687,16 @@ func _paint_team(button: Button, team_index: int) -> void:
 		button.add_theme_color_override(color_name, UiTokens.BG)
 
 
-func _refresh_teams_hint() -> void:
-	var teams_ok := teams_valid()
-	var controls_ok := controls_valid()
-	_next_button.disabled = not (teams_ok and controls_ok)
-	var waiting := 0
-	for slot in _setup.humans:
-		if not _setup.joined[slot]:
-			waiting += 1
-	if waiting > 0:
-		_hint.text = "Falta%s %d: J en WASD, punto en las flechas o cualquier botón del mando" \
-				% ["n" if waiting > 1 else "", waiting]
-	elif not teams_ok:
+func _refresh_hint() -> void:
+	_next_button.disabled = not can_start()
+	if fighters() < 2:
+		_hint.text = "Sumá un rival: J, punto o un botón del mando para unirse, o + Bot"
+	elif not teams_valid():
 		_hint.text = "Todos en el mismo equipo: elegí otro color para alguien"
-	elif not controls_ok:
+	elif not controls_valid():
 		_hint.text = "Dos jugadores con el mismo teclado o mando"
+	elif fighters() < MAX_FIGHTERS:
+		_hint.text = "Para sumar a alguien más: J, punto o un botón del mando, o + Bot"
 	else:
 		_hint.text = "Hacen equipo los del mismo color"
 
