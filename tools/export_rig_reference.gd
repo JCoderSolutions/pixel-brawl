@@ -18,6 +18,7 @@ const FRAMES := [
 const BASE_COLOR := Color("8b9bb4")
 
 var _out := "user://rig_reference"
+var _palette := PixelArtCheck.load_palette()
 
 
 func _init() -> void:
@@ -66,7 +67,6 @@ func _sheet(file_name: String, look: FighterLook, shirt: Color) -> void:
 		var fps: float = FRAMES[row][1]
 		for column in count:
 			var rig := FighterRig.new()
-			rig.set_process(false)
 			rig.position = Vector2(column * CELL, row * CELL)
 			rig.size = Vector2(CELL, CELL)
 			rig.look = look
@@ -74,9 +74,15 @@ func _sheet(file_name: String, look: FighterLook, shirt: Color) -> void:
 			rig.anim = row
 			rig.anim_time = column / fps
 			viewport.add_child(rig)
+			# After add_child: _ready turns _process back on, and it would
+			# advance anim_time with the real clock (a different frame per run).
+			rig.set_process(false)
 	await process_frame
 	await RenderingServer.frame_post_draw
 	var image := viewport.get_texture().get_image()
+	# The rig shades its colours (darkened/lightened): snap them back onto
+	# Endesga 32 so the sheet opens in any editor with the palette intact.
+	image = PixelArtCheck.clean(image, _palette, 1)
 	image.save_png(_out.path_join(file_name + ".png"))
 	if look == null:
 		_save_poses(image)

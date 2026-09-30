@@ -14,7 +14,8 @@ Dónde va cada archivo y qué campo completar: [[docs/art-swap-guide]].
 
 - **Resolución base 480x270**, escalada en múltiplos enteros. Un pixel del
   arte = un pixel del juego: nada de dibujar a 2x.
-- **Paleta Endesga 32** (`assets/palettes/endesga-32.hex`). Cargarla en el
+- **Paleta Endesga 32** (`assets/palettes/endesga-32.hex`, y
+  `endesga-32.gpl` para importarla en editores). Cargarla en el
   editor y usar solo esos 32 colores. Los roles de la UI están en
   [[docs/ui-style-guide]].
 - **PNG con transparencia**, sin suavizado ni antialias en los bordes.
@@ -314,14 +315,61 @@ Lo más consistente (y lo que hacen muchos juegos de pelea chicos): animar
 colores para cada personaje. Todos se mueven igual, pesan lo mismo en
 pantalla y el trabajo de animación se hace una vez.
 
-### Paso 6: limpieza y control (siempre)
+### Paso 6: que se pueda editar (siempre)
 
-1. Achicar con **vecino más cercano** si salió más grande (o Pixel Art
-   Fixer). Nunca con suavizado.
-2. **Indexar a Endesga 32** en Pixelorama o LibreSprite.
-3. Revisar contra la hoja de referencia: **16x28 px, pies en la última
+Lo que sale de una IA casi nunca es pixel art "de verdad", aunque lo
+parezca: cada pixel del dibujo viene como un bloque de 4x4 u 8x8 con
+colores apenas distintos, bordes semitransparentes y colores cerca de la
+paleta pero no en ella. Se ve bien, pero en un editor el balde de pintura
+no rellena, la goma deja halos y recolorear es imposible. Editable quiere
+decir:
+
+| Regla | Por qué |
+| --- | --- |
+| **1 pixel del arte = 1 pixel de la imagen** (32x32 por cuadro) | Se retoca pixel por pixel y entra al juego sin escalar |
+| **Solo colores de Endesga 32** | El balde rellena zonas enteras y se recolorea cambiando un color de la paleta |
+| **Transparencia total o nada**, sin bordes suavizados | Sin halos al mover o espejar el sprite |
+| **Pocos colores por personaje** (hasta ~16) y **zonas planas** | Cambiar ropa o hacer otro personaje es rellenar zonas |
+| **Poco ruido**: nada de pixeles sueltos ni tramado | Cada pixel suelto es un retoque a mano en cada cuadro |
+
+Para que salga así desde la IA: paleta Endesga 32 cargada, quitar fondo
+activado, estilo Low Res (o el diseño a 64 redibujado a mano) y en el
+prompt `flat shading, no dithering, no gradients, no anti-aliasing`.
+
+**Control automático** (`tools/pixel_art_check.sh`): revisa la imagen y,
+con `--out`, guarda una copia limpia (achica cada bloque a 1 pixel con su
+color más común, pasa todo a la paleta y deja la transparencia sin
+bordes). Acepta varias imágenes a la vez.
+
+```
+tools/pixel_art_check.sh descargas/bruno_rd.png --out assets/sprites/characters/bruno/
+```
+
+```
+descargas/bruno_rd.png: NO EDITABLE (256x256, 4612 colores)
+  error: cada pixel del arte ocupa 8x8: achicar a 32x32 (sin suavizado)
+  error: 254 pixeles semitransparentes (bordes suavizados)
+  error: 11518 pixeles fuera de la paleta Endesga 32
+  aviso: 4612 colores: más de 16 cuesta retocar y recolorear
+  limpio -> assets/sprites/characters/bruno/bruno_rd.png (32x32, 6 colores)
+```
+
+Los **errores** los arregla la copia limpia. Los **avisos** (muchos
+colores, pixeles sueltos, medida fuera de la grilla de 32) se corrigen a
+mano en el editor. El test `scripts/art/test_pixel_art_check.gd` garantiza
+que una salida tipo IA (agrandada 8x, con ruido fuerte y bordes suaves)
+vuelve exacta al sprite original, y que las hojas de referencia del juego
+ya son editables.
+
+Después, en el editor (Pixelorama, LibreSprite, Aseprite):
+
+1. Abrir el PNG limpio e **importar la paleta** `assets/palettes/endesga-32.gpl`
+   (formato GIMP, lo leen todos).
+2. Revisar contra la hoja de referencia: **16x28 px, pies en la última
    fila, mirando a la derecha, contorno de 1 px**, el mismo alto en todos
    los cuadros (usar "onion skin").
+3. Guardar el archivo del editor (con capas) junto al PNG para seguir
+   editando; al juego entra solo el PNG.
 4. Exportar la hoja, armar el `SpriteFrames` y probar en una partida.
 
 ### Otros assets con IA
