@@ -13,15 +13,9 @@ const SIZE_LINT_DIRS := ["res://scenes", "res://scripts"]
 ## Files allowed to set sizes: the theme itself, the touch buttons (they draw
 ## their label scaled to the button) and the tests.
 const SIZE_LINT_SKIP := ["ui_theme.gd", "touch_action_button.gd"]
-## Color literals still left in the UI screens, per file. Fase 4 of TASK-024
-## moves them to UiTokens; the count may only go down.
-const COLOR_BASELINE := {
-	"res://scenes/ui/scoreboard.gd": 3,
-	"res://scenes/ui/main_menu.tscn": 1,
-	"res://scenes/ui/options_menu.tscn": 1,
-	"res://scenes/ui/winner_screen.tscn": 1,
-	"res://scenes/ui/touch/touch_controls.tscn": 5,
-}
+## Color literals allowed in the UI screens, per file: none since Fase 4 of
+## TASK-024. Colors come from UiTokens (or GameManager's team colors).
+const COLOR_BASELINE := {}
 
 var _ok := true
 

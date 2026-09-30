@@ -28,6 +28,7 @@ func _ready() -> void:
 	# Native phone apps are always full screen. Browsers allow it because the
 	# switch happens inside the click that toggles it.
 	_fullscreen.visible = not OS.has_feature("mobile")
+	%FullscreenLabel.visible = _fullscreen.visible
 
 
 ## Shows the stored options and takes the focus for keyboards and pads.

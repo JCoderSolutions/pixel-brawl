@@ -23,6 +23,8 @@ const ACCENT_HI := Color("fee761")
 const DANGER := Color("e43b44")
 const SUCCESS := Color("63c74d")
 const INFO := Color("0099db")
+## Extra actions (switch weapon on touch).
+const SPECIAL := Color("b55088")
 ## Behind panels drawn over something else (options, pause).
 const SHADE := Color(BG, 0.85)
 

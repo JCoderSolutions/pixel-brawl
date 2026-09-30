@@ -23,6 +23,30 @@ func _snap(name: String) -> void:
 	root.get_texture().get_image().save_png(_out.path_join(name + ".png"))
 
 
+## In a match: the HUD with weapons, the touch buttons, the standings between
+## rounds and the winner screen.
+func _snap_match() -> void:
+	var manager := root.get_node("GameManager")
+	manager.configure_match(1, 1)
+	var arena: Node = load(MapCatalog.path(0)).instantiate()
+	arena.get_node("TouchControls").visibility = TouchControls.Visibility.ALWAYS
+	root.add_child(arena)
+	for i in 90:
+		await physics_frame
+	var holder: WeaponHolder = manager.get_player(0).weapons
+	holder.equip(load("res://scripts/weapons/data/bat.tres"))
+	holder.equip(load("res://scripts/weapons/data/grenade.tres"), 2)
+	holder.equip(load("res://scripts/weapons/data/pistol.tres"))
+	await _snap("08_partida")
+	var hud := arena.get_node("HUD")
+	hud.scoreboard.refresh(manager)
+	hud.scoreboard.show()
+	await _snap("09_entre_rondas")
+	hud.scoreboard.hide()
+	manager.match_ended.emit(0)
+	await _snap("10_ganador")
+
+
 func _run() -> void:
 	root.size = Vector2i(960, 540)
 	var menu = load("res://scenes/ui/main_menu.tscn").instantiate()
@@ -49,5 +73,8 @@ func _run() -> void:
 	menu._show(menu.Step.TITLE)
 	menu._options.open()
 	await _snap("07_opciones")
+	menu.queue_free()
+	await process_frame
+	await _snap_match()
 	print("OK: screenshots in %s" % ProjectSettings.globalize_path(_out))
 	quit()

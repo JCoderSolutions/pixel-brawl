@@ -26,7 +26,7 @@ componentes) y aplicarlo a todo el juego. Plan completo y auditoría en
       `scripts/ui/test_ui_theme.gd`, capturas con `tools/ui_screenshots.sh`
 - [x] Fase 2: descartada, sus puntos entraron en la Fase 3
 - [x] Fase 3: tarjetas de ancho fijo con "apretá para unirte", "+ Bot" y dificultad por bot en cada tarjeta; el menú queda Título → Luchadores → Mapa → Rondas
-- [ ] Fase 4: todas las pantallas y el HUD con el sistema
+- [x] Fase 4: todas las pantallas, el HUD y los controles táctiles con el sistema; cero colores sueltos en `scenes/ui`
 - [ ] Fase 5: íconos, sonido y movimiento de foco, revisión en teléfono/TV/PC
 
 ## Evidencia
@@ -35,4 +35,5 @@ componentes) y aplicarlo a todo el juego. Plan completo y auditoría en
 - Comparación de fuentes: `vault/docs/img/fonts/`
 - Después de la Fase 1: `vault/docs/img/ui-fase1/`
 - Tarjetas de la Fase 3: `vault/docs/img/ui-fase3/`
+- Fase 4 (partida, ganador, opciones): `vault/docs/img/ui-fase4/`
 - Tests: `scripts/ui/test_ui_theme.gd`, `scripts/test_control_schemes.gd`, `scripts/test_main_menu.gd`

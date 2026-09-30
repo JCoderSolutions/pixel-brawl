@@ -98,6 +98,12 @@ static func _panels(theme: Theme) -> void:
 	theme.set_stylebox("panel", "PanelContainer", _box(UiTokens.SURFACE, UiTokens.BORDER, UiTokens.BORDER_WIDTH, true, UiTokens.GROUP_GAP))
 	theme.set_type_variation("PanelCard", "PanelContainer")
 	theme.set_stylebox("panel", "PanelCard", _box(UiTokens.SURFACE, UiTokens.BORDER, UiTokens.BORDER_WIDTH, true, UiTokens.GAP))
+	# Whole-screen background (menus, options): the page color, no border.
+	theme.set_type_variation("PanelScreen", "Panel")
+	theme.set_stylebox("panel", "PanelScreen", _box(UiTokens.BG, UiTokens.BG, 0, true, 0))
+	# Dims the game behind the winner screen.
+	theme.set_type_variation("PanelDim", "Panel")
+	theme.set_stylebox("panel", "PanelDim", _box(UiTokens.SHADE, UiTokens.SHADE, 0, true, 0))
 	# A free card waiting for someone: no fill, just the outline.
 	theme.set_type_variation("PanelOpen", "PanelContainer")
 	theme.set_stylebox("panel", "PanelOpen", _box(Color(0, 0, 0, 0), UiTokens.SURFACE_HI, UiTokens.BORDER_WIDTH, false, UiTokens.GAP))

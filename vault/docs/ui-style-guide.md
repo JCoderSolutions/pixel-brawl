@@ -285,7 +285,7 @@ van en el PR.
 - [x] Test `scripts/ui/test_ui_theme.gd`: tema del proyecto, tema guardado
       igual al de los tokens, roles dentro de Endesga 32, fuentes con acentos
       e importadas sin antialias, ningún `font_size` suelto y colores sueltos
-      que solo pueden bajar (quedan 12 en 6 archivos para la Fase 4)
+      que solo pueden bajar (desde la Fase 4 no queda ninguno)
 - [x] Capturas: `tools/ui_screenshots.sh [carpeta]` (Xvfb si no hay pantalla)
 
 Cómo se ve después de la Fase 1 (la pantalla de luchadores sigue
@@ -336,12 +336,28 @@ con las teclas, bots del mismo ancho) quedó dentro de la Fase 3.
 ![[img/ui-fase3/03_luchadores_2_y_bot.png]]
 ![[img/ui-fase3/04_luchadores_llenas.png]]
 
-### Fase 4 — Pasar todo al sistema
-- [ ] Título, mapa, rondas
-- [ ] Opciones (panel opaco con `shade`), pausa
-- [ ] HUD, tabla de posiciones, pantalla de ganador, textos flotantes
-- [ ] Controles táctiles con los colores y la fuente del sistema
-- [ ] Colores de jugadores y fondo a Endesga 32
+### Fase 4 — Pasar todo al sistema (hecha 2026-09-30)
+- [x] Título, mapa y rondas: fondo `PanelScreen` (`bg`), "Jugar" y
+      "Siguiente" como `ButtonPrimary`, títulos en mayúscula, el mapa elegido
+      relleno igual que las rondas (sin texto amarillo suelto)
+- [x] Opciones: fondo opaco (ya no se ve el título detrás) y "Pantalla
+      completa" dentro de la grilla, alineada con el resto. No hay pausa
+      todavía
+- [x] HUD, tabla de posiciones (`PanelOverlay`) y pantalla de ganador
+      (`PanelDim`, "Revancha" principal, por encima de los controles
+      táctiles). Los textos flotantes ya usaban `LabelSmall`
+- [x] Controles táctiles: colores por rol desde `UiTokens` (Golpe `danger`,
+      Salto `success`, Cubrir `accent`, Tomar `info`, Arma `special`) y
+      Pixel Operator 8 a múltiplos exactos
+- [x] Colores de jugadores y fondo en Endesga 32 (el azul de P1/Bruno pasó
+      a `#0099db`)
+- [x] Ningún color suelto en `scenes/ui`: el test ya no permite ninguno
+
+![[img/ui-fase4/08_partida.png]]
+![[img/ui-fase4/10_ganador.png]]
+
+Otras: [[img/ui-fase4/01_titulo.png]], [[img/ui-fase4/05_mapa.png]],
+[[img/ui-fase4/07_opciones.png]].
 
 ### Fase 5 — Pulido
 - [ ] Íconos de dispositivo y de armas (§3.6)

@@ -27,6 +27,11 @@ const BUTTONS := {
 ## Actions that may not be in project.godot yet (weapons are not wired into
 ## the player). They are created empty at runtime so the buttons can press them.
 const RUNTIME_ACTIONS := ["fire", "pickup", "switch"]
+## Button colors: one role per action, from the UI tokens.
+const BUTTON_COLORS := {
+	"Attack": UiTokens.DANGER, "Jump": UiTokens.SUCCESS, "Fire": UiTokens.ACCENT,
+	"Pickup": UiTokens.INFO, "Switch": UiTokens.SPECIAL,
+}
 
 @export_range(1, 4) var slot := 1
 ## AUTO shows the controls on touch screens, or as soon as a finger touches.
@@ -52,6 +57,7 @@ func _ready() -> void:
 	joystick.prefix = prefix
 	for name in buttons:
 		buttons[name].action = prefix + name.to_lower()
+		buttons[name].color = BUTTON_COLORS[name]
 	get_viewport().size_changed.connect(_relayout)
 	_relayout()
 	# A scene that forces a mode wins; otherwise the player's option decides.

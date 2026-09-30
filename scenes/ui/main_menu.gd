@@ -391,7 +391,7 @@ func _show(to: int) -> void:
 				focus = cards.get_child(fighters()).find_child("AddBot", true, false) \
 						if fighters() < MAX_FIGHTERS else cards.get_child(0).find_child("Prev", true, false)
 		Step.MAP:
-			_step_title.text = "Mapa"
+			_step_title.text = "MAPA"
 			_next_button.visible = false
 			var grid := GridContainer.new()
 			grid.columns = 2
@@ -404,10 +404,12 @@ func _show(to: int) -> void:
 					select_map(index)
 					next()
 				var button := _choice(label, index == _setup.map, pick, grid)
+				button.toggle_mode = true
+				button.button_pressed = index == _setup.map
 				if index == _setup.map:
 					focus = button
 		Step.ROUNDS:
-			_step_title.text = "Rondas para ganar"
+			_step_title.text = "RONDAS PARA GANAR"
 			var row := HBoxContainer.new()
 			row.alignment = BoxContainer.ALIGNMENT_CENTER
 			row.add_theme_constant_override("separation", 8)
@@ -421,8 +423,6 @@ func _show(to: int) -> void:
 				button.toggle_mode = true
 				button.button_group = group
 				button.button_pressed = rounds_choice == _setup.rounds
-				# The theme fills the chosen one (pressed): no yellow text here.
-				button.remove_theme_color_override("font_color")
 				button.custom_minimum_size.x = 44
 			_hint.text = _summary()
 			_next_button.text = "¡A pelear!"
@@ -450,12 +450,12 @@ func _summary() -> String:
 
 # --- Step widgets ---
 
-func _choice(text: String, current: bool, on_press: Callable, parent: Control = null) -> Button:
+## A choice button; the theme fills the current one when the caller makes it
+## a pressed toggle.
+func _choice(text: String, _current: bool, on_press: Callable, parent: Control = null) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(160, 30)
-	if current:
-		button.add_theme_color_override("font_color", UiTokens.ACCENT_HI)
 	button.pressed.connect(on_press)
 	(parent if parent != null else _content).add_child(button)
 	return button

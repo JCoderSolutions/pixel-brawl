@@ -44,10 +44,10 @@ static func sprite_path(look_name: String) -> String:
 static func presets() -> Array[FighterLook]:
 	if _presets.is_empty():
 		_presets = [
-			create("Bruno", Color(0.2, 0.545, 0.8), Color("3a4466"), Color("e8b796"), Color("2ce8f5")),
-			create("Roja", Color(0.894, 0.231, 0.267), Color("262b44"), Color("c28569"), Color("feae34")),
-			create("Kai", Color(0.388, 0.78, 0.302), Color("5a6988"), Color("733e39"), Color("0099db")),
-			create("Sol", Color(0.996, 0.906, 0.38), Color("3e2731"), Color("ead4aa"), Color("e43b44")),
+			create("Bruno", Color("0099db"), Color("3a4466"), Color("e8b796"), Color("2ce8f5")),
+			create("Roja", Color("e43b44"), Color("262b44"), Color("c28569"), Color("feae34")),
+			create("Kai", Color("63c74d"), Color("5a6988"), Color("733e39"), Color("0099db")),
+			create("Sol", Color("fee761"), Color("3e2731"), Color("ead4aa"), Color("e43b44")),
 			create("Sombra", Color("262b44"), Color("181425"), Color("e8b796"), Color("e43b44")),
 			create("Doc", Color("c0cbdc"), Color("3a4466"), Color("c28569"), Color("0099db")),
 			create("Punk", Color("b55088"), Color("262b44"), Color("ead4aa"), Color("63c74d")),

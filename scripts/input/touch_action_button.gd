@@ -61,8 +61,10 @@ func _draw() -> void:
 	draw_arc(center, r, 0.0, TAU, 32, Color(color, 0.7), 1.5)
 	if label.is_empty():
 		return
-	var font := get_theme_default_font()
-	var font_size := maxi(8, roundi(r * 0.6))
+	# The small pixel font at a whole multiple of its size, so it stays crisp
+	# while the button scales with the screen.
+	var font: Font = UiTokens.FONT_SMALL
+	var font_size := UiTokens.TEXT_SMALL * maxi(1, floori(r * 0.6 / UiTokens.TEXT_SMALL))
 	var text_size := font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
 	var baseline := center + Vector2(-text_size.x * 0.5, font.get_ascent(font_size) - text_size.y * 0.5)
-	draw_string(font, baseline, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(1, 1, 1, 0.85))
+	draw_string(font, baseline, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(UiTokens.TEXT_STRONG, 0.85))
