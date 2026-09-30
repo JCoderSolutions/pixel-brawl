@@ -58,3 +58,9 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
       luchador quedaba colgado un bloque debajo del borde. Ahora las sondas
       cuentan el bloque donde arrancan (`hit_from_inside`). Test
       `scripts/test_mobility.gd`
+- [x] Cornisas solo del mapa (feedback de Jose 2026-09-30: "se sigue
+      subiendo donde no debe, cajas y demás"): cajas de suministro, barriles
+      y bloques que caen comparten la capa del mapa, así que el luchador se
+      colgaba de ellos (hasta de una caja cayendo). Ahora solo cuelga de
+      `StaticBody2D`/`TileMap`, y si el bloque se rompe mientras cuelga, cae.
+      Tests en `scripts/test_mobility.gd`

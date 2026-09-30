@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-30"
+last_updated_notes: "TASK-002 cornisas solo del mapa; TASK-005 retroceso, fogonazo, dispersión y mira que acelera"
 last_updated_notes: "TASK-005 power-up guardado (botón Power) y bots que apuntan a mano"
 last_updated_notes: "Lista de chequeo manual; fases 2-4 al día con sus tareas; backlog limpio"
 last_updated_notes: "TASK-002 cornisas solo en el borde real; TASK-020 reacción al daño de zona; guía de assets (herramientas y medidas)"
