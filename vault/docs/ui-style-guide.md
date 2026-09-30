@@ -359,10 +359,28 @@ con las teclas, bots del mismo ancho) quedó dentro de la Fase 3.
 Otras: [[img/ui-fase4/01_titulo.png]], [[img/ui-fase4/05_mapa.png]],
 [[img/ui-fase4/07_opciones.png]].
 
-### Fase 5 — Pulido
-- [ ] Íconos de dispositivo y de armas (§3.6)
-- [ ] Sonido y movimiento de foco (§3.7)
-- [ ] Revisión en teléfono, TV con mando y PC
+### Fase 5 — Pulido (hecha 2026-09-30, falta la prueba en dispositivos)
+- [x] Íconos pixel de 8x8 dibujados desde mapas de texto en la paleta
+      (`UiIcons`: teclado, mando, bot). Cada tarjeta muestra el de su
+      dispositivo o el del bot. El HUD dibuja el arma en mano al lado de su
+      nombre con su propio arte (`WeaponIcon` usa `WeaponArt`). Cuando llegue
+      arte real se cambia el mapa por una imagen
+- [x] Sonido y movimiento de foco (autoload `UiFeedback`): mover el foco
+      suena `ui_move` y el control salta 1 px por 0.06 s; cualquier botón
+      suena `ui_confirm`; Atrás, cerrar Opciones y seguir de la pausa suenan
+      `ui_back`. Los tres sonidos se generan en `generate_sfx.py` (CC0)
+- [x] Menú de pausa (`PauseMenu`, lo agrega la arena sola): Esc o Start en
+      cualquier mando, o el botón táctil "II" arriba al centro. Congela la
+      partida y ofrece Seguir, Reiniciar partida y Menú. No se abre con la
+      pantalla de ganador
+- [x] Test `scripts/ui/test_ui_polish.gd`
+- [ ] Revisión en teléfono, TV con mando y PC (Jose: no se puede desde la
+      nube)
+
+![[img/ui-fase5/04_luchadores_llenas.png]]
+![[img/ui-fase5/10_pausa.png]]
+
+Otra: [[img/ui-fase5/08_partida.png]] (HUD con el arma).
 
 ---
 

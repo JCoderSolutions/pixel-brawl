@@ -27,6 +27,7 @@ func _ready() -> void:
 			_props.append([prop.scene_file_path, prop.get_parent(), prop.position])
 	if not autostart:
 		return
+	add_child(PauseMenu.new())
 	var spawns: Array[Vector2] = []
 	for marker in $Spawns.get_children():
 		spawns.append(marker.position)

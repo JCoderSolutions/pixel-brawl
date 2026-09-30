@@ -195,6 +195,39 @@ def dry_fire():
                   (0.4 * env(t - 0.035, 0.03, 0.0005, 3.0) * square(ph2(t - 0.035), 0.3) if t > 0.035 else 0.0))
 
 
+def ui_move():
+    """Tic corto al mover el foco por un menú."""
+    ph = {"phase": 0.0}
+
+    def fn(t):
+        ph["phase"] += 1320.0 / RATE
+        return env(t, 0.06, 0.001, 3.0) * 0.25 * square(ph["phase"], 0.25)
+
+    return render(0.06, fn)
+
+
+def ui_confirm():
+    """Dos notas que suben: elegir una opción."""
+    ph = {"phase": 0.0}
+
+    def fn(t):
+        ph["phase"] += (880.0 if t < 0.04 else 1320.0) / RATE
+        return env(t, 0.1, 0.002, 1.2) * 0.3 * square(ph["phase"], 0.5)
+
+    return render(0.1, fn)
+
+
+def ui_back():
+    """Dos notas que bajan: volver o cerrar."""
+    ph = {"phase": 0.0}
+
+    def fn(t):
+        ph["phase"] += (660.0 if t < 0.04 else 440.0) / RATE
+        return env(t, 0.1, 0.002, 1.2) * 0.3 * square(ph["phase"], 0.5)
+
+    return render(0.1, fn)
+
+
 RECIPES = {
     "punch": punch,
     "hit": hit,
@@ -211,6 +244,9 @@ RECIPES = {
     "death": death,
     "pickup": pickup,
     "dry_fire": dry_fire,
+    "ui_move": ui_move,
+    "ui_confirm": ui_confirm,
+    "ui_back": ui_back,
 }
 
 

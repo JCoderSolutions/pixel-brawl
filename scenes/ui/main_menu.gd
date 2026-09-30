@@ -60,6 +60,7 @@ func _ready() -> void:
 	_options_button.pressed.connect(_options.open)
 	_options.closed.connect(_options_button.grab_focus)
 	_quit_button.visible = not OS.has_feature("web")
+	_back_button.set_meta("silent", true)
 	_back_button.pressed.connect(back)
 	_next_button.pressed.connect(next)
 	_show(Step.TITLE)
@@ -354,8 +355,13 @@ func next() -> void:
 
 
 func back() -> void:
-	if step != Step.TITLE:
-		_show(step - 1)
+	if step == Step.TITLE:
+		return
+	# By path: scripts that preload this one compile before the autoloads.
+	var feedback := get_node_or_null("/root/UiFeedback")
+	if feedback != null:
+		feedback.back()
+	_show(step - 1)
 
 
 func _show(to: int) -> void:
@@ -482,6 +488,10 @@ func _fighter_card(slot: int) -> Control:
 	var human: bool = slot < _setup.humans
 	var bot_index: int = slot - _setup.humans
 	var header := HBoxContainer.new()
+	# Keyboard, pad or bot at a glance.
+	var icon := UiIcons.rect(UiIcons.BOT if not human else UiIcons.for_scheme(control(slot)))
+	icon.name = "Icon"
+	header.add_child(icon)
 	var tag := Label.new()
 	tag.name = "Tag"
 	tag.text = "P%d" % (slot + 1) if human else "BOT %d" % (bot_index + 1)
@@ -568,6 +578,7 @@ func _fighter_card(slot: int) -> Control:
 			hint.text = "CPU"
 			return
 		var scheme := control(slot)
+		icon.texture = UiIcons.texture(UiIcons.for_scheme(scheme))
 		value.text = ControlSchemes.CARD_LABELS[scheme]
 		hint.text = ControlSchemes.KEY_HINTS.get(scheme, "Cualquier botón")
 		# A pad that isn't plugged in still counts: it can be plugged in later.

@@ -27,7 +27,8 @@ componentes) y aplicarlo a todo el juego. Plan completo y auditoría en
 - [x] Fase 2: descartada, sus puntos entraron en la Fase 3
 - [x] Fase 3: tarjetas de ancho fijo con "apretá para unirte", "+ Bot" y dificultad por bot en cada tarjeta; el menú queda Título → Luchadores → Mapa → Rondas
 - [x] Fase 4: todas las pantallas, el HUD y los controles táctiles con el sistema; cero colores sueltos en `scenes/ui`
-- [ ] Fase 5: íconos, sonido y movimiento de foco, revisión en teléfono/TV/PC
+- [x] Fase 5: íconos pixel (tarjetas y arma en el HUD), sonido y salto de foco, menú de pausa
+- [ ] Revisión en teléfono, TV con mando y PC (manual, Jose)
 
 ## Evidencia
 

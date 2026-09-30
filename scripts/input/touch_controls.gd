@@ -23,14 +23,18 @@ const BUTTONS := {
 	"Fire": {"offset": Vector2(-74, -76), "radius": 17.0},
 	"Pickup": {"offset": Vector2(-26, -100), "radius": 15.0},
 	"Switch": {"offset": Vector2(-122, -100), "radius": 15.0},
+	# Pause sits at the top centre (see compute_layout), away from the thumbs.
+	"Pause": {"offset": Vector2.ZERO, "radius": 15.0},
 }
+## Buttons that press a game-wide action instead of the slot's own.
+const GLOBAL_ACTIONS := {"Pause": "pause"}
 ## Actions that may not be in project.godot yet (weapons are not wired into
 ## the player). They are created empty at runtime so the buttons can press them.
 const RUNTIME_ACTIONS := ["fire", "pickup", "switch"]
 ## Button colors: one role per action, from the UI tokens.
 const BUTTON_COLORS := {
 	"Attack": UiTokens.DANGER, "Jump": UiTokens.SUCCESS, "Fire": UiTokens.ACCENT,
-	"Pickup": UiTokens.INFO, "Switch": UiTokens.SPECIAL,
+	"Pickup": UiTokens.INFO, "Switch": UiTokens.SPECIAL, "Pause": UiTokens.TEXT,
 }
 
 @export_range(1, 4) var slot := 1
@@ -47,6 +51,7 @@ var _mode := Visibility.AUTO
 	"Fire": $Fire as TouchActionButton,
 	"Pickup": $Pickup as TouchActionButton,
 	"Switch": $Switch as TouchActionButton,
+	"Pause": $Pause as TouchActionButton,
 }
 
 
@@ -56,7 +61,7 @@ func _ready() -> void:
 		ensure_action(prefix + action)
 	joystick.prefix = prefix
 	for name in buttons:
-		buttons[name].action = prefix + name.to_lower()
+		buttons[name].action = GLOBAL_ACTIONS.get(name, prefix + name.to_lower())
 		buttons[name].color = BUTTON_COLORS[name]
 	get_viewport().size_changed.connect(_relayout)
 	_relayout()
@@ -90,6 +95,8 @@ static func compute_layout(screen: Vector2) -> Dictionary:
 	for name in BUTTONS:
 		var r: float = BUTTONS[name].radius * unit
 		var center: Vector2 = corner + BUTTONS[name].offset * unit
+		if name == "Pause":
+			center = Vector2(screen.x * 0.5, margin + r)
 		layout[name] = Rect2(center - Vector2(r, r), Vector2(r, r) * 2.0)
 	# Lower-left area, up to 45% of the width: the stick floats to the finger.
 	var top := screen.y * 0.35

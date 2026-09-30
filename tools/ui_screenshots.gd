@@ -43,8 +43,11 @@ func _snap_match() -> void:
 	hud.scoreboard.show()
 	await _snap("09_entre_rondas")
 	hud.scoreboard.hide()
+	(arena.get_node("PauseMenu") as PauseMenu).pause()
+	await _snap("10_pausa")
+	(arena.get_node("PauseMenu") as PauseMenu).resume()
 	manager.match_ended.emit(0)
-	await _snap("10_ganador")
+	await _snap("11_ganador")
 
 
 func _run() -> void:

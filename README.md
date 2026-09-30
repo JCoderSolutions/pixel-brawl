@@ -17,6 +17,7 @@ la arena (gana el primero en llevarse 3 rondas).
 | Golpe / usar arma | J | Ctrl / Enter | X |
 | Cubrirse / apuntar | K | . / Numpad 1 | RB |
 | Recoger / lanzar arma | L | , / Numpad 2 | Y |
+| Pausa | Esc | Esc | Start |
 | Cambiar de arma | I | / (tecla a la derecha del punto) / Numpad 3 | LB |
 
 ### Pantalla y arte

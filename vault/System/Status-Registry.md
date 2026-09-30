@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-30"
+last_updated_notes: "TASK-024 fase 5: íconos, sonidos de menú, salto de foco y menú de pausa; falta prueba en dispositivos"
 last_updated_notes: "TASK-024 fase 4: todas las pantallas, HUD y táctiles con la línea gráfica"
 last_updated_notes: "TASK-024/TASK-011 bots desde las tarjetas con dificultad propia; menú Título → Luchadores → Mapa → Rondas"
 last_updated_notes: "TASK-024 decisiones aprobadas por Jose y fase 3: tarjetas de luchadores con apretá para unirte"

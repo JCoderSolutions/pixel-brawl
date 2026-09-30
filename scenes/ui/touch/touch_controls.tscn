@@ -42,3 +42,9 @@ layout_mode = 3
 mouse_filter = 2
 script = ExtResource("3")
 label = "Arma"
+
+[node name="Pause" type="Control" parent="."]
+layout_mode = 3
+mouse_filter = 2
+script = ExtResource("3")
+label = "II"

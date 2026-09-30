@@ -66,11 +66,13 @@ func _on_player_spawned(id: int, player: Node) -> void:
 		panel.bar.value = current)
 	panel.weapon.text = ""
 	panel.carried.text = ""
+	panel.icon.weapon = null
 	var holder: WeaponHolder = player.get("weapons")
 	if holder != null:
 		var refresh := func() -> void:
 			panel.weapon.text = weapon_line(holder)
 			panel.carried.text = carried_line(holder)
+			panel.icon.weapon = holder.weapon
 		holder.inventory_changed.connect(refresh)
 		holder.ammo_changed.connect(func(_a) -> void: refresh.call())
 		holder.weapon_spent.connect(func(_w) -> void: refresh.call())
@@ -79,6 +81,11 @@ func _on_player_spawned(id: int, player: Node) -> void:
 
 func weapon_text(id: int) -> String:
 	return _panels[id].weapon.text if _panels.has(id) else ""
+
+
+## The weapon drawn next to P(id + 1)'s weapon line, or null.
+func weapon_icon(id: int) -> WeaponData:
+	return _panels[id].icon.weapon if _panels.has(id) else null
 
 
 ## The other carried weapons (the ones not in hand), for the inventory line.
@@ -128,12 +135,17 @@ func _make_panel(id: int) -> Dictionary:
 	weapon.add_theme_color_override("font_color", UiTokens.TEXT)
 	var carried := Label.new()
 	carried.theme_type_variation = &"LabelSmall"
+	# The weapon in hand drawn small next to its name.
+	var weapon_row := HBoxContainer.new()
+	var icon := WeaponIcon.new()
+	weapon_row.add_child(icon)
+	weapon_row.add_child(weapon)
 	box.add_child(header)
 	box.add_child(bar)
-	box.add_child(weapon)
+	box.add_child(weapon_row)
 	box.add_child(carried)
 	_bars_row.add_child(box)
-	return {"bar": bar, "score": score, "weapon": weapon, "carried": carried}
+	return {"bar": bar, "score": score, "weapon": weapon, "carried": carried, "icon": icon}
 
 
 func _on_scores_changed(scores: Array) -> void:
