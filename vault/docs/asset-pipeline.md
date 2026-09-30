@@ -151,21 +151,102 @@ segunda columna):
 - **Cómo entra:** `assets/audio/sfx/` y una línea en `SFX` de
   `scripts/audio/audio_manager.gd`.
 
-## Flujo recomendado con IA
+## Personajes con IA sin perder la consistencia
 
-1. **Generar** el personaje o el objeto con Retro Diffusion o PixelLab,
-   pidiendo "pixel art, side view, facing right, transparent background" y
-   la medida final (32x32 para personajes).
-2. **Si sale más grande**, achicar con vecino más cercano (nunca con
-   suavizado) hasta la medida exacta, o pasarlo por el Pixel Art Fixer.
-3. **Reducir a Endesga 32** en Pixelorama o LibreSprite (modo de color
-   indexado con la paleta cargada).
-4. **Limpiar a mano**: contorno de 1 px, pies en el borde de abajo, mismo
-   tamaño de cuerpo en todos los cuadros.
-5. **Animar** en Pixelorama copiando el cuadro base y moviendo brazos y
-   piernas (la IA todavía es poco confiable para animaciones largas).
-6. **Exportar** la hoja PNG y meterla en Godot como dice cada sección.
-7. Correr `scripts/test_art_hooks.gd` y mirar una partida.
+La IA es buena para el **estilo** y el **diseño** de un personaje; es mala
+para dibujar el mismo personaje en poses exactas (un uppercut, colgarse de
+una cornisa) cuadro a cuadro. Por eso el método es: la IA diseña, el juego
+pone las proporciones y las poses, y la mano une todo.
+
+### Paso 0: las hojas de referencia del juego
+
+`tools/export_rig_reference.sh` exporta el luchador de formas nativas en
+todas sus poses a `assets/sprites/characters/reference/`:
+
+- `base.png` (maniquí gris) y una por personaje (`bruno.png`, `roja.png`...).
+- **Una fila por animación, un cuadro de 32x32 por frame**, en este orden:
+  idle, run, jump, fall, crouch, attack, hurt, aim, victory, dive, ride,
+  block, roll, uppercut, kick, air_kick, grab, held, hang.
+- `x4/`: las mismas hojas ampliadas 4x para subirlas a la IA.
+
+Son **el tamaño, los pies y las poses exactas** que espera el juego: se
+dibuja encima (capa aparte en Pixelorama) o se suben como referencia.
+
+### Paso 1: la ficha del personaje (se escribe una vez)
+
+Un bloque de texto fijo por personaje que se pega **igual** en cada pedido.
+Ejemplo para Bruno:
+
+```
+ESTILO: 16-bit pixel art game sprite, side view, facing right, full body,
+clean 1px dark outline, flat shading with one highlight, no anti-aliasing,
+transparent background, 32x32.
+PERSONAJE: Bruno, street brawler, short dark hair with a cyan headband
+(#2ce8f5), light skin (#e8b796), blue t-shirt (#0099db), dark navy pants
+(#3a4466), dark shoes, athletic build, 16 px wide and 28 px tall.
+```
+
+Los colores con su hex de Endesga 32 (los de `FighterLook`) y las
+proporciones van siempre. Lo único que cambia entre pedidos es la pose.
+
+### Paso 2: Retro Diffusion, el diseño base
+
+1. Crear la cuenta (50 créditos gratis, no vencen).
+2. Modelo **RD Plus** (o RD Pro si alcanza), tamaño **32x32**.
+3. Subir la **paleta**: una imagen con los 32 colores de Endesga 32 (en
+   Lospec se descarga el PNG de la paleta). Así no inventa colores.
+4. Prompt: la ficha + `POSE: standing idle, relaxed fighting stance`.
+5. Sacar 4 a 8 variantes, elegir **una**, y anotar la **semilla** (seed).
+   Esa imagen es "el Bruno oficial".
+
+### Paso 3: más poses del mismo personaje
+
+- En cada pedido nuevo: **la misma ficha + la misma semilla + el Bruno
+  oficial como imagen de referencia** (RD Pro acepta hasta 9 referencias:
+  sumar también la pose de `x4/base.png` que se quiere). Cambiar solo la
+  línea de pose: `POSE: running`, `POSE: throwing a straight punch`,
+  `POSE: jumping, knees up`, `POSE: hanging from a ledge with both hands`...
+- Si una pose sale con otro peinado u otra ropa, se descarta: no se
+  "arregla" con otro prompt, se repite con la referencia.
+
+### Paso 4: animaciones
+
+- **Retro Diffusion Animation** tiene estilos listos: *Walking and Idle* y
+  *Four Angle Walking* salen en **48x48** (pensados para vista de arriba)
+  y *Small Sprites* en **32x32** con caminata a la derecha y a la
+  izquierda. Sirven para `idle` y `run`; hay que llevar el personaje a 28 px
+  de alto y los pies al borde de abajo.
+- **PixelLab** anima un sprite propio con "Animate with skeleton" o
+  "Animate with text" y tiene vista lateral: se sube el Bruno oficial y se
+  piden 4 a 6 cuadros de la acción.
+- Las poses de pelea (uppercut, patadas, agarre, colgarse) casi siempre
+  conviene hacerlas **a mano sobre la hoja de referencia**: copiar el cuadro
+  del Bruno oficial y mover brazos y piernas siguiendo la fila de `base.png`.
+
+### Paso 5: los 8 personajes con el mismo cuerpo
+
+Lo más consistente (y lo que hacen muchos juegos de pelea chicos): animar
+**un solo cuerpo** (`base.png` redibujado) y cambiarle pelo, ropa y
+colores para cada personaje. Todos se mueven igual, pesan lo mismo en
+pantalla y el trabajo de animación se hace una vez.
+
+### Paso 6: limpieza y control (siempre)
+
+1. Achicar con **vecino más cercano** si salió más grande (o Pixel Art
+   Fixer). Nunca con suavizado.
+2. **Indexar a Endesga 32** en Pixelorama o LibreSprite.
+3. Revisar contra la hoja de referencia: **16x28 px, pies en la última
+   fila, mirando a la derecha, contorno de 1 px**, el mismo alto en todos
+   los cuadros (usar "onion skin").
+4. Exportar la hoja, armar el `SpriteFrames` y probar en una partida.
+
+### Otros assets con IA
+
+- **Tiles:** RD tiene estilos de texturas repetibles; pedir 16x16,
+  `seamless`, y después hacer a mano los 2 cuadros de daño (grietas).
+- **Armas:** RD Plus en la medida de la tabla, `side view, facing right`.
+- **Fondos:** RD Plus en tamaño grande, colores apagados, y separar capas a
+  mano.
 
 ## Fuentes consultadas (2026-09-30)
 
@@ -173,3 +254,7 @@ segunda columna):
 - [Retro Diffusion: Pixel Art Fixer](https://retrodiffusion.ai/tools/pixel-art-fixer/)
 - [Pixelorama](https://pixelorama.org/)
 - [Suno: derechos del plan gratis vs pago](https://replayedstudio.com/blog/suno-commercial-rights-explained/)
+- [Retro Diffusion: Walking & Idle](https://retrodiffusion.ai/styles/walking-idle/) y [Four Angle Walking](https://retrodiffusion.ai/styles/four-angle-walking/)
+- [Retro Diffusion Plus en Replicate](https://replicate.com/retro-diffusion/rd-plus/readme)
+- [Retro Diffusion: ejemplos de la API](https://github.com/Retro-Diffusion/api-examples)
+- [PixelLab: formas de usarlo](https://www.pixellab.ai/docs/ways-to-use-pixellab)
