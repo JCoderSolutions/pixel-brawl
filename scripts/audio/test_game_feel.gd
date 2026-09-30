@@ -47,6 +47,7 @@ func _run_tests() -> void:
 	await _test_jump_and_land()
 	await _test_power_up_pickup()
 	await _test_empty_gun_click()
+	await _test_acid_feedback()
 	_test_wire_once()
 	print("OK: impact bursts, melee hit + hit-stop, block thud, projectile flesh/ricochet, weapon sounds, explosion + debris, death, jump/landing, power-up pickup feedback, empty-gun click and single wiring verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
@@ -317,6 +318,32 @@ func _test_empty_gun_click() -> void:
 	_reset()
 	player.weapons.throw_weapon()
 	_check(&"throw" in _played, "throwing a weapon whooshes")
+	arena.queue_free()
+	await process_frame
+
+
+## Acid has no knockback, so it used to hurt without any reaction: now the
+## fighter blinks, green bubbles rise and it sizzles, a few times a second.
+func _test_acid_feedback() -> void:
+	_reset()
+	var arena := _arena()
+	var player: CharacterBody2D = PLAYER_SCENE.instantiate()
+	player.is_controlled = false
+	arena.add_child(player)
+	var acid := HazardZone.new()
+	acid.kind = HazardZone.Kind.ACID
+	acid.size = Vector2(64, 32)
+	acid.position = Vector2(-32, -24)
+	arena.add_child(acid)
+	var blinked := false
+	for i in 20:
+		await physics_frame
+		blinked = blinked or player.get_node("Visual").flash
+	_check(player.health.current_health < player.health.max_health, "the acid hurts")
+	_check(&"sizzle" in _played, "and sizzles (got %s)" % [_played])
+	_check(_bursts(ImpactBurst.Kind.DUST) >= 1, "bubbles rise from the fighter")
+	_check(blinked, "the fighter blinks")
+	_check(_played.count(&"sizzle") <= 3, "a few times a second, not every tick (%d)" % _played.count(&"sizzle"))
 	arena.queue_free()
 	await process_frame
 

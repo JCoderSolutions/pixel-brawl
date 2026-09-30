@@ -24,6 +24,10 @@ extends Node
 ## have nothing to show and must not have time bent under them.
 
 const WIRED_META := &"_game_feel_wired"
+## Seconds between two rounds of hazard feedback on the same fighter.
+const HAZARD_FEEDBACK_EVERY := 0.2
+## How long the hazard blink lasts (real seconds).
+const HAZARD_FLASH_TIME := 0.08
 
 @export var hit_stop_enabled := true
 @export var melee_hit_stop := 0.06
@@ -47,6 +51,8 @@ var audio: Node
 
 ## body -> { on_floor, vy, hit_frame }
 var _fighters := {}
+## Fighter instance id -> real time of its last hazard feedback.
+var _hazard_feedback := {}
 var _hit_stop_left := 0.0
 var _slow_left := 0.0
 var _slow_scale := 1.0
@@ -129,6 +135,8 @@ func wire(node: Node) -> void:
 		node.destroyed.connect(_on_block_destroyed)
 	elif node is Hurtbox:
 		node.blocked.connect(_on_blocked.bind(node))
+	elif node is HazardZone:
+		node.hurt.connect(_on_hazard_hurt.bind(node))
 	elif node is HealthComponent:
 		node.died.connect(_on_died.bind(node))
 	elif _is_fighter(node):
@@ -315,6 +323,27 @@ func _on_exploded(center: Vector2, _radius: float, _hits: int) -> void:
 func _on_block_destroyed(block: DestructibleBlock) -> void:
 	_play(&"block_break")
 	_burst(ImpactBurst.Kind.DEBRIS, block.global_position, Vector2.UP)
+
+
+## Acid, fire and spikes hurting someone: the fighter blinks white like a
+## hit, bubbles in the zone's colour rise from them and it sizzles (spikes
+## thud). Once per HAZARD_FEEDBACK_EVERY per fighter, not every tick.
+func _on_hazard_hurt(body: Node2D, _amount: int, zone: HazardZone) -> void:
+	if zone.instant_kill or zone.kind == HazardZone.Kind.VOID or not is_instance_valid(body):
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - float(_hazard_feedback.get(body.get_instance_id(), -INF)) < HAZARD_FEEDBACK_EVERY:
+		return
+	_hazard_feedback[body.get_instance_id()] = now
+	_play(&"hit" if zone.kind == HazardZone.Kind.SPIKES else &"sizzle")
+	var colors: Array = HazardZone.COLORS[zone.kind]
+	_burst(ImpactBurst.Kind.DUST, body.global_position + Vector2(0, -6), Vector2.UP).tint(colors[1])
+	var rig := body.get_node_or_null("Visual") as FighterRig
+	if rig != null and not rig.flash:
+		rig.flash = true
+		get_tree().create_timer(HAZARD_FLASH_TIME, true, false, true).timeout.connect(func() -> void:
+			if is_instance_valid(rig):
+				rig.flash = false)
 
 
 func _on_died(_source: Node, health: HealthComponent) -> void:

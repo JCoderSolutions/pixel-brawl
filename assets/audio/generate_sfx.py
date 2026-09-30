@@ -195,6 +195,12 @@ def dry_fire():
                   (0.4 * env(t - 0.035, 0.03, 0.0005, 3.0) * square(ph2(t - 0.035), 0.3) if t > 0.035 else 0.0))
 
 
+def sizzle():
+    """Chisporroteo corto: ácido o fuego quemando a un luchador."""
+    noise = Noise(21, lowpass=0.6)
+    return render(0.18, lambda t: env(t, 0.18, 0.004, 1.5) * 0.45 * noise.sample(9000 - 30000 * t))
+
+
 def ui_move():
     """Tic corto al mover el foco por un menú."""
     ph = {"phase": 0.0}
@@ -244,6 +250,7 @@ RECIPES = {
     "death": death,
     "pickup": pickup,
     "dry_fire": dry_fire,
+    "sizzle": sizzle,
     "ui_move": ui_move,
     "ui_confirm": ui_confirm,
     "ui_back": ui_back,
