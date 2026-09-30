@@ -38,7 +38,7 @@ alignment = 1
 
 [node name="Title" type="Label" parent="Box"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_type_variation = &"LabelTitle"
 text = "Opciones"
 horizontal_alignment = 1
 

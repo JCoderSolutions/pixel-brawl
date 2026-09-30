@@ -20,10 +20,9 @@ static func spawn(parent: Node, label: String, color: Color, at: Vector2) -> Flo
 	floating.z_index = 30
 	var node := Label.new()
 	node.text = label
-	node.add_theme_font_size_override("font_size", 8)
+	node.theme_type_variation = &"LabelSmall"
 	node.add_theme_color_override("font_color", color)
-	node.add_theme_color_override("font_outline_color", Color("181425"))
-	node.add_theme_constant_override("outline_size", 3)
+	node.add_theme_constant_override("outline_size", 2)
 	node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	node.size = Vector2(80, 12)
 	node.position = Vector2(-40, -6)

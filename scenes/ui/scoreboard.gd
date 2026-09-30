@@ -6,7 +6,6 @@ extends PanelContainer
 ## map itself. Built in code so the HUD and the winner screen share it.
 
 const HEADERS := ["", "RONDAS", "KILLS", "MUERTES"]
-const FONT_SIZE := 8
 const LEADER_COLOR := Color("feae34")
 
 var _grid: GridContainer
@@ -29,7 +28,7 @@ func _init() -> void:
 	_grid.add_theme_constant_override("v_separation", 1)
 	box.add_child(_grid)
 	_footer = Label.new()
-	_footer.add_theme_font_size_override("font_size", FONT_SIZE)
+	_footer.theme_type_variation = &"LabelSmall"
 	_footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_footer)
 
@@ -89,7 +88,7 @@ static func _stat(values: Array, id: int) -> int:
 func _cell(text: String, color: Color) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
+	label.theme_type_variation = &"LabelSmall"
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 2)

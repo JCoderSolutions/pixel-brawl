@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-30"
+last_updated_notes: "TASK-024 fase 1: tema global, fuentes pixel, tokens y test de UI (fuente y paleta provisorias)"
 last_updated_notes: "TASK-024 plan de línea gráfica y sistema de UI propuesto (espera decisiones de Jose)"
 last_updated_notes: "TASK-005 inventario por espacios (cuerpo a cuerpo, pistola, principal, arrojable) y botón Cambiar arma"
 last_updated_notes: "TASK-002/TASK-003 barrido más corto y patada aérea sin embestida (feedback de Jose)"
@@ -70,7 +71,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | [[project/tasks/TASK-010-power-ups|TASK-010 — Power-ups]] | `in-progress` | high | PHASE-3 |
 | [[project/tasks/TASK-022-fighter-animations|TASK-022 — Luchador animado (formas nativas)]] | `in-progress` | high | PHASE-3 |
 | [[project/tasks/TASK-023-art-hooks|TASK-023 — Enganches para el arte (tilesets y sprites)]] | `in-progress` | medium | PHASE-3 |
-| [[project/tasks/TASK-024-ui-style-system|TASK-024 — Línea gráfica y sistema de UI]] | `todo` | high | PHASE-3 |
+| [[project/tasks/TASK-024-ui-style-system|TASK-024 — Línea gráfica y sistema de UI]] | `in-progress` | high | PHASE-3 |
 
 ## Tareas por desglosar (backlog)
 

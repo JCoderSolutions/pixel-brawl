@@ -322,8 +322,8 @@ func _show(to: int) -> void:
 				button.toggle_mode = true
 				button.button_group = group
 				button.button_pressed = rounds_choice == _setup.rounds
+				# The theme fills the chosen one (pressed): no yellow text here.
 				button.remove_theme_color_override("font_color")
-				button.add_theme_color_override("font_pressed_color", Color("fee761"))
 				button.custom_minimum_size.x = 44
 			_hint.text = _summary()
 			_next_button.text = "¡A pelear!"

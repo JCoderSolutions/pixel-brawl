@@ -124,10 +124,10 @@ func _make_panel(id: int) -> Dictionary:
 	fill.bg_color = manager.player_color(id)
 	bar.add_theme_stylebox_override("fill", fill)
 	var weapon := Label.new()
-	weapon.add_theme_font_size_override("font_size", 8)
+	weapon.theme_type_variation = &"LabelSmall"
+	weapon.add_theme_color_override("font_color", UiTokens.TEXT)
 	var carried := Label.new()
-	carried.add_theme_font_size_override("font_size", 6)
-	carried.modulate = Color("8b9bb4")
+	carried.theme_type_variation = &"LabelSmall"
 	box.add_child(header)
 	box.add_child(bar)
 	box.add_child(weapon)

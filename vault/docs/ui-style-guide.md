@@ -162,29 +162,40 @@ fase 3 también sirve para el online (TASK-013/014).
 
 ### 3.2 Tipografía [DECIDIR]
 
-| Opción | Licencia | Acentos (á ñ ¿ ¡) | Comentario |
-| --- | --- | --- | --- |
-| **monogram** (datagoblin) | CC0 | Sí, versión *extended* (537 glifos) | Monoespaciada, muy legible a tamaño chico. Recomendada para todo el texto |
-| Pixel Operator (Jayvee Enaguas) | CC0 | Parciales | Proporcional, tiene negrita y versión 8 px. Hay que verificar ñ y ¿ |
-| m5x7 / m6x11 (Daniel Linssen) | Gratis con crédito | Verificar | Muy usadas en indies; revisar glifos en español |
-| Press Start 2P | OFL | Sí | Solo para el logo o carteles: muy ancha para texto corrido |
+**Comparación (2026-09-30).** Cada candidata renderizada en Godot a 480x270
+(sin antialias, captura a 2x) con la misma pantalla de prueba: título, frase
+con acentos, HUD, tarjetas y botones. Imágenes en `img/fonts/`.
 
-Antes de elegir: renderizar "¡Ñandú! ¿Qué pasó? áéíóú ü PELEA 0123" con cada
-una en 480x270 y compararlas en captura.
+| Fuente | Licencia | Acentos | Tamaño de diseño | Resultado |
+| --- | --- | --- | --- | --- |
+| **Pixel Operator** | CC0 | Completos | 16 px | La más limpia y legible. **Elegida para texto** (provisoria) |
+| **Pixel Operator 8** | CC0 | Completos | 8 px | Misma familia a 8 px. **Elegida para textos chicos** (HUD, pistas) |
+| **Jersey 10** | OFL | Completos | 19 px | Gruesa, con cara de juego de pelea. **Elegida para títulos y carteles** |
+| Pixelify Sans | OFL | Completos | — | No cae en la grilla: la B parece G, el 2 parece 8 y el 5 parece 3. Descartada |
+| Press Start 2P | OFL | Completos | 8 px | Tan ancha que "WASD · J K L I" se sale de la tarjeta. Solo serviría para un logo |
+| Silkscreen | OFL | Completos | 8 px | Todo en mayúsculas y muy chica para leer frases |
+| Tiny5 / Micro 5 | OFL | Completos | 8 / 11 px | Muy chicas para texto corrido |
+| monogram | CC0 | Completos (extended) | 16 px | No se pudo bajar desde la nube (itch.io bloqueado). Se puede probar en local |
 
-**Escala (solo estos tamaños):**
+![[img/fonts/pixeloperator.png]]
+![[img/fonts/jersey10-regular.png]]
 
-| Token | Uso |
-| --- | --- |
-| `text_small` | pistas, HUD secundario, créditos |
-| `text_body` | botones, filas, HUD principal |
-| `text_title` | título de cada pantalla |
-| `text_display` | logo, "¡PELEA!", ganador |
+Otras: [[img/fonts/pixeloperator8.png]], [[img/fonts/pixelifysans.png]],
+[[img/fonts/pressstart2p-regular.png]], [[img/fonts/silkscreen-regular.png]],
+[[img/fonts/tiny5-regular.png]], [[img/fonts/micro5-regular.png]],
+[[img/fonts/default.png]] (la de Godot, la de antes).
 
-Los valores exactos dependen de la fuente elegida: `text_body` = tamaño de
-diseño de la fuente, y el resto múltiplos enteros (x1 chico si existe, x2
-título, x3 o x4 display). Texto con contorno de 1 px `#181425` cuando va sobre
-el juego.
+**Escala (solo estos tamaños, en `UiTokens`):**
+
+| Token | Fuente | Tamaño | Uso | Estilo del tema |
+| --- | --- | --- | --- | --- |
+| `TEXT_SMALL` | Pixel Operator 8 | 8 | pistas, HUD, textos flotantes, tabla | `LabelSmall` |
+| `TEXT_BODY` | Pixel Operator | 16 | botones, filas, texto normal | por defecto |
+| `TEXT_TITLE` | Jersey 10 | 19 | título de cada pantalla | `LabelTitle` |
+| `TEXT_DISPLAY` | Jersey 10 | 38 | logo, "¡PELEA!", ganador | `LabelDisplay` |
+
+Las fuentes se importan sin antialias ni hinting. Texto sobre el juego con
+contorno de 2 px `bg`.
 
 ### 3.3 Colores por rol (todos Endesga 32)
 
@@ -254,19 +265,37 @@ van en el PR.
 
 ### Fase 0 — Decidir (Jose)
 - [ ] Aprobar la paleta por roles (§3.3)
-- [ ] Elegir la fuente después de ver la comparación en captura (§3.2)
+- [ ] Confirmar la fuente: Pixel Operator + Jersey 10 (aplicada provisoria, §3.2)
 - [ ] Elegir la estructura de la pantalla de luchadores: tarjetas con
       "apretá para unirte" o tabla de anchos fijos (§3.1)
 
-### Fase 1 — Cimientos
-- [ ] `assets/palettes/endesga-32.hex` y clase `UiTokens` (colores, espacios,
-      tamaños de texto)
-- [ ] Fuente elegida en `assets/fonts/` con su licencia y crédito en
-      `assets/CREDITS.md`
-- [ ] `assets/ui/theme.tres` con los componentes de §3.5, fijado como tema
-      global en `project.godot`
-- [ ] Test headless: sin `Color(...)` ni `font_size` sueltos en `scenes/ui`
-- [ ] Script de capturas con Xvfb de todas las pantallas de menú
+### Fase 1 — Cimientos (hecha 2026-09-30, con la fuente y la paleta provisorias)
+- [x] `assets/palettes/endesga-32.hex` y clase `UiTokens`
+      (`scripts/ui/ui_tokens.gd`: colores por rol, fuentes, tamaños, espacios)
+- [x] Fuentes en `assets/fonts/` con licencias y `assets/fonts/CREDITS.md`
+- [x] `UiTheme.build()` (`scripts/ui/ui_theme.gd`) arma el tema desde los
+      tokens; `tools/build_ui_theme.gd` lo guarda en `assets/ui/theme.tres`,
+      que es el tema global (`gui/theme/custom`). Estilos: `Button`,
+      `ButtonPrimary`, `LabelSmall`, `LabelTitle`, `LabelDisplay`,
+      `PanelCard`, `PanelOverlay`, barras, sliders, interruptor y desplegable
+- [x] Todos los tamaños de letra sueltos pasaron a esos estilos
+- [x] Test `scripts/ui/test_ui_theme.gd`: tema del proyecto, tema guardado
+      igual al de los tokens, roles dentro de Endesga 32, fuentes con acentos
+      e importadas sin antialias, ningún `font_size` suelto y colores sueltos
+      que solo pueden bajar (quedan 13 en 6 archivos para la Fase 4)
+- [x] Capturas: `tools/ui_screenshots.sh [carpeta]` (Xvfb si no hay pantalla)
+
+Cómo se ve después de la Fase 1 (la pantalla de luchadores sigue
+desalineada: es la Fase 2):
+
+![[img/ui-fase1/01_titulo.png]]
+![[img/ui-fase1/05_luchadores_mixto.png]]
+
+Otras: [[img/ui-fase1/08_rondas.png]], [[img/ui-fase1/09_opciones.png]].
+
+Para cambiar un color, una fuente o un tamaño: editar `UiTokens`, correr
+`godot --headless --path . -s tools/build_ui_theme.gd` y commitear el
+`theme.tres` regenerado (el test falla si quedan distintos).
 
 ### Fase 2 — Arreglo inmediato de la pantalla de luchadores
 - [ ] Filas en `GridContainer` con anchos fijos por columna

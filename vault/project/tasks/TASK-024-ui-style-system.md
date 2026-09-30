@@ -1,6 +1,6 @@
 ---
 type: "task"
-status: "todo"            # allowed: todo | in-progress | done | discarded
+status: "in-progress"            # allowed: todo | in-progress | done | discarded
 priority: "high"
 phase: "PHASE-3"
 depends_on: "TASK-011, TASK-012"
@@ -21,7 +21,9 @@ componentes) y aplicarlo a todo el juego. Plan completo y auditoría en
 ## Criterios de done
 
 - [ ] Fase 0: Jose aprueba paleta, fuente y estructura de la pantalla de luchadores
-- [ ] Fase 1: `UiTokens`, fuente, `theme.tres` global, test sin colores sueltos, capturas con Xvfb
+- [x] Fase 1: `UiTokens`, fuentes (Pixel Operator + Jersey 10, provisorias),
+      `theme.tres` global generado desde los tokens, test
+      `scripts/ui/test_ui_theme.gd`, capturas con `tools/ui_screenshots.sh`
 - [ ] Fase 2: pantalla de luchadores en tabla de anchos fijos, sin dispositivos repetidos
 - [ ] Fase 3: tarjetas por jugador con "apretá para unirte"
 - [ ] Fase 4: todas las pantallas y el HUD con el sistema
@@ -30,3 +32,5 @@ componentes) y aplicarlo a todo el juego. Plan completo y auditoría en
 ## Evidencia
 
 - Auditoría con capturas: `vault/docs/img/ui-audit/`
+- Comparación de fuentes: `vault/docs/img/fonts/`
+- Después de la Fase 1: `vault/docs/img/ui-fase1/`
