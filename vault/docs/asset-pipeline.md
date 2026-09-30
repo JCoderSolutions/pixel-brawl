@@ -172,10 +172,11 @@ todas sus poses a `assets/sprites/characters/reference/`:
 - `poses/`: una imagen por pose del maniquí (`idle.png`, `run.png`...),
   128x128 con fondo blanco, para el "input image" de Retro Diffusion.
 - La paleta como imagen para las herramientas: `assets/palettes/endesga-32.png`.
-- `guide.png` (y `x4/guide.png`): el cuadro del luchador para usar como
-  capa guía en el editor. Caja cyan = zona de golpe (16x28, el cuerpo va
-  adentro; guantes, pelo o arma pueden salirse hacia los costados), fila
-  verde = el piso (pies en la última fila), línea roja = el centro, marcas
+- `guide.png` (32x32) y `guide_48.png` (48x48), con copia en `x4/`: el
+  cuadro del luchador para usar como capa guía en el editor. Caja cyan =
+  zona de golpe (16x28, el cuerpo va adentro; el pelo puede pasar unos px
+  arriba y guantes, patadas o armas salirse a cualquier lado), fila verde
+  = el piso (pies en la última fila), línea roja = el centro, marcas
   amarillas = proporción chibi (cabeza ~11 px, torso ~8, piernas ~9).
 
 Son **el tamaño, los pies y las poses exactas** que espera el juego: se
@@ -197,6 +198,23 @@ PERSONAJE: Bruno, street brawler, short dark hair with a cyan headband
 
 Los colores con su hex de Endesga 32 (los de `FighterLook`) y las
 proporciones van siempre. Lo único que cambia entre pedidos es la pose.
+
+### Referencia de estilo (propuesta, 2026-09-30)
+
+Jose eligió como dirección visual el estilo de
+[The Adventurer de Sscary](https://sscary.itch.io/the-adventurer-male):
+personaje de **16x32 px** en un cuadro de **48x64**, proporción chibi
+(cabeza grande, ~2,5 cabezas de alto), contorno oscuro de 1 px, 2-3 tonos
+por color, cara legible con ojos grandes, pelo con forma marcada.
+
+En el juego se traduce a: cuadro de **48x48** (`guide_48.png`), cuerpo
+dentro de la zona de golpe de 16x28, pelo hasta 32 px de alto.
+
+Licencia del pack (según su página): se puede usar y modificar en juegos
+gratis y comerciales, **no se puede redistribuir**. Como este repo es
+público, los archivos del pack **no se suben**: se usan como referencia
+visual (o como imagen de referencia en la IA) y lo que entra al repo es
+arte propio.
 
 ### Paso 1b: que parezca un luchador, no un NPC
 

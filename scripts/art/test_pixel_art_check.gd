@@ -41,7 +41,7 @@ func _load(path: String) -> Image:
 
 
 func _cell(sheet: Image) -> Image:
-	return sheet.get_region(Rect2i(0, 0, PixelArtCheck.CELL, PixelArtCheck.CELL))
+	return sheet.get_region(Rect2i(0, 0, 32, 32))
 
 
 func _same(a: Image, b: Image) -> bool:
@@ -108,7 +108,7 @@ func _test_warnings() -> void:
 	_check(result.ok and not result.warnings.is_empty(), "stray pixels are a warning, not an error")
 	var odd := Image.create(20, 30, false, Image.FORMAT_RGBA8)
 	odd.fill(_palette[3])
-	_check(not PixelArtCheck.report(odd, _palette).warnings.is_empty(), "sizes off the 32 px grid warn")
+	_check(not PixelArtCheck.report(odd, _palette).warnings.is_empty(), "sizes off the 16 px grid warn")
 
 
 func _test_gpl_palette() -> void:

@@ -9,8 +9,8 @@ extends RefCounted
 ## CLI: tools/pixel_art_check.sh. Guide: vault/docs/asset-pipeline.md.
 
 const PALETTE_PATH := "res://assets/palettes/endesga-32.hex"
-## Fighter cells and sheets are laid out on this grid.
-const CELL := 32
+## Fighter frames (32x32, 48x48...) and tiles are multiples of this.
+const GRID := 16
 ## Alpha at or above this is opaque once cleaned; below it, transparent.
 const ALPHA_CUT := 0.5
 ## In an image drawn N times bigger, colour changes between neighbours
@@ -140,8 +140,8 @@ static func report(image: Image, palette: PackedColorArray) -> Dictionary:
 	if off_palette > 0:
 		errors.append("%d pixeles fuera de la paleta Endesga 32" % off_palette)
 	var native := Vector2i(width, height) / scale
-	if native.x % CELL != 0 or native.y % CELL != 0:
-		warnings.append("%dx%d no es múltiplo de %d: los luchadores van en cuadros de 32x32" % [native.x, native.y, CELL])
+	if native.x % GRID != 0 or native.y % GRID != 0:
+		warnings.append("%dx%d no es múltiplo de %d: los cuadros van de 32x32 o 48x48" % [native.x, native.y, GRID])
 	if colors.size() > MAX_EASY_COLORS:
 		warnings.append("%d colores: más de %d cuesta retocar y recolorear" % [colors.size(), MAX_EASY_COLORS])
 	if visible > 0 and float(orphans) / visible > MAX_ORPHAN_SHARE:

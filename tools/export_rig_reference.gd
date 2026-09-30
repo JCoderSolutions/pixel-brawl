@@ -38,30 +38,34 @@ func _run() -> void:
 	quit()
 
 
-## guide.png: the fighter's frame, for a guide layer in a pixel editor.
-## Cyan box = hurtbox (16x28, player.tscn): the body goes inside it; gloves,
-## hair or a weapon may stick out sideways. Green row = the ground (feet on
-## the last row). Red = centre column. Yellow ticks on the left = chibi
-## proportions: head down to the first tick, torso to the second, legs below.
+## guide.png (32x32) and guide_48.png (48x48, room for swings and kicks,
+## like the 16x32-in-48x64 packs): the fighter's frame, for a guide layer in
+## a pixel editor. Cyan box = hurtbox (16x28, player.tscn): the body goes
+## inside it; hair up to 4 px above it, and gloves, kicks or a weapon may
+## stick out anywhere in the frame. Green row = the ground (feet on the last
+## row). Red = centre column. Yellow ticks on the left = chibi proportions:
+## head down to the first tick, torso to the second, legs below.
 func _save_guide() -> void:
-	var guide := Image.create(CELL, CELL, false, Image.FORMAT_RGBA8)
-	var hurt := Rect2i(8, CELL - 28, 16, 28)
-	for x in range(hurt.position.x, hurt.end.x):
-		guide.set_pixel(x, hurt.position.y, Color("2ce8f5"))
-	for y in range(hurt.position.y, hurt.end.y):
-		guide.set_pixel(hurt.position.x, y, Color("2ce8f5"))
-		guide.set_pixel(hurt.end.x - 1, y, Color("2ce8f5"))
-	for y in range(0, CELL, 2):
-		guide.set_pixel(CELL / 2, y, Color("e43b44"))
-	for x in CELL:
-		guide.set_pixel(x, CELL - 1, Color("63c74d"))
-	for y in [CELL - 28 + 11, CELL - 28 + 19]:
-		guide.set_pixel(0, y, Color("fee761"))
-		guide.set_pixel(1, y, Color("fee761"))
-	guide.save_png(_out.path_join("guide.png"))
 	DirAccess.make_dir_recursive_absolute(_out.path_join("x4"))
-	guide.resize(CELL * 4, CELL * 4, Image.INTERPOLATE_NEAREST)
-	guide.save_png(_out.path_join("x4").path_join("guide.png"))
+	for size in [CELL, 48]:
+		var guide := Image.create(size, size, false, Image.FORMAT_RGBA8)
+		var hurt := Rect2i(size / 2 - 8, size - 28, 16, 28)
+		for x in range(hurt.position.x, hurt.end.x):
+			guide.set_pixel(x, hurt.position.y, Color("2ce8f5"))
+		for y in range(hurt.position.y, hurt.end.y):
+			guide.set_pixel(hurt.position.x, y, Color("2ce8f5"))
+			guide.set_pixel(hurt.end.x - 1, y, Color("2ce8f5"))
+		for y in range(0, size, 2):
+			guide.set_pixel(size / 2, y, Color("e43b44"))
+		for x in size:
+			guide.set_pixel(x, size - 1, Color("63c74d"))
+		for y in [size - 28 + 11, size - 28 + 19]:
+			guide.set_pixel(0, y, Color("fee761"))
+			guide.set_pixel(1, y, Color("fee761"))
+		var file_name: String = "guide.png" if size == CELL else "guide_%d.png" % size
+		guide.save_png(_out.path_join(file_name))
+		guide.resize(size * 4, size * 4, Image.INTERPOLATE_NEAREST)
+		guide.save_png(_out.path_join("x4").path_join(file_name))
 
 
 ## One file per pose for img2img tools (Retro Diffusion's input image takes
