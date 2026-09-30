@@ -242,11 +242,23 @@ El maniquí gris como imagen de entrada **congela el diseño**: con strength
 0.55–0.7 copia su pose neutra y su cuerpo flaco, y a 32x32 no queda lugar
 para inventar personalidad. Por eso se separa en dos:
 
-1. **Diseño (concepto)**: RD Plus estilo **Default**, **64x64 o más**,
-   **sin imagen de entrada** (o strength **0.8–0.9** si se quiere forzar
-   la vista lateral). Prompt: línea de estilo + fila de la tabla +
-   `side view, facing right, full body, fighting stance`. Tandas de 4
-   hasta que uno "tenga cara de personaje"; anotar semilla.
+1. **Diseño (concepto)**: RD Plus, **64x64 a 128x128**, **sin imagen de
+   entrada y sin semilla** (si quedó cargada una imagen de una prueba
+   anterior, todas las tandas salen con el mismo encuadre y la misma
+   pose). Estilo: **Cartoon** (formas simples, cuerpo entero) o
+   **Character Turnaround** (varias vistas de cuerpo entero: se usa la de
+   perfil). "Default" tiende a medio cuerpo realista y corta los pies.
+   Tandas de 4 hasta que uno "tenga cara de personaje"; anotar semilla.
+
+   Prompt **corto (20–30 palabras), solo el personaje**: el estilo ya
+   pone el pixel art (nunca escribir "pixel art") y las listas largas
+   de encuadre y técnica se ignoran. Lo primero que se escribe pesa más.
+
+   ```
+   chibi street boxer, big head, spiky black hair, cyan headband,
+   blue tank top, navy pants, big red boxing gloves raised, full body, boots
+   ```
+
 2. **Sprite del juego**: ese concepto se lleva a 32x32 redibujándolo en
    Pixelorama sobre `x4/base.png` (el concepto al lado como guía): el
    cuerpo lo pone el maniquí, el carácter lo ponen pelo, accesorio,
@@ -260,7 +272,7 @@ Configuración (2026-09-30):
 | Campo | Qué poner |
 | --- | --- |
 | Modelo | **RD Pro** si alcanzan los créditos: es el único que baja a 32x32 y acepta imágenes de referencia. Si no, **RD Plus** |
-| Estilo | RD Plus: **Low Res** (hecho para assets chicos). "Default" pinta más detalle y llena el lienzo: sirve para bocetos a 64x64, no para el sprite final |
+| Estilo | Diseño: **Cartoon** o **Character Turnaround** (paso 1c). Sprite a 32: **Low Res** (hecho para assets chicos). "Default" pinta más detalle, llena el lienzo y suele cortar los pies |
 | Medida | **32x32**. Si el modelo o el estilo no la aceptan (RD Plus pide mínimo 64 salvo los estilos low res), **64x64** y después se redibuja a 32 en Pixelorama usando el resultado de guía, nunca achicando |
 | Input image | Para el **diseño**: ninguna (ver paso 1c). Para **poses** de un personaje ya diseñado: `assets/sprites/characters/reference/poses/<pose>.png` (128x128, fondo blanco: la herramienta no acepta transparencia) |
 | Strength | Poses: **0.55 a 0.7**. Más bajo copia el maniquí gris; más alto se olvida de la pose y las proporciones. Diseño con entrada: **0.8 a 0.9** |
