@@ -36,9 +36,13 @@ extends CharacterBody2D
 
 @export_group("Aim")
 ## Holding block with a gun, grenade or rocket aims instead (Superfighters):
-## the fighter plants, jump/crouch turn the aim up/down at this speed
-## (rad/s) and left/right picks the side.
-@export var aim_speed := 2.5
+## the fighter plants, jump/crouch turn the aim up/down, speeding up to
+## this (rad/s), and left/right picks the side.
+@export var aim_speed := 3.0
+## Aim turn speed (rad/s) right after pressing up/down: taps nudge the aim
+## finely, holding speeds it up to aim_speed over aim_ramp seconds.
+@export var aim_speed_min := 0.8
+@export var aim_ramp := 0.25
 
 @export_group("Sprint")
 ## Double-tap a direction (within this many seconds) to sprint while it's held.
@@ -169,6 +173,9 @@ var _last_tap_dir := 0.0
 var _since_tap := INF
 var _prev_move_dir := 0.0
 var _hanging := false
+## Seconds the aim has been turning in the same direction.
+var _aim_turn_time := 0.0
+var _aim_turn_dir := 0.0
 ## The map piece the hands hold while hanging; if it breaks, the fighter falls.
 var _ledge_body: Object
 var _ledge_timer := 0.0
@@ -808,6 +815,11 @@ func _can_aim() -> bool:
 	return weapons.has_weapon() and (weapons.weapon.is_ranged() or weapons.weapon is GrenadeData)
 
 
+## Aim turn speed after holding up/down for `held` seconds.
+func aim_turn_speed(held: float) -> float:
+	return lerpf(aim_speed_min, aim_speed, clampf(held / aim_ramp, 0.0, 1.0)) if aim_ramp > 0.0 else aim_speed
+
+
 func _update_aim(delta: float, frame: InputFrame) -> void:
 	var want := frame.is_held(InputFrame.BLOCK) and _can_aim() and is_on_floor() \
 			and not _diving and not _rolling and not is_grabbing() and not health.is_dead()
@@ -815,7 +827,9 @@ func _update_aim(delta: float, frame: InputFrame) -> void:
 		_aiming = true
 		var turn := (1.0 if frame.is_held(InputFrame.CROUCH) else 0.0) \
 				- (1.0 if frame.is_held(InputFrame.JUMP) else 0.0)
-		weapons.aim_angle += turn * aim_speed * delta
+		_aim_turn_time = _aim_turn_time + delta if turn == _aim_turn_dir and turn != 0.0 else 0.0
+		_aim_turn_dir = turn
+		weapons.aim_angle += turn * aim_turn_speed(_aim_turn_time) * delta
 		var dir := signf(frame.move_x())
 		if dir != 0.0 and (dir > 0.0) != _facing_right:
 			_flip(dir > 0.0)

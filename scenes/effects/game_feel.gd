@@ -28,6 +28,9 @@ const WIRED_META := &"_game_feel_wired"
 const HAZARD_FEEDBACK_EVERY := 0.2
 ## How long the hazard blink lasts (real seconds).
 const HAZARD_FLASH_TIME := 0.08
+## Camera trauma per pixel of a gun's recoil: a pistol barely nudges the
+## view, a shotgun thumps it.
+const SHOT_SHAKE := 0.04
 
 @export var hit_stop_enabled := true
 @export var melee_hit_stop := 0.06
@@ -281,8 +284,10 @@ func _on_fired(data: WeaponData, projectile_count: int, holder: WeaponHolder) ->
 		_play(&"swing")
 		return
 	_play(&"shotgun" if projectile_count > 1 else &"shot")
-	var muzzle := holder.global_position + Vector2(data.muzzle_offset * holder.facing, 0.0)
-	_burst(ImpactBurst.Kind.SPARK, muzzle, Vector2(holder.facing, 0.0))
+	# The flash leaves along the aim, not always straight ahead.
+	var forward := holder.aim_direction()
+	_burst(ImpactBurst.Kind.SPARK, holder.global_position + forward * data.muzzle_offset, forward)
+	SharedCamera.shake(holder, SHOT_SHAKE * data.recoil)
 
 
 func _on_weapon_equipped(_weapon: WeaponData, _ammo: int) -> void:

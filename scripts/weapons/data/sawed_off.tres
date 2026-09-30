@@ -19,3 +19,4 @@ spread_degrees = 36.0
 projectile_speed = 550.0
 projectile_range = 110.0
 muzzle_offset = 10.0
+recoil = 4.5

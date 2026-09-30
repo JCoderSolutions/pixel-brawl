@@ -37,6 +37,11 @@ enum Slot { MELEE, HANDGUN, RIFLE, THROWABLE }
 @export var projectile_speed := 600.0
 @export var projectile_range := 400.0
 @export var muzzle_offset := 12.0
+## Pixels the gun jumps back per shot (it also tips up); visual only.
+@export var recoil := 2.0
+## Random deviation of each shot, in degrees either way (automatic fire
+## wanders a little instead of drawing a laser line).
+@export var jitter_degrees := 0.0
 
 @export_group("Melee")
 @export var reach := Vector2(28.0, 18.0)
