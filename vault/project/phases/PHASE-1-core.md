@@ -24,6 +24,9 @@ goals: "Core mechanics: movimiento, combate básico, mapa destructible, export w
 
 ## Criterio de salida
 
+Código listo; falta el test manual: [[docs/manual-test-checklist]] (sesión 1).
+
+
 - [ ] Player se mueve y pega
 - [ ] Un mapa con plataformas que explotan se destruye
-- [ ] Export a Web funcional en browser
+- [x] Export a Web funcional en browser (Pages, TASK-017; Jose jugó la versión web 2026-09-30)

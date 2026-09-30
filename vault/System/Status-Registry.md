@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-30"
+last_updated_notes: "Lista de chequeo manual; fases 2-4 al día con sus tareas; backlog limpio"
 last_updated_notes: "TASK-002 cornisas solo en el borde real; TASK-020 reacción al daño de zona; guía de assets (herramientas y medidas)"
 last_updated_notes: "TASK-011/TASK-018 ronda trabada por muerte en la cuenta regresiva y cámara que no encuadraba en pantallas no 16:9"
 last_updated_notes: "TASK-021 cohete montado más lento y sin salir de la vista"
@@ -42,16 +43,17 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 
 ## Estado global del proyecto
 
-**`planned`** — Fase 1 (core mechanics).
+**`in-progress`** — Fases 1 a 3 con el código listo, esperando el test manual
+([[docs/manual-test-checklist]]); Fase 4 a medias (táctil y Pages sí, online no).
 
 ## Fases
 
 | Fase | Estado | Nota |
 | --- | --- | --- |
 | [[project/phases/PHASE-1-core|PHASE-1 — Core mechanics]] | `in-progress` | TASK-002, TASK-003 y TASK-004 esperan test manual |
-| [[project/phases/PHASE-2-caos|PHASE-2 — Items y caos]] | `planned` | Espera PHASE-1 |
-| [[project/phases/PHASE-3-content|PHASE-3 — Content + polish]] | `planned` | Espera PHASE-2 |
-| [[project/phases/PHASE-4-multiplayer|PHASE-4 — Multiplayer + deploy]] | `planned` | Espera PHASE-3 |
+| [[project/phases/PHASE-2-caos|PHASE-2 — Items y caos]] | `in-progress` | Código listo; falta test manual ([[docs/manual-test-checklist]]) |
+| [[project/phases/PHASE-3-content|PHASE-3 — Content + polish]] | `in-progress` | Falta test manual, arte real y power-up guardado |
+| [[project/phases/PHASE-4-multiplayer|PHASE-4 — Multiplayer + deploy]] | `in-progress` | Táctil y CI/Pages hechos; online e itch.io sin empezar |
 
 ## Tareas activas
 
@@ -84,12 +86,6 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 
 | Tarea | Fase |
 | --- | --- |
-| TASK-005 — Weapon spawn and pickup | PHASE-2 |
-| TASK-006 — Grenade + explosion destroys tiles | PHASE-2 |
-| TASK-008 — Local 2-player split keyboard | PHASE-2 |
-| TASK-007 — Ragdoll death | PHASE-2 |
-| TASK-010 — Power-up system | PHASE-3 |
-| TASK-009 — Map set (4+ maps) | PHASE-3 |
 | TASK-013 — WebRTC host/join | PHASE-4 |
 | TASK-014 — Lobby con código de sala | PHASE-4 |
 | TASK-016 — Build + publish itch.io | PHASE-4 |
