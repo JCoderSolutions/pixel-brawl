@@ -30,11 +30,38 @@ func _init() -> void:
 
 
 func _run() -> void:
+	_save_guide()
 	await _sheet("base", null, BASE_COLOR)
 	for look in FighterLook.presets():
 		await _sheet(look.name.to_lower(), look, look.shirt)
 	print("OK: rig reference sheets in %s" % ProjectSettings.globalize_path(_out))
 	quit()
+
+
+## guide.png: the fighter's frame, for a guide layer in a pixel editor.
+## Cyan box = hurtbox (16x28, player.tscn): the body goes inside it; gloves,
+## hair or a weapon may stick out sideways. Green row = the ground (feet on
+## the last row). Red = centre column. Yellow ticks on the left = chibi
+## proportions: head down to the first tick, torso to the second, legs below.
+func _save_guide() -> void:
+	var guide := Image.create(CELL, CELL, false, Image.FORMAT_RGBA8)
+	var hurt := Rect2i(8, CELL - 28, 16, 28)
+	for x in range(hurt.position.x, hurt.end.x):
+		guide.set_pixel(x, hurt.position.y, Color("2ce8f5"))
+	for y in range(hurt.position.y, hurt.end.y):
+		guide.set_pixel(hurt.position.x, y, Color("2ce8f5"))
+		guide.set_pixel(hurt.end.x - 1, y, Color("2ce8f5"))
+	for y in range(0, CELL, 2):
+		guide.set_pixel(CELL / 2, y, Color("e43b44"))
+	for x in CELL:
+		guide.set_pixel(x, CELL - 1, Color("63c74d"))
+	for y in [CELL - 28 + 11, CELL - 28 + 19]:
+		guide.set_pixel(0, y, Color("fee761"))
+		guide.set_pixel(1, y, Color("fee761"))
+	guide.save_png(_out.path_join("guide.png"))
+	DirAccess.make_dir_recursive_absolute(_out.path_join("x4"))
+	guide.resize(CELL * 4, CELL * 4, Image.INTERPOLATE_NEAREST)
+	guide.save_png(_out.path_join("x4").path_join("guide.png"))
 
 
 ## One file per pose for img2img tools (Retro Diffusion's input image takes

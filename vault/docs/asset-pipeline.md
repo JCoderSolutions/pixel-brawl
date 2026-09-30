@@ -172,6 +172,11 @@ todas sus poses a `assets/sprites/characters/reference/`:
 - `poses/`: una imagen por pose del maniquí (`idle.png`, `run.png`...),
   128x128 con fondo blanco, para el "input image" de Retro Diffusion.
 - La paleta como imagen para las herramientas: `assets/palettes/endesga-32.png`.
+- `guide.png` (y `x4/guide.png`): el cuadro del luchador para usar como
+  capa guía en el editor. Caja cyan = zona de golpe (16x28, el cuerpo va
+  adentro; guantes, pelo o arma pueden salirse hacia los costados), fila
+  verde = el piso (pies en la última fila), línea roja = el centro, marcas
+  amarillas = proporción chibi (cabeza ~11 px, torso ~8, piernas ~9).
 
 Son **el tamaño, los pies y las poses exactas** que espera el juego: se
 dibuja encima (capa aparte en Pixelorama) o se suben como referencia.
