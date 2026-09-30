@@ -14,6 +14,9 @@ investigue como dev de juegos, como diseñador y como jugador, que se elija la
 mejor estructura y que quede una **línea gráfica única para todo el juego**
 (fuentes, colores, tipos de botón, etc.) que se pueda ir definiendo por partes.
 
+Página visual (paleta, fuentes, componentes y maquetas interactivas):
+https://claude.ai/artifact/6QCn3nsiEzftJPw2wzbRoc (privada de Jose).
+
 Este documento es la propuesta. Nada de acá está aprobado todavía: las
 decisiones marcadas **[DECIDIR]** esperan a Jose.
 
