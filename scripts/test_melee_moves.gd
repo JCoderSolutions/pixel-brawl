@@ -2,7 +2,7 @@ extends SceneTree
 
 ## Headless tests for the Superfighters melee moves: three presses chain
 ## jab -> cross -> uppercut (the finisher launches), crouch + attack kicks,
-## attack in the air drop kicks, and pickup with empty hands grabs a rival
+## attack in the air kicks without breaking the jump, and pickup with empty hands grabs a rival
 ## who can be kneed, thrown (towards a held direction) or mash free.
 ## Run: godot --headless --path . -s scripts/test_melee_moves.gd
 
@@ -19,11 +19,11 @@ func _run_tests() -> void:
 	await _test_combo_chains_into_uppercut()
 	await _test_slow_presses_restart_the_combo()
 	await _test_crouch_attack_kicks()
-	await _test_air_attack_drop_kicks()
+	await _test_air_attack_kicks()
 	await _test_grab_knee_and_throw()
 	await _test_throw_backwards()
 	await _test_mash_free()
-	print("OK: jab-cross-uppercut combo, combo reset, kick, drop kick, grab with knees and throws, and breaking free verified" if _ok else "FAILED")
+	print("OK: jab-cross-uppercut combo, combo reset, kick, air kick, grab with knees and throws, and breaking free verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -137,13 +137,14 @@ func _test_crouch_attack_kicks() -> void:
 	await process_frame
 
 
-func _test_air_attack_drop_kicks() -> void:
+func _test_air_attack_kicks() -> void:
 	var stage := _stage()
 	var attacker := _fighter(stage, 0, _hold(6, 0.0, InputFrame.JUMP) + _hold(1, 0.0, InputFrame.ATTACK) + _hold(60))
 	var kicked: bool = await _until(func(): return attacker.is_attacking(), 40)
-	_check(kicked and not attacker.is_on_floor() and attacker.attack_move() == &"air_kick", "attack in the air drop kicks")
+	_check(kicked and not attacker.is_on_floor() and attacker.attack_move() == &"air_kick", "attack in the air kicks")
 	await _frames(3)
-	_check(attacker.velocity.x > 200.0 and attacker.velocity.y > 0.0, "and dives forward and down (%s)" % attacker.velocity)
+	_check(absf(attacker.velocity.x) < 1.0 and attacker.velocity.y < 0.0,
+			"without lunging: the jump keeps rising in place (%s)" % attacker.velocity)
 	stage.queue_free()
 	await process_frame
 

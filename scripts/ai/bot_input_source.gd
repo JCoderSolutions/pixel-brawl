@@ -116,8 +116,8 @@ func _decide() -> InputFrame:
 		if side != 0 and side != body.weapons.facing and _pending & (InputFrame.ATTACK | InputFrame.PICKUP):
 			move = side * 0.1
 		elif not body.is_on_floor() and not body.weapons.has_weapon() and _pending & InputFrame.ATTACK:
-			# An empty-handed attack in the air is a drop kick that could
-			# carry the bot over a ledge: punch once it lands.
+			# Kicking in the air keeps the bot chasing a launched rival
+			# past the ledge (no floor check up there): strike once it lands.
 			pass
 		else:
 			buttons |= _pending

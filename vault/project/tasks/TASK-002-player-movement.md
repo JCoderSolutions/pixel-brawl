@@ -43,5 +43,10 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
       hasta 0.25 s antes de aterrizar hace una rodada de recuperación sin daño
       por caída (`FallDamage` ignora rodadas). Los bots trepan si quedan
       colgados. Test `scripts/test_mobility.gd`
+- [x] Barrido más natural (feedback de Jose 2026-09-30: "se desplaza
+      mucho"): la zambullida termina apenas toca el piso (antes se deslizaba
+      a 250 px/s hasta cumplir 0.4 s) y la rodada frena de 170 a 60 px/s en
+      0.25 s. Todo el movimiento pasó de ~177 px a ~76 px. El test de
+      `scripts/test_dive.gd` exige que quede entre 50 y 110 px
 - [ ] Test manual de la zambullida en PC y teléfono
 - [ ] Rápido test manual: moverse con WASD (P1) se siente responsivo (las flechas son de P2 desde TASK-008)
