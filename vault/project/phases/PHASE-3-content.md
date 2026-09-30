@@ -28,7 +28,7 @@ goals: "Contenido y polish: mapas variados, power-ups, UI, audio, animaciones"
 - [ ] [[project/tasks/TASK-024-ui-style-system|TASK-024 — Línea gráfica y sistema de UI]] — `in-progress`
 
 Falta: test manual ([[docs/manual-test-checklist]]), el primer personaje
-y tileset reales (TASK-023) y el power-up guardado (TASK-005).
+y tileset reales (TASK-023).
 
 ## Criterio de salida
 

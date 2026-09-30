@@ -64,6 +64,8 @@ Menú: Luchadores → sumar un bot desde la tarjeta → mapa **Arena** → 3 ron
 
 **Bots** ([[project/tasks/TASK-020-bots|TASK-020]])
 - [ ] Fácil se le gana siempre; Normal da pelea; Difícil cuesta
+- [ ] Subido a una plataforma con un bot armado abajo: Normal/Difícil apuntan
+  y disparan hacia arriba (no se quedan quietos debajo)
 
 **Sonido y opciones** ([[project/tasks/TASK-012-sfx-game-feel|TASK-012]])
 - [ ] Volúmenes equilibrados (música no tapa golpes); el freno en cada golpe no traba
@@ -85,7 +87,9 @@ Una ronda en cada mapa contra un bot ([[project/tasks/TASK-009-map-set|TASK-009]
 - [ ] **Fundición**: pozo de fuego, lanzallamas, bloque que cae, interruptor
 - [ ] Cada trampa avisa antes de dañar y el daño se entiende
 - [ ] Cajas de suministro caen cada tanto y dan algo útil
-- [ ] Power-ups: se ve qué hace cada uno al agarrarlo
+- [ ] Power-ups: al tocarlo se guarda (se ve en el HUD) y se usa con O / B /
+  botón Power; se entiende qué hace cada uno al usarlo
+- [ ] Con un power-up guardado, el siguiente queda en el piso
 - [ ] Animaciones del luchador se leen a tamaño real (correr, golpear, colgarse, rodar)
   ([[project/tasks/TASK-022-fighter-animations|TASK-022]])
 

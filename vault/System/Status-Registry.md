@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-30"
+last_updated_notes: "TASK-005 power-up guardado (botón Power) y bots que apuntan a mano"
 last_updated_notes: "Lista de chequeo manual; fases 2-4 al día con sus tareas; backlog limpio"
 last_updated_notes: "TASK-002 cornisas solo en el borde real; TASK-020 reacción al daño de zona; guía de assets (herramientas y medidas)"
 last_updated_notes: "TASK-011/TASK-018 ronda trabada por muerte en la cuenta regresiva y cámara que no encuadraba en pantallas no 16:9"
@@ -52,7 +53,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | --- | --- | --- |
 | [[project/phases/PHASE-1-core|PHASE-1 — Core mechanics]] | `in-progress` | TASK-002, TASK-003 y TASK-004 esperan test manual |
 | [[project/phases/PHASE-2-caos|PHASE-2 — Items y caos]] | `in-progress` | Código listo; falta test manual ([[docs/manual-test-checklist]]) |
-| [[project/phases/PHASE-3-content|PHASE-3 — Content + polish]] | `in-progress` | Falta test manual, arte real y power-up guardado |
+| [[project/phases/PHASE-3-content|PHASE-3 — Content + polish]] | `in-progress` | Falta test manual y arte real |
 | [[project/phases/PHASE-4-multiplayer|PHASE-4 — Multiplayer + deploy]] | `in-progress` | Táctil y CI/Pages hechos; online e itch.io sin empezar |
 
 ## Tareas activas
