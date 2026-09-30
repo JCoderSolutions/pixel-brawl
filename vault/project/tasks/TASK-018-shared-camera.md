@@ -32,6 +32,14 @@ golpes y explosiones.
       más zoom y después vuelve a seguir a todos (golpe final). Test
       `scripts/test_spectacle.gd`
 - [ ] Test manual de sensación (suavizado, fuerza del shake)
+- [x] Encuadre en pantallas que no son 16:9 (feedback de Jose 2026-09-30:
+      "la vista al inicio no queda centrada, enfoca solo a uno"): el zoom
+      pixel-perfect redondeaba hacia arriba cuando no había un paso entero
+      entre el mínimo y el zoom necesario (teléfono vertical ~1.1 px por
+      pixel, ventana casi cuadrada) y dejaba a los dos luchadores afuera en
+      los mapas grandes. Ahora usa el paso de abajo si alcanza, el de arriba
+      solo si todos siguen entrando y si no el zoom exacto. Test
+      `scripts/test_shared_camera.gd`
 
 ## Uso
 

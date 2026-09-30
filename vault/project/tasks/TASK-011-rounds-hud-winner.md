@@ -70,6 +70,11 @@ pantalla de ganador con revancha y un menú simple para entrar a jugar.
       terminar cada ronda y en la pantalla del ganador. Test
       `scripts/test_spectacle.gd`
 - [ ] Test manual del menú en PC y teléfono
+- [x] Morir durante la cuenta regresiva cuenta (feedback de Jose
+      2026-09-30: "muero muy rápido, la vista se queda en el bot y no
+      reaparezco, el bot se queda quieto"): esa muerte se ignoraba, la ronda
+      no terminaba nunca, el jugador no volvía y el bot no tenía rival. Test
+      `scripts/test_game_manager.gd`
 
 ## Detalles
 

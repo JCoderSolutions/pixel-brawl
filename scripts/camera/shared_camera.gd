@@ -83,6 +83,8 @@ var _zoom_velocity := 0.0
 ## Zoom the spring is heading to; lags the ideal one when tightening.
 var _zoom_goal := 1.0
 var _zoom_in_timer := 0.0
+## Largest zoom that still shows every living target (INF with none).
+var _fit_zoom := INF
 var _shake_time := 0.0
 var _noise := FastNoiseLite.new()
 ## Close-up on one point (final blow): its centre, zoom factor and time left.
@@ -219,6 +221,7 @@ func _goal() -> Vector3:
 		if _is_alive(target):
 			points.append(target.global_position + focus_offset)
 	if points.is_empty():
+		_fit_zoom = INF
 		return Vector3(_center.x, _center.y, _zoom)
 	var box := Rect2(points[0], Vector2.ZERO)
 	for p in points:
@@ -226,6 +229,7 @@ func _goal() -> Vector3:
 	var view := _view_size()
 	var framed := box.size + margin * 2.0
 	var fit := minf(view.x / maxf(framed.x, 1.0), view.y / maxf(framed.y, 1.0))
+	_fit_zoom = fit
 	var z := clampf(fit, min_zoom, max_zoom)
 	z = maxf(z, _min_zoom_for_bounds())
 	var center := _clamp_center(box.get_center(), z)
@@ -298,11 +302,18 @@ func _resting_zoom(ideal: float) -> float:
 	var screen := _screen_scale()
 	# Round down so everyone still fits; step back up if that would show past
 	# the map or go under min_zoom.
-	var steps := maxf(floorf(z * screen + 0.001), 1.0)
+	# The step below, if it isn't under the floor; else the step above if
+	# everyone still fits; else the exact zoom. Fitting everyone beats pixel
+	# perfection: on portrait phones or square windows a step can be as big
+	# as the whole zoom range, and jumping up to it cut fighters out.
 	var floor_zoom := maxf(lowest, min_zoom)
-	if steps / screen < floor_zoom - 0.001:
-		steps = ceilf(floor_zoom * screen - 0.001)
-	return steps / screen
+	var below := floorf(z * screen + 0.001)
+	if below >= 1.0 and below / screen >= floor_zoom - 0.001:
+		return below / screen
+	var above := ceilf(floor_zoom * screen - 0.001) / screen
+	if above <= _fit_zoom + 0.001:
+		return above
+	return z
 
 
 func _screen_scale() -> float:
