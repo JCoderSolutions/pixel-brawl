@@ -111,6 +111,13 @@ func _test_rig_plays_sprite_frames() -> void:
 	rig.look = FighterLook.at(0)
 	rig.anim = FighterRig.Anim.IDLE
 	_check(rig.sprite_frame() == null, "characters without a sheet keep native shapes")
+	# Frames bigger than the fighter (48x64, room for swings): the team
+	# marker sits over the drawn pixels, not over the frame's empty top.
+	var tall := Image.create(48, 64, false, Image.FORMAT_RGBA8)
+	tall.fill_rect(Rect2i(16, 32, 16, 32), Color.WHITE)
+	var tall_frame := ImageTexture.create_from_image(tall)
+	_check(FighterRig.sprite_height(tall_frame) == 32.0, "a 32 px fighter in a 48x64 frame is 32 px tall")
+	_check(FighterRig.sprite_height(_texture(32, 32)) == 32.0, "an empty frame counts its full height")
 	await process_frame
 	rig.queue_free()
 	await process_frame
