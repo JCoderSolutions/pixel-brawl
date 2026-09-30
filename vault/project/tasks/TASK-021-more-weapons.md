@@ -56,6 +56,14 @@ arma es un `.tres` en `scripts/weapons/data/`.
       volver contra quien lo disparó. Los bots montados lo apuntan a su rival
       (las vueltas en U, por arriba). Pose `RIDE`. Test
       `scripts/weapons/test_rocket_ride.gd`
+- [x] Cohete controlable y dentro de la vista (feedback de Jose 2026-09-30:
+      "me salí por arriba del mapa y si no veo no puedo controlar"): montado,
+      el cohete baja al 60 % de la velocidad del disparo (420 → ~250 px/s) y
+      gira a 2 rad/s (antes 3). Da más tiempo para reaccionar sin que sea más
+      fácil devolverlo: el radio de giro queda casi igual. Todo cohete explota
+      al llegar a 8 px del borde de lo que puede mostrar la cámara
+      (`SharedCamera.bounds`), como si chocara contra una pared, así que el
+      jinete nunca sale de la pantalla
 - [x] Molotov (punto 4 del orden acordado con Jose 2026-09-29): botella que
       se rompe al tocar pared, piso o luchador, prende fuego a los que agarra
       y deja un charco de fuego de 64 px por 5 s (20 de daño por segundo) en
