@@ -19,6 +19,7 @@ la arena (gana el primero en llevarse 3 rondas).
 | Recoger / lanzar arma | L | , / Numpad 2 | Y |
 | Pausa | Esc | Esc | Start |
 | Cambiar de arma | I | / (tecla a la derecha del punto) / Numpad 3 | LB |
+| Usar power-up guardado | O | ; (Ñ en teclado español) / Numpad 4 | B |
 
 ### Pantalla y arte
 

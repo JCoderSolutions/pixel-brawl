@@ -77,6 +77,15 @@ func _on_player_spawned(id: int, player: Node) -> void:
 		holder.ammo_changed.connect(func(_a) -> void: refresh.call())
 		holder.weapon_spent.connect(func(_w) -> void: refresh.call())
 		refresh.call()
+	panel.power.text = ""
+	var receiver := PowerUpReceiver.find_on(player)
+	if receiver != null:
+		var show_power := func(data: PowerUpData) -> void:
+			panel.power.text = power_line(data)
+			if data != null:
+				panel.power.add_theme_color_override("font_color", data.color)
+		receiver.stored_changed.connect(show_power)
+		show_power.call(receiver.stored)
 
 
 func weapon_text(id: int) -> String:
@@ -91,6 +100,16 @@ func weapon_icon(id: int) -> WeaponData:
 ## The other carried weapons (the ones not in hand), for the inventory line.
 func carried_text(id: int) -> String:
 	return _panels[id].carried.text if _panels.has(id) else ""
+
+
+## The stored power-up of P(id + 1), as shown under the weapons.
+func power_text(id: int) -> String:
+	return _panels[id].power.text if _panels.has(id) else ""
+
+
+## "+ Velocidad": the power-up kept for later, drawn in its colour.
+func power_line(data: PowerUpData) -> String:
+	return "" if data == null else "+ " + data.display_name
 
 
 func weapon_line(holder: WeaponHolder) -> String:
@@ -135,6 +154,8 @@ func _make_panel(id: int) -> Dictionary:
 	weapon.add_theme_color_override("font_color", UiTokens.TEXT)
 	var carried := Label.new()
 	carried.theme_type_variation = &"LabelSmall"
+	var power := Label.new()
+	power.theme_type_variation = &"LabelSmall"
 	# The weapon in hand drawn small next to its name.
 	var weapon_row := HBoxContainer.new()
 	var icon := WeaponIcon.new()
@@ -144,8 +165,9 @@ func _make_panel(id: int) -> Dictionary:
 	box.add_child(bar)
 	box.add_child(weapon_row)
 	box.add_child(carried)
+	box.add_child(power)
 	_bars_row.add_child(box)
-	return {"bar": bar, "score": score, "weapon": weapon, "carried": carried, "icon": icon}
+	return {"bar": bar, "score": score, "weapon": weapon, "carried": carried, "icon": icon, "power": power}
 
 
 func _on_scores_changed(scores: Array) -> void:

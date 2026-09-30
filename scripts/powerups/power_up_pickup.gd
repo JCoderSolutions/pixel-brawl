@@ -3,7 +3,8 @@ extends RigidBody2D
 
 ## A power-up lying on the map. Falls on the world (mask 1) without blocking
 ## anyone (layer 0); its Grab area (mask 2) hands it to the first fighter with
-## a PowerUpReceiver that walks over it, Superfighters style: no button.
+## a PowerUpReceiver that walks over it, Superfighters style: no button. The
+## fighter keeps it (PowerUpReceiver.store) and uses it with POWER.
 
 signal collected(data: PowerUpData, by: Node)
 
@@ -22,12 +23,13 @@ func _ready() -> void:
 	$Grab.body_entered.connect(try_give)
 
 
-## Gives the power-up to `fighter`; returns false if it can't use it now.
+## Gives the power-up to `fighter`; returns false if it can't take it now
+## (its slot is full).
 func try_give(fighter: Node) -> bool:
 	if is_queued_for_deletion() or power_up == null:
 		return false
 	var receiver := PowerUpReceiver.find_on(fighter)
-	if receiver == null or not receiver.apply(power_up):
+	if receiver == null or not receiver.store(power_up):
 		return false
 	remove_from_group(GROUP)
 	collected.emit(power_up, fighter)
@@ -41,8 +43,8 @@ func try_give(fighter: Node) -> bool:
 func _physics_process(delta: float) -> void:
 	_time += delta
 	queue_redraw()
-	# A fighter already standing on it (e.g. a medkit refused at full health)
-	# grabs it as soon as it can use it.
+	# A fighter already standing on it with the slot full grabs it as soon
+	# as the slot empties.
 	if Engine.get_physics_frames() % 10 == 0:
 		for fighter in $Grab.get_overlapping_bodies():
 			if try_give(fighter):

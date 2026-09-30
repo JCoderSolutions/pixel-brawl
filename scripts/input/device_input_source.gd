@@ -4,7 +4,7 @@ extends InputSource
 ## and on-screen touch buttons all feed a slot by binding to its actions.
 
 const MAX_SLOTS := 4
-const ACTIONS := ["move_left", "move_right", "jump", "crouch", "attack", "fire", "pickup", "switch"]
+const ACTIONS := ["move_left", "move_right", "jump", "crouch", "attack", "fire", "pickup", "switch", "power"]
 
 var slot: int
 var _prefix: String
@@ -29,5 +29,7 @@ func sample() -> InputFrame:
 		held |= InputFrame.PICKUP
 	if InputMap.has_action(_prefix + "switch") and Input.is_action_pressed(_prefix + "switch"):
 		held |= InputFrame.SWITCH
+	if InputMap.has_action(_prefix + "power") and Input.is_action_pressed(_prefix + "power"):
+		held |= InputFrame.POWER
 	var move := Input.get_axis(_prefix + "move_left", _prefix + "move_right")
 	return InputFrame.create(move, held)

@@ -6,9 +6,15 @@ extends Node2D
 ## WeaponHolder.damage_multiplier, HealthComponent.shield) and puts them back
 ## when the effect runs out, so the player script needs no power-up code.
 ## Picking the same effect again refreshes its timer instead of stacking.
+##
+## Superfighters keeps one power-up for later: walking over one stores it
+## (`store`), and the fighter uses it when they choose (`use_stored`, the
+## POWER button). With the slot full, pickups stay on the map.
 
 signal power_up_applied(data: PowerUpData)
 signal power_up_expired(data: PowerUpData)
+## The stored power-up changed (null = the slot emptied).
+signal stored_changed(data: PowerUpData)
 
 ## Seconds before expiry when the aura starts blinking.
 const WARN_TIME := 2.0
@@ -16,6 +22,8 @@ const HEAL_FLASH := 0.5
 
 ## Active timed effects: Effect -> {"data": PowerUpData, "left": float}.
 var _active := {}
+## The power-up kept for later, or null.
+var stored: PowerUpData
 var _base_run_speed := 0.0
 var _base_punch_damage := 0
 var _heal_flash := 0.0
@@ -38,7 +46,9 @@ func _ready() -> void:
 	_base_punch_damage = hitbox.damage if hitbox != null else 0
 	var health := _health()
 	if health != null:
-		health.died.connect(func(_source: Node) -> void: clear())
+		health.died.connect(func(_source: Node) -> void:
+			clear()
+			_set_stored(null))
 
 
 func body() -> Node:
@@ -70,6 +80,32 @@ func apply(data: PowerUpData) -> bool:
 	power_up_applied.emit(data)
 	queue_redraw()
 	return true
+
+
+## Keeps `data` for later. False (the pickup stays) if the slot is full or
+## the fighter is dead.
+func store(data: PowerUpData) -> bool:
+	var health := _health()
+	if data == null or stored != null or (health != null and health.is_dead()):
+		return false
+	_set_stored(data)
+	return true
+
+
+## Applies the stored power-up and empties the slot. False if there is none
+## or it can't be used now (a medkit at full health stays stored).
+func use_stored() -> bool:
+	if stored == null or not apply(stored):
+		return false
+	_set_stored(null)
+	return true
+
+
+func _set_stored(data: PowerUpData) -> void:
+	if stored == data:
+		return
+	stored = data
+	stored_changed.emit(data)
 
 
 func is_active(effect: PowerUpData.Effect) -> bool:
