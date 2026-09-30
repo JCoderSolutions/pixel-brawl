@@ -63,6 +63,7 @@ var flash := false:
 		flash = value
 		queue_redraw()
 var anim := Anim.IDLE
+static var _sprite_heights := {}
 ## Holding a weapon: the gun arm stays up while moving.
 var armed := false
 var anim_time := 0.0
@@ -142,12 +143,23 @@ static func anim_name(which: Anim) -> StringName:
 
 ## A sprite frame stands on the feet line, centred; the hit flash washes it
 ## out and the team marker floats over it like over the shapes.
+## Height of the drawn pixels above the frame's bottom edge (the feet): a
+## 48x64 frame with a 32 px fighter is 32. Cached per texture.
+static func sprite_height(frame: Texture2D) -> float:
+	var key := frame.get_instance_id()
+	if not _sprite_heights.has(key):
+		var image := frame.get_image()
+		var used := image.get_used_rect() if image != null else Rect2i()
+		_sprite_heights[key] = float(frame.get_height() - used.position.y) if used.size.y > 0 else float(frame.get_height())
+	return _sprite_heights[key]
+
+
 func _draw_sprite(frame: Texture2D) -> void:
 	var frame_size := frame.get_size()
 	var tint := Color(4, 4, 4) if flash else Color.WHITE
 	draw_texture(frame, Vector2(-frame_size.x / 2.0, -frame_size.y).round(), tint)
 	if team_color.a > 0.0:
-		var tip := Vector2(0.0, -frame_size.y - 1.0)
+		var tip := Vector2(0.0, -sprite_height(frame) - 1.0)
 		draw_colored_polygon(PackedVector2Array([tip + Vector2(-2, -3), tip + Vector2(2, -3), tip]), team_color)
 
 

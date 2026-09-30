@@ -45,10 +45,14 @@ Herramientas, medidas y flujo con IA para hacer el arte: [[docs/asset-pipeline]]
   `dive`, `ride`, `block`, `roll`, `uppercut`, `kick`, `air_kick`, `grab`,
   `held`, `hang`. Velocidad (FPS) y loop se configuran en cada
   animación. Si falta una animación, esa pose se dibuja con formas nativas.
-- Cuadros de 32x32, **mirando a la derecha** y con **los pies en el borde de
-  abajo**, centrados. El juego los espeja al mirar a la izquierda.
+- Cuadros de **32x32 o 48x48** (el más grande deja lugar a patadas, golpes
+  y armas; todos los cuadros de una hoja, del mismo tamaño), **mirando a la
+  derecha** y con **los pies en el borde de abajo**, centrados. El juego
+  los espeja al mirar a la izquierda. El cuerpo, dentro de la zona de golpe
+  de 16x28 (`reference/guide.png` y `guide_48.png`); el pelo puede pasar
+  unos px arriba.
 - El destello del golpe aclara el sprite. La marca de equipo se dibuja
-  sola arriba de la cabeza. El color de camiseta del personaje se sigue
+  sola arriba de la cabeza (sobre el pixel más alto dibujado, no sobre el borde del cuadro). El color de camiseta del personaje se sigue
   usando en el HUD, así que conviene que coincida con el sprite.
 
 ## Armas

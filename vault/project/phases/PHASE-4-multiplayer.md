@@ -1,6 +1,6 @@
 ---
 type: "phase"
-status: "planned"
+status: "in-progress"
 project: "pixel-brawl"
 phase_id: "PHASE-4"
 goals: "Multiplayer + deploy: WebRTC online, controles touch, build final, publicar"
@@ -18,10 +18,11 @@ goals: "Multiplayer + deploy: WebRTC online, controles touch, build final, publi
 
 ## Tareas
 
-- [ ] TASK-013 — WebRTC host/join — `todo` (por desglosar)
+- [ ] TASK-013 — WebRTC host/join — `todo` (por desglosar; empezar con un plan de sincronización)
 - [ ] TASK-014 — Lobby con código de sala — `todo` (por desglosar)
-- [ ] TASK-015 — Touch controls — `todo` (por desglosar)
-- [ ] TASK-016 — Build + publish itch.io — `todo` (por desglosar)
+- [ ] [[project/tasks/TASK-015-touch-controls|TASK-015 — Touch controls]] — `in-progress`
+- [ ] TASK-016 — Build + publish itch.io — `todo` (por desglosar; la build Web ya sale en CI)
+- [ ] [[project/tasks/TASK-017-ci-web-build|TASK-017 — CI + build Web en Pages]] — `in-progress`
 
 ## Criterio de salida
 
