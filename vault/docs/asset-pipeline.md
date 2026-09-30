@@ -168,6 +168,9 @@ todas sus poses a `assets/sprites/characters/reference/`:
   idle, run, jump, fall, crouch, attack, hurt, aim, victory, dive, ride,
   block, roll, uppercut, kick, air_kick, grab, held, hang.
 - `x4/`: las mismas hojas ampliadas 4x para subirlas a la IA.
+- `poses/`: una imagen por pose del maniquí (`idle.png`, `run.png`...),
+  128x128 con fondo blanco, para el "input image" de Retro Diffusion.
+- La paleta como imagen para las herramientas: `assets/palettes/endesga-32.png`.
 
 Son **el tamaño, los pies y las poses exactas** que espera el juego: se
 dibuja encima (capa aparte en Pixelorama) o se suben como referencia.
@@ -191,13 +194,33 @@ proporciones van siempre. Lo único que cambia entre pedidos es la pose.
 
 ### Paso 2: Retro Diffusion, el diseño base
 
+Configuración (2026-09-30):
+
+| Campo | Qué poner |
+| --- | --- |
+| Modelo | **RD Pro** si alcanzan los créditos: es el único que baja a 32x32 y acepta imágenes de referencia. Si no, **RD Plus** |
+| Estilo | RD Plus: **Low Res** (hecho para assets chicos). "Default" pinta más detalle y llena el lienzo: sirve para bocetos a 64x64, no para el sprite final |
+| Medida | **32x32**. Si el modelo o el estilo no la aceptan (RD Plus pide mínimo 64 salvo los estilos low res), **64x64** y después se redibuja a 32 en Pixelorama usando el resultado de guía, nunca achicando |
+| Input image | `assets/sprites/characters/reference/poses/<pose>.png` (128x128, fondo blanco: la herramienta no acepta transparencia) |
+| Strength | **0.55 a 0.7**. Más bajo copia el maniquí gris; más alto se olvida de la pose y las proporciones |
+| Paleta | `assets/palettes/endesga-32.png` |
+| Quitar fondo | **Sí** (remove background), para que salga transparente |
+| Semilla | Vacía la primera vez; cuando sale uno bueno, anotarla y repetirla |
+| Cantidad | 4 por tanda |
+
+Prompt: la ficha del paso 1 sin la línea de estilo técnico (el modelo ya
+es pixel art) y con la pose al final. Corto y concreto: el modelo sigue
+mejor listas de rasgos que frases largas.
+
+```
+side view, facing right, full body street brawler, short dark hair, cyan
+headband, light skin, blue t-shirt, dark navy pants, dark shoes, athletic,
+1px dark outline, flat shading, standing idle in a relaxed fighting stance
+```
+
 1. Crear la cuenta (50 créditos gratis, no vencen).
-2. Modelo **RD Plus** (o RD Pro si alcanza), tamaño **32x32**.
-3. Subir la **paleta**: una imagen con los 32 colores de Endesga 32 (en
-   Lospec se descarga el PNG de la paleta). Así no inventa colores.
-4. Prompt: la ficha + `POSE: standing idle, relaxed fighting stance`.
-5. Sacar 4 a 8 variantes, elegir **una**, y anotar la **semilla** (seed).
-   Esa imagen es "el Bruno oficial".
+2. Primera tanda con `poses/idle.png`, elegir **una** y anotar la
+   **semilla**. Esa imagen es "el Bruno oficial".
 
 ### Paso 3: más poses del mismo personaje
 

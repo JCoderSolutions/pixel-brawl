@@ -36,6 +36,21 @@ func _run() -> void:
 	quit()
 
 
+## One file per pose for img2img tools (Retro Diffusion's input image takes
+## a single, opaque picture): the first frame of each animation of the base
+## mannequin, on white, 4x (128x128). poses/idle.png, poses/run.png...
+func _save_poses(sheet: Image) -> void:
+	var folder := _out.path_join("poses")
+	DirAccess.make_dir_recursive_absolute(folder)
+	for row in FRAMES.size():
+		var pose := Image.create(CELL, CELL, false, Image.FORMAT_RGBA8)
+		pose.fill(Color.WHITE)
+		pose.blend_rect(sheet, Rect2i(0, row * CELL, CELL, CELL), Vector2i.ZERO)
+		pose.convert(Image.FORMAT_RGB8)
+		pose.resize(CELL * 4, CELL * 4, Image.INTERPOLATE_NEAREST)
+		pose.save_png(folder.path_join(String(FighterRig.anim_name(row)) + ".png"))
+
+
 func _sheet(file_name: String, look: FighterLook, shirt: Color) -> void:
 	var columns := 0
 	for entry in FRAMES:
@@ -63,6 +78,8 @@ func _sheet(file_name: String, look: FighterLook, shirt: Color) -> void:
 	await RenderingServer.frame_post_draw
 	var image := viewport.get_texture().get_image()
 	image.save_png(_out.path_join(file_name + ".png"))
+	if look == null:
+		_save_poses(image)
 	# 4x copy (nearest): AI tools read small references badly.
 	image.resize(image.get_width() * 4, image.get_height() * 4, Image.INTERPOLATE_NEAREST)
 	DirAccess.make_dir_recursive_absolute(_out.path_join("x4"))
