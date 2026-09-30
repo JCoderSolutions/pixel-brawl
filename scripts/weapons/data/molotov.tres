@@ -21,6 +21,7 @@ ignite_time = 3.0
 id = &"molotov"
 display_name = "Molotov"
 kind = 0
+slot = 3
 damage = 10
 knockback = Vector2(0, 0)
 cooldown = 0.6

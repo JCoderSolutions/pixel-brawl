@@ -1,7 +1,7 @@
 class_name TouchControls
 extends CanvasLayer
 ## On-screen controls for phones and tablets: a floating stick on the left
-## (move + crouch) and jump/attack/block/pickup buttons on the right (the
+## (move + crouch) and jump/attack/block/pickup/switch buttons on the right (the
 ## "fire" action blocks). They press
 ## the slot's `p<slot>_*` actions, so the player reads them through its usual
 ## DeviceInputSource with no touch-specific code.
@@ -22,10 +22,11 @@ const BUTTONS := {
 	"Jump": {"offset": Vector2(-26, -48), "radius": 20.0},
 	"Fire": {"offset": Vector2(-74, -76), "radius": 17.0},
 	"Pickup": {"offset": Vector2(-26, -100), "radius": 15.0},
+	"Switch": {"offset": Vector2(-122, -100), "radius": 15.0},
 }
 ## Actions that may not be in project.godot yet (weapons are not wired into
 ## the player). They are created empty at runtime so the buttons can press them.
-const RUNTIME_ACTIONS := ["fire", "pickup"]
+const RUNTIME_ACTIONS := ["fire", "pickup", "switch"]
 
 @export_range(1, 4) var slot := 1
 ## AUTO shows the controls on touch screens, or as soon as a finger touches.
@@ -40,6 +41,7 @@ var _mode := Visibility.AUTO
 	"Jump": $Jump as TouchActionButton,
 	"Fire": $Fire as TouchActionButton,
 	"Pickup": $Pickup as TouchActionButton,
+	"Switch": $Switch as TouchActionButton,
 }
 
 

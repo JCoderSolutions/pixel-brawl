@@ -293,7 +293,10 @@ func _sample_input() -> InputFrame:
 ## Attack uses the weapon in hand (the fire button blocks now). Automatic weapons
 ## fire while it is held; the rest need a fresh press per shot. Pickup grabs
 ## the nearest weapon, or throws the current one when nothing is in reach.
+## Switch draws the next carried weapon (or the fists).
 func _use_weapon(frame: InputFrame, just_pressed: int) -> void:
+	if just_pressed & InputFrame.SWITCH and not is_attacking():
+		weapons.switch_next()
 	if just_pressed & InputFrame.PICKUP and not weapons.try_pick_up():
 		if weapons.has_weapon():
 			weapons.throw_weapon()
@@ -670,9 +673,9 @@ func _on_died(_source: Node) -> void:
 	$Hurtbox.set_deferred("monitorable", false)
 	_visual.flash = false
 	_visual.color = _base_color.darkened(0.6)
-	# Dead hands let go; deferred because physics bodies can't be added
-	# from inside the hit's physics callback.
-	weapons.drop.call_deferred()
+	# Dead hands let go of everything carried; deferred because physics
+	# bodies can't be added from inside the hit's physics callback.
+	weapons.drop_all.call_deferred()
 
 
 func _apply_gravity(delta: float, want_crouch: bool) -> void:

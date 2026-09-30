@@ -60,6 +60,26 @@ aparecen al azar en el mapa y hacen daño por el mismo pipeline de TASK-003.
       `scripts/weapons/test_aim.gd`
 - [ ] Los bots todavía no apuntan a mano: disparan en horizontal
 
+## Inventario por espacios (2026-09-30)
+
+- [x] Como en Superfighters, cada luchador lleva un arma por espacio:
+      cuerpo a cuerpo (bate, katana), pistola (pistola, recortada), arma
+      principal (rifle, escopeta, bazuca) y arrojable (granada, molotov).
+      `WeaponData.slot` lo define en cada `.tres`. Recoger mete el arma en su
+      espacio y la saca; si el espacio ya tenía otra, esa cae al piso; si es
+      la misma, suma munición hasta el máximo. El botón Cambiar arma (P1 `I`,
+      P2 `/` o Numpad 3, mandos LB, táctil "Arma") recorre puños ->
+      cuerpo a cuerpo -> pistola -> principal -> arrojable, con 0.15 s antes
+      de poder usar el arma sacada. Cuando el arma en la mano se va
+      (lanzada, soltada, última granada) se saca la mejor que quede
+      (principal > pistola > cuerpo a cuerpo > arrojable). Al morir se
+      sueltan todas. El HUD muestra el arma en mano y debajo, en chico, las
+      demás. Los bots sacan el arma de fuego si el rival está lejos y el bate
+      o la katana si tienen los puños. Test `scripts/weapons/test_inventory.gd`
+- [ ] Test manual: cambiar de arma se siente rápido con teclado, mando y táctil
+- [ ] Espacio de power-up (Superfighters guarda uno para usarlo después):
+      hoy los power-ups se aplican al tocarlos
+
 ## Evidencia
 
 - Commit: `feat(weapons): add data-driven weapons, projectiles, pickup and random spawn`

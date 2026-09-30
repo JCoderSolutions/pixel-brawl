@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = &"sawed_off"
 display_name = "Escopeta recortada"
 kind = 0
+slot = 1
 damage = 9
 knockback = Vector2(230, -130)
 cooldown = 0.5

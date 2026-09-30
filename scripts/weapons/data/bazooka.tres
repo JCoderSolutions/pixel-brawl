@@ -17,6 +17,7 @@ block_damage = 60
 id = &"bazooka"
 display_name = "Bazuca"
 kind = 0
+slot = 2
 damage = 55
 knockback = Vector2(0, 0)
 cooldown = 1.0

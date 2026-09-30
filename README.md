@@ -13,9 +13,11 @@ la arena (gana el primero en llevarse 3 rondas).
 | Moverse | A / D | ← / → | Stick o cruceta |
 | Saltar | W / Espacio | ↑ | A |
 | Agacharse | S | ↓ | Abajo |
-| Golpe | J | Ctrl / Enter | X |
-| Disparar arma | K | . / Numpad 1 | RB |
-| Recoger / soltar arma | L | , / Numpad 2 | Y |
+| Correr (sprint) | doble toque A / D | doble toque ← / → | doble toque |
+| Golpe / usar arma | J | Ctrl / Enter | X |
+| Cubrirse / apuntar | K | . / Numpad 1 | RB |
+| Recoger / lanzar arma | L | , / Numpad 2 | Y |
+| Cambiar de arma | I | / (tecla a la derecha del punto) / Numpad 3 | LB |
 
 ### Pantalla y arte
 

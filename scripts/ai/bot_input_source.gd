@@ -50,7 +50,7 @@ const THROW_DISTANCE := 60.0
 const FIRE_ROLL_REACH := 80.0
 ## Buttons the player reacts to on the press edge; the bot releases them for
 ## a tick between presses.
-const TAP_BUTTONS := InputFrame.JUMP | InputFrame.ATTACK | InputFrame.PICKUP
+const TAP_BUTTONS := InputFrame.JUMP | InputFrame.ATTACK | InputFrame.PICKUP | InputFrame.SWITCH
 
 var profile: BotProfile
 ## The fighter this bot drives (a player CharacterBody2D with `health` and
@@ -193,6 +193,9 @@ func _think() -> void:
 	var dx := _target.global_position.x - body.global_position.x
 	var dy := absf(_target.global_position.y - body.global_position.y)
 	var side := _side_of(_target)
+	if _wants_switch(weapons, absf(dx)):
+		# Cycles one slot per press, so it gets there over a few thinks.
+		_pending |= InputFrame.SWITCH
 	var weapon: WeaponData = weapons.weapon
 	var strike := 0
 	if weapon == null:
@@ -223,6 +226,19 @@ func _think() -> void:
 			strike = InputFrame.ATTACK
 	if strike != 0 and (weapon == null or weapons.is_ready()) and _rng.randf() < profile.aggression:
 		_pending |= strike
+
+
+## Something carried beats what's in hand: a loaded gun for a rival out of
+## fist range, or any melee weapon over bare fists.
+func _wants_switch(weapons: WeaponHolder, distance: float) -> bool:
+	var slot := weapons.active_slot
+	var gun_in_hand := (slot == WeaponData.Slot.HANDGUN or slot == WeaponData.Slot.RIFLE) \
+			and not weapons.is_empty()
+	if distance > PUNCH_RANGE * 2.0 and not gun_in_hand:
+		for gun in [WeaponData.Slot.RIFLE, WeaponData.Slot.HANDGUN]:
+			if weapons.carried(gun) != null and weapons.ammo_in(gun) != 0:
+				return true
+	return slot == -1 and weapons.carried(WeaponData.Slot.MELEE) != null
 
 
 func _in_shot(target: Node2D) -> bool:

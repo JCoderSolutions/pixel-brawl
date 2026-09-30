@@ -15,6 +15,7 @@ block_damage = 30
 id = &"grenade"
 display_name = "Granada"
 kind = 0
+slot = 3
 damage = 45
 knockback = Vector2(0, 0)
 cooldown = 0.6
