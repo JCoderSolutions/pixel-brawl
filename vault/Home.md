@@ -29,6 +29,7 @@ proyecto. Funciona desde cualquier PC y con cualquier agente de IA.
 | [[docs/multi-agent-setup]] | Config multiagente (OpenCode, Claude, Kiro) |
 | [[docs/engram-hooks-behavior]] | Qué hacen los hooks automáticos de Engram |
 | [[docs/art-swap-guide]] | Cómo reemplazar las formas nativas por tilesets y sprites |
+| [[docs/asset-pipeline]] | Herramientas (gratis y de IA), medidas y flujo para hacer los assets |
 | [[docs/ui-style-guide]] | Línea gráfica y sistema de UI (propuesta: paleta, fuente, componentes, fases) |
 | Engram (memoria) | `engram/` — export de memoria persistente (opcional) |
 

@@ -4,6 +4,7 @@ Todo lo que hoy se dibuja con formas nativas tiene un enganche para arte
 real. Cuando existe el arte, se usa; si falta, queda la forma nativa. No hay
 que tocar código: se sueltan archivos y se completan campos en el editor.
 Paleta: Endesga 32. Test de los enganches: `scripts/test_art_hooks.gd`.
+Herramientas, medidas y flujo con IA para hacer el arte: [[docs/asset-pipeline]].
 
 ## Tiles del mapa (16x16)
 

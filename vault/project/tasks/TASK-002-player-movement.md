@@ -50,3 +50,11 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
       `scripts/test_dive.gd` exige que quede entre 50 y 110 px
 - [ ] Test manual de la zambullida en PC y teléfono
 - [ ] Rápido test manual: moverse con WASD (P1) se siente responsivo (las flechas son de P2 desde TASK-008)
+- [x] Cornisas solo en el borde real (feedback de Jose 2026-09-30: "se
+      agarra de diversos puntos, no es consistente"): las paredes son bloques
+      de 16 px apilados y la sonda que busca el borde ignoraba el bloque
+      donde arrancaba, así que la unión con el bloque de abajo contaba como
+      cornisa. Saltando contra una pared un poco más alta que el alcance, el
+      luchador quedaba colgado un bloque debajo del borde. Ahora las sondas
+      cuentan el bloque donde arrancan (`hit_from_inside`). Test
+      `scripts/test_mobility.gd`
