@@ -33,6 +33,7 @@ func _check(condition: bool, message: String) -> void:
 func _key(keycode: int) -> InputEventKey:
 	var event := InputEventKey.new()
 	event.physical_keycode = keycode
+	event.keycode = keycode
 	event.pressed = true
 	return event
 
@@ -83,6 +84,10 @@ func _test_apply_rebinds_slots() -> void:
 			"reset brings back the shipped bindings")
 
 
+func _card(menu: Control, slot: int) -> Control:
+	return menu.get_node("%Content").get_child(0).get_child(slot)
+
+
 func _test_menu_and_manager() -> void:
 	var menu: Control = load("res://scenes/ui/main_menu.tscn").instantiate()
 	root.add_child(menu)
@@ -96,24 +101,44 @@ func _test_menu_and_manager() -> void:
 	menu.open_setup()
 	menu.next()
 	menu.next()
-	var rows: Array = menu.get_node("%Content").get_children()
-	var p2_control: Button = rows[1].get_child(6)
-	_check(p2_control.text == "Flechas", "each player's row shows its control")
-	p2_control.pressed.emit()
-	_check(menu.control(1) == S.PAD_1 and p2_control.text == "Mando 1", "pressing it moves to the next control")
-	_check(not menu.controls_valid() and menu.get_node("%NextButton").disabled, "P2 and P3 on pad 1: can't go on")
-	menu.set_control(2, S.PAD_3)
-	_check(menu.controls_valid(), "moving P3 to pad 3 fixes it")
+	var next_button: Button = menu.get_node("%NextButton")
+	_check(menu.is_joined(0) and menu.control(0) == S.WASD, "P1 joins with the device driving the menu")
+	_check(not menu.is_joined(1) and _card(menu, 1).find_child("Join", true, false) != null,
+			"the other cards wait for someone to press a button")
+	_check(next_button.disabled and menu.get_node("%Hint").text.begins_with("Faltan 3"), "and the setup waits for them")
+	# "Apretá para unirte": attack/block/pickup keys of a free keyboard half,
+	# or any button of a free pad.
+	_check(not menu.try_join(_key(KEY_J)), "P1's own keys don't join again")
+	_check(not menu.try_join(_key(KEY_ENTER)), "Enter confirms in the menu, it doesn't join")
+	_check(menu.try_join(_key(KEY_PERIOD)) and menu.control(1) == S.ARROWS, "the arrows half joins as P2")
+	_check(menu.try_join(_pad_button(0, JOY_BUTTON_A)) and menu.control(2) == S.PAD_1, "the first pad joins as P3")
+	_check(not menu.try_join(_pad_button(0, JOY_BUTTON_B)), "a pad already in doesn't take a second card")
+	(_card(menu, 3).find_child("Join", true, false) as Button).pressed.emit()
+	_check(menu.control(3) == S.PAD_2, "the card's button joins with the next free device (%d)" % menu.control(3))
+	_check(menu.controls_valid() and not next_button.disabled, "everybody in: the setup can go on")
+	var device: Control = _card(menu, 1).find_child("Device", true, false)
+	(device.get_node("Next") as Button).pressed.emit()
+	_check(menu.control(1) == S.PAD_3 and (device.get_node("Value") as Label).text == "Mando 3",
+			"the device arrows skip the ones taken (%d)" % menu.control(1))
+	(_card(menu, 1).find_child("Leave", true, false) as Button).pressed.emit()
+	_check(not menu.is_joined(1) and next_button.disabled, "× frees the card")
+	_check(menu.try_join(_key(KEY_COMMA)) and menu.control(1) == S.ARROWS, "and someone else can take it")
+	await process_frame
+	var card_width := _card(menu, 0).size.x
+	_check(_card(menu, 1).size.x == card_width and _card(menu, 2).size.x == card_width and _card(menu, 3).size.x == card_width,
+			"every card has the same width whatever it says (%.0f)" % card_width)
 	menu.set_counts(4, 0)
-	_check(menu.control(1) == S.PAD_1, "picks stick while the player count stays")
+	_check(menu.control(2) == S.PAD_1, "picks stick while the player count stays")
 	menu.apply_selection()
 	var gm := root.get_node("GameManager")
-	_check(gm.controls == [S.WASD, S.PAD_1, S.PAD_3, S.PAD_2], "the GameManager gets them (%s)" % [gm.controls])
+	_check(gm.controls == [S.WASD, S.ARROWS, S.PAD_1, S.PAD_2], "the GameManager gets them (%s)" % [gm.controls])
 	menu.set_counts(2, 0)
-	_check(menu.control(0) == S.WASD and menu.control(1) == S.ARROWS, "a new player count starts from the defaults again")
+	_check(menu.control(0) == S.WASD and menu.control(1) == S.ARROWS and not menu.is_joined(1),
+			"a new player count starts from the defaults again, nobody joined")
 	menu.choose_mode(true)
 	menu.set_counts(1, 1)
-	_check(menu.control(0) == S.KEYS_OR_PAD, "alone against bots: keyboard or pad")
+	menu._show(menu.Step.FIGHTERS)
+	_check(menu.control(0) == S.KEYS_OR_PAD and menu.controls_valid(), "alone against bots: keyboard or pad, no waiting")
 	menu.queue_free()
 	await process_frame
 	gm.controls.clear()

@@ -25,7 +25,13 @@ static var _setup := {
 	looks = [0, 1, 2, 3], teams = [0, 0, 0, 0], map = 0, rounds = 3,
 	# ControlSchemes.Scheme per human; `auto` until someone picks one.
 	controls = [0, 1, 2, 3], controls_auto = true,
+	# Human cards that have a device: someone pressed a button on it.
+	joined = [false, false, false, false],
 }
+## Fighter cards have a fixed width so long names never push the columns.
+const CARD_WIDTH := 108
+## The device the menu was last driven with: P1's when several play.
+var _menu_scheme: int = ControlSchemes.Scheme.WASD
 
 var step: int = Step.TITLE
 
@@ -58,6 +64,15 @@ func _ready() -> void:
 	_show(Step.TITLE)
 
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton and event.pressed and event.device < ControlSchemes.MAX_SLOTS:
+		_menu_scheme = ControlSchemes.Scheme.PAD_1 + event.device
+	elif event is InputEventKey and event.pressed:
+		_menu_scheme = ControlSchemes.Scheme.WASD
+	if step == Step.FIGHTERS and try_join(event):
+		get_viewport().set_input_as_handled()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if step != Step.TITLE and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
@@ -88,6 +103,7 @@ func set_counts(humans: int, bots: int) -> void:
 		_setup.bots = 0
 	if _setup.humans != before:
 		_setup.controls_auto = true
+		_setup.joined = [false, false, false, false]
 
 
 func humans() -> int:
@@ -124,11 +140,72 @@ func team(slot: int) -> int:
 	return _setup.teams[slot]
 
 
-## Keyboard half or gamepad for human `slot` (ControlSchemes.Scheme).
+## Keyboard half or gamepad for human `slot` (ControlSchemes.Scheme); the
+## card counts as joined.
 func set_control(slot: int, scheme: int) -> void:
 	_auto_controls()
 	_setup.controls[slot] = posmod(scheme, ControlSchemes.LABELS.size())
 	_setup.controls_auto = false
+	_setup.joined[slot] = true
+
+
+## Human `slot` takes `scheme` unless another joined player already has that
+## keyboard half or pad. Returns whether it joined.
+func join(slot: int, scheme: int) -> bool:
+	if slot < 0 or slot >= _setup.humans or scheme_taken(scheme, slot):
+		return false
+	set_control(slot, scheme)
+	return true
+
+
+## Frees human `slot`'s card for another device.
+func leave(slot: int) -> void:
+	_setup.joined[slot] = false
+
+
+func is_joined(slot: int) -> bool:
+	return _setup.joined[slot]
+
+
+## True if a joined player other than `except` uses the same device.
+func scheme_taken(scheme: int, except := -1) -> bool:
+	for slot in _setup.humans:
+		if slot != except and _setup.joined[slot] and ControlSchemes.clash(scheme, _setup.controls[slot]):
+			return true
+	return false
+
+
+## First human card still waiting for a device, or -1.
+func open_slot() -> int:
+	for slot in _setup.humans:
+		if not _setup.joined[slot]:
+			return slot
+	return -1
+
+
+## A button pressed on a device nobody has joins the next open card
+## ("apretá para unirte"). Returns whether it did.
+func try_join(event: InputEvent) -> bool:
+	var scheme := ControlSchemes.join_scheme(event)
+	var slot := open_slot()
+	if scheme == -1 or slot == -1 or not join(slot, scheme):
+		return false
+	if step == Step.FIGHTERS:
+		_show(Step.FIGHTERS)
+	return true
+
+
+## The next scheme after `scheme` nobody else has, going `dir` (+1 / -1).
+## KEYS_OR_PAD is only for a lone player.
+func _next_free_scheme(slot: int, scheme: int, dir: int) -> int:
+	var count := ControlSchemes.LABELS.size()
+	for offset in range(1, count + 1):
+		var candidate := posmod(scheme + dir * offset, count)
+		if candidate == ControlSchemes.Scheme.KEYS_OR_PAD and _setup.humans > 1:
+			continue
+		if not scheme_taken(candidate, slot):
+			return candidate
+	return scheme
 
 
 func control(slot: int) -> int:
@@ -136,10 +213,10 @@ func control(slot: int) -> int:
 	return _setup.controls[slot]
 
 
-## No two players on the same keyboard half or gamepad.
+## Every human has joined with a device, and no two share one.
 func controls_valid() -> bool:
 	_auto_controls()
-	return ControlSchemes.all_distinct(_setup.controls.slice(0, _setup.humans))
+	return open_slot() == -1 and ControlSchemes.all_distinct(_setup.controls.slice(0, _setup.humans))
 
 
 ## Until someone picks, controls follow the players and the pads plugged in.
@@ -277,11 +354,16 @@ func _show(to: int) -> void:
 			_build_counts()
 			_hint.text = "En el paso siguiente cada jugador elige teclado o mando"
 		Step.FIGHTERS:
-			_step_title.text = "Personajes, equipos y controles"
-			_auto_controls()
+			_step_title.text = "LUCHADORES"
+			_auto_join_first()
+			var cards := HBoxContainer.new()
+			cards.alignment = BoxContainer.ALIGNMENT_CENTER
+			_content.add_child(cards)
 			for slot in fighters():
-				_content.add_child(_fighter_row(slot))
+				cards.add_child(_fighter_card(slot))
 			_refresh_teams_hint()
+			if _next_button.disabled:
+				focus = cards.get_child(0).find_child("Prev", true, false)
 		Step.MAP:
 			_step_title.text = "Mapa"
 			_next_button.visible = false
@@ -403,88 +485,216 @@ func _arrow(text: String, on_press: Callable) -> Button:
 	return button
 
 
-## "P1  < [rig] Bruno >  [ Sin equipo ]": the character arrows and a team
-## button that cycles through the teams, both redrawing the preview.
-func _fighter_row(slot: int) -> Control:
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 4)
+## P1 always has a device: alone, the keyboard and any pad; with others,
+## the one that has been driving the menu.
+func _auto_join_first() -> void:
+	_auto_controls()
+	if _setup.joined[0]:
+		return
+	_setup.joined[0] = true
+	_setup.controls[0] = ControlSchemes.Scheme.KEYS_OR_PAD if _setup.humans == 1 else _menu_scheme
+
+
+## One fixed-width card per fighter: tag, preview, character, team and
+## device. A human card without a device waits for someone to press a button.
+func _fighter_card(slot: int) -> Control:
+	var card := PanelContainer.new()
+	card.theme_type_variation = &"PanelCard"
+	card.custom_minimum_size = Vector2(CARD_WIDTH, 0)
+	card.name = "Card%d" % slot
+	var box := VBoxContainer.new()
+	card.add_child(box)
+	var human: bool = slot < _setup.humans
+	var header := HBoxContainer.new()
 	var tag := Label.new()
-	tag.text = "P%d" % (slot + 1) if slot < _setup.humans else "BOT %d" % (slot - _setup.humans + 1)
-	tag.custom_minimum_size.x = 52
-	row.add_child(tag)
+	tag.name = "Tag"
+	tag.text = "P%d" % (slot + 1) if human else "BOT %d" % (slot - _setup.humans + 1)
+	tag.add_theme_color_override("font_color", UiTokens.TEXT_STRONG)
+	tag.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(tag)
+	box.add_child(header)
+	if human and not _setup.joined[slot]:
+		_waiting_card(box, slot)
+		return card
+	if human and slot > 0:
+		var leave_button := Button.new()
+		leave_button.name = "Leave"
+		leave_button.text = "×"
+		leave_button.tooltip_text = "Liberar la tarjeta"
+		leave_button.theme_type_variation = &"ButtonSmall"
+		leave_button.custom_minimum_size = Vector2(UiTokens.CHIP_HEIGHT, UiTokens.CHIP_HEIGHT)
+		leave_button.pressed.connect(func() -> void:
+			leave(slot)
+			_show(Step.FIGHTERS))
+		header.add_child(leave_button)
+	else:
+		var status := Label.new()
+		status.theme_type_variation = &"LabelSmall"
+		status.text = "LISTO" if human else "CPU"
+		header.add_child(status)
+
+	# Preview at twice the game's size, standing on the card's floor line.
+	var stage := Control.new()
+	stage.custom_minimum_size = Vector2(0, 58)
 	var rig := FighterRig.new()
-	rig.custom_minimum_size = Vector2(32, 32)
+	rig.name = "Rig"
+	rig.size = Vector2(32, 28)
+	rig.scale = Vector2(2, 2)
+	stage.add_child(rig)
+	stage.resized.connect(func() -> void: rig.position = Vector2(stage.size.x / 2.0 - 32.0, stage.size.y - 56.0))
+	box.add_child(stage)
+
 	var name_label := Label.new()
-	name_label.custom_minimum_size.x = 56
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.name = "Name"
+	var pick := _selector(name_label, func(dir: int) -> void: set_look(slot, _setup.looks[slot] + dir))
+	box.add_child(pick)
 	var team_button := Button.new()
-	team_button.custom_minimum_size = Vector2(80, 28)
+	team_button.name = "Team"
+	team_button.clip_text = true
+	team_button.custom_minimum_size = Vector2(0, UiTokens.SELECTOR_HEIGHT)
+	team_button.pressed.connect(func() -> void:
+		set_team(slot, _setup.teams[slot] + 1)
+		_refresh_teams_hint())
+	box.add_child(team_button)
+
+	var device := Label.new()
+	device.name = "Value"
+	device.theme_type_variation = &"LabelSmall"
+	var hint := Label.new()
+	hint.name = "Keys"
+	hint.theme_type_variation = &"LabelSmall"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.clip_text = true
+	if human:
+		box.add_child(_selector(device, func(dir: int) -> void:
+			set_control(slot, _next_free_scheme(slot, _setup.controls[slot], dir))
+			_refresh_teams_hint(), "Device"))
+	else:
+		device.text = "CPU · %s" % BotProfile.display_name(_setup.difficulty)
+		device.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		device.clip_text = true
+		box.add_child(device)
+	box.add_child(hint)
+
 	var refresh := func() -> void:
 		var character := FighterLook.at(_setup.looks[slot])
 		rig.look = character
 		rig.color = character.shirt
 		rig.team_color = GameManager.TEAM_COLORS[_setup.teams[slot]]
 		name_label.text = character.name
-		team_button.text = TEAM_LABELS[_setup.teams[slot]]
-		var tint: Color = GameManager.TEAM_COLORS[_setup.teams[slot]]
-		if _setup.teams[slot] == 0:
-			team_button.remove_theme_color_override("font_color")
-		else:
-			team_button.add_theme_color_override("font_color", tint)
-	row.add_child(_arrow("<", func() -> void:
-		set_look(slot, _setup.looks[slot] - 1)
-		refresh.call()))
-	row.add_child(rig)
-	row.add_child(name_label)
-	row.add_child(_arrow(">", func() -> void:
-		set_look(slot, _setup.looks[slot] + 1)
-		refresh.call()))
-	team_button.pressed.connect(func() -> void:
-		set_team(slot, _setup.teams[slot] + 1)
-		refresh.call()
-		_refresh_teams_hint())
-	row.add_child(team_button)
-	row.add_child(_control_button(slot) if slot < _setup.humans else _cpu_label())
+		_paint_team(team_button, _setup.teams[slot])
+		if not human:
+			return
+		var scheme: int = _setup.controls[slot]
+		device.text = ControlSchemes.LABELS[scheme]
+		hint.text = ControlSchemes.KEY_HINTS.get(scheme, "Cualquier botón")
+		# A pad that isn't plugged in still counts: it can be plugged in later.
+		var pad := ControlSchemes.pad_of(scheme)
+		var missing := pad >= 0 and scheme != ControlSchemes.Scheme.KEYS_OR_PAD \
+				and not pad in Input.get_connected_joypads()
+		device.add_theme_color_override("font_color", UiTokens.TEXT_MUTED if missing else UiTokens.TEXT)
+		if missing:
+			hint.text = "Sin conectar"
+	var buttons: Array = [pick.get_node("Prev"), pick.get_node("Next"), team_button]
+	if human:
+		buttons.append_array([box.get_node("Device/Prev"), box.get_node("Device/Next")])
+	for button in buttons:
+		button.pressed.connect(refresh)
 	refresh.call()
+	return card
+
+
+## "Apretá un botón para unirte", blinking; the button joins with the next
+## free device, for mouse and touch.
+func _waiting_card(box: VBoxContainer, slot: int) -> void:
+	var plus := Label.new()
+	plus.theme_type_variation = &"LabelDisplay"
+	plus.text = "+"
+	plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	plus.add_theme_color_override("font_color", UiTokens.ACCENT)
+	box.add_child(plus)
+	var call_label := Label.new()
+	call_label.name = "Call"
+	call_label.theme_type_variation = &"LabelSmall"
+	call_label.text = "APRETÁ UN BOTÓN\nPARA UNIRTE"
+	call_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(call_label)
+	call_label.ready.connect(func() -> void:
+		var blink := call_label.create_tween().set_loops()
+		blink.tween_interval(0.5)
+		blink.tween_callback(func() -> void: call_label.modulate.a = 1.0 - call_label.modulate.a))
+	var keys := Label.new()
+	keys.theme_type_variation = &"LabelSmall"
+	keys.text = "J, . o mando"
+	keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	keys.clip_text = true
+	box.add_child(keys)
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(spacer)
+	var button := Button.new()
+	button.name = "Join"
+	button.text = "Unirse"
+	button.custom_minimum_size = Vector2(0, UiTokens.SELECTOR_HEIGHT)
+	button.pressed.connect(func() -> void:
+		if join(slot, _next_free_scheme(slot, ControlSchemes.Scheme.KEYS_OR_PAD, 1)):
+			_show(Step.FIGHTERS))
+	box.add_child(button)
+
+
+## "‹ value ›" with a fixed-width value that clips instead of growing.
+func _selector(value: Label, change: Callable, node_name := "Pick") -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.name = node_name
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value.clip_text = true
+	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var prev := _arrow("‹", func() -> void: change.call(-1))
+	prev.name = "Prev"
+	var next_arrow := _arrow("›", func() -> void: change.call(1))
+	next_arrow.name = "Next"
+	for arrow in [prev, next_arrow]:
+		arrow.custom_minimum_size = Vector2(UiTokens.SELECTOR_HEIGHT, UiTokens.SELECTOR_HEIGHT)
+	row.add_child(prev)
+	row.add_child(value)
+	row.add_child(next_arrow)
 	return row
 
 
-## Cycles the human's keyboard half / gamepad; greyed out while that pad
-## isn't plugged in (it still counts: it can be plugged in later).
-func _control_button(slot: int) -> Button:
-	var button := Button.new()
-	button.custom_minimum_size = Vector2(100, 28)
-	var refresh := func() -> void:
-		var scheme := control(slot)
-		button.text = ControlSchemes.LABELS[scheme]
-		var pad := ControlSchemes.pad_of(scheme)
-		if pad >= 0 and scheme != ControlSchemes.Scheme.KEYS_OR_PAD and not pad in Input.get_connected_joypads():
-			button.add_theme_color_override("font_color", Color("8b9bb4"))
-		else:
-			button.remove_theme_color_override("font_color")
-	button.pressed.connect(func() -> void:
-		set_control(slot, control(slot) + 1)
-		refresh.call()
-		_refresh_teams_hint())
-	refresh.call()
-	return button
-
-
-func _cpu_label() -> Label:
-	var label := Label.new()
-	label.text = "CPU"
-	label.custom_minimum_size.x = 100
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	return label
+## Team button: the team's color as a filled chip, or plain without a team.
+func _paint_team(button: Button, team_index: int) -> void:
+	button.text = TEAM_LABELS[team_index]
+	for state in ["normal", "hover"]:
+		button.remove_theme_stylebox_override(state)
+	for color_name in ["font_color", "font_hover_color", "font_focus_color"]:
+		button.remove_theme_color_override(color_name)
+	if team_index == 0:
+		return
+	var tint: Color = GameManager.TEAM_COLORS[team_index]
+	for state in ["normal", "hover"]:
+		var chip := StyleBoxFlat.new()
+		chip.bg_color = tint if state == "normal" else tint.lightened(0.25)
+		chip.anti_aliasing = false
+		chip.content_margin_left = UiTokens.GAP
+		chip.content_margin_right = UiTokens.GAP
+		button.add_theme_stylebox_override(state, chip)
+	for color_name in ["font_color", "font_hover_color", "font_focus_color"]:
+		button.add_theme_color_override(color_name, UiTokens.BG)
 
 
 func _refresh_teams_hint() -> void:
 	var teams_ok := teams_valid()
 	var controls_ok := controls_valid()
 	_next_button.disabled = not (teams_ok and controls_ok)
-	if not teams_ok:
-		_hint.text = "Todos en el mismo equipo: no queda rival"
+	var waiting := 0
+	for slot in _setup.humans:
+		if not _setup.joined[slot]:
+			waiting += 1
+	if waiting > 0:
+		_hint.text = "Falta%s %d: J en WASD, punto en las flechas o cualquier botón del mando" \
+				% ["n" if waiting > 1 else "", waiting]
+	elif not teams_ok:
+		_hint.text = "Todos en el mismo equipo: elegí otro color para alguien"
 	elif not controls_ok:
 		_hint.text = "Dos jugadores con el mismo teclado o mando"
 	else:

@@ -60,6 +60,18 @@ static func _buttons(theme: Theme) -> void:
 	for state in ["font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
 		theme.set_color(state, "ButtonPrimary", UiTokens.BG)
 
+	# Chip-sized secondary button (× on a card): small font, 2 px padding.
+	theme.set_type_variation("ButtonSmall", "Button")
+	_button_type(theme, "ButtonSmall", UiTokens.SURFACE, UiTokens.BORDER, UiTokens.TEXT)
+	theme.set_font("font", "ButtonSmall", UiTokens.FONT_SMALL)
+	theme.set_font_size("font_size", "ButtonSmall", UiTokens.TEXT_SMALL)
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		var box: StyleBoxFlat = theme.get_stylebox(state, "ButtonSmall")
+		box.content_margin_left = 2
+		box.content_margin_right = 2
+		box.content_margin_top = 2
+		box.content_margin_bottom = 2
+
 
 static func _button_type(theme: Theme, type: StringName, fill: Color, edge: Color, text: Color) -> void:
 	theme.set_stylebox("normal", type, _box(fill, edge, UiTokens.BORDER_WIDTH))

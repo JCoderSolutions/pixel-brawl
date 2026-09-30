@@ -1,6 +1,7 @@
 ---
 type: "plan"
-status: "proposed"        # proposed | approved | discarded — solo Jose aprueba
+status: "approved"        # proposed | approved | discarded — solo Jose aprueba
+approved: "2026-09-30"
 topic_key: "ui-style-guide"
 created: "2026-09-30"
 task: "TASK-024"
@@ -266,13 +267,12 @@ y en positivo ("Elegí otro equipo" en vez de "Todos en el mismo equipo").
 Cada fase es un PR que se puede probar solo. Las capturas de antes y después
 van en el PR.
 
-### Fase 0 — Decidir (Jose)
-- [ ] Aprobar la paleta por roles (§3.3)
-- [ ] Confirmar la fuente: Pixel Operator + Jersey 10 (aplicada provisoria, §3.2)
-- [ ] Elegir la estructura de la pantalla de luchadores: tarjetas con
-      "apretá para unirte" o tabla de anchos fijos (§3.1)
+### Fase 0 — Decidir (Jose, aprobado 2026-09-30)
+- [x] Paleta por roles (§3.3): aprobada
+- [x] Fuente: Pixel Operator + Jersey 10, quedan las aplicadas (§3.2)
+- [x] Pantalla de luchadores: tarjetas con "apretá para unirte" (opción A, §3.1)
 
-### Fase 1 — Cimientos (hecha 2026-09-30, con la fuente y la paleta provisorias)
+### Fase 1 — Cimientos (hecha 2026-09-30)
 - [x] `assets/palettes/endesga-32.hex` y clase `UiTokens`
       (`scripts/ui/ui_tokens.gd`: colores por rol, fuentes, tamaños, espacios)
 - [x] Fuentes en `assets/fonts/` con licencias y `assets/fonts/CREDITS.md`
@@ -285,7 +285,7 @@ van en el PR.
 - [x] Test `scripts/ui/test_ui_theme.gd`: tema del proyecto, tema guardado
       igual al de los tokens, roles dentro de Endesga 32, fuentes con acentos
       e importadas sin antialias, ningún `font_size` suelto y colores sueltos
-      que solo pueden bajar (quedan 13 en 6 archivos para la Fase 4)
+      que solo pueden bajar (quedan 12 en 6 archivos para la Fase 4)
 - [x] Capturas: `tools/ui_screenshots.sh [carpeta]` (Xvfb si no hay pantalla)
 
 Cómo se ve después de la Fase 1 (la pantalla de luchadores sigue
@@ -300,16 +300,32 @@ Para cambiar un color, una fuente o un tamaño: editar `UiTokens`, correr
 `godot --headless --path . -s tools/build_ui_theme.gd` y commitear el
 `theme.tres` regenerado (el test falla si quedan distintos).
 
-### Fase 2 — Arreglo inmediato de la pantalla de luchadores
-- [ ] Filas en `GridContainer` con anchos fijos por columna
-- [ ] Control como selector "‹ ›" que saltea dispositivos ya tomados
-- [ ] Bots con la misma celda (selector de dificultad o "CPU") del mismo ancho
-- [ ] Texto del control con las teclas ("WASD · J K L I")
+### Fase 2 — Arreglo inmediato (descartada)
+Con la opción A elegida se fue directo a las tarjetas: la tabla alineada ya
+no hacía falta. Lo que tenía (selector que saltea dispositivos tomados, texto
+con las teclas, bots del mismo ancho) quedó dentro de la Fase 3.
 
-### Fase 3 — Tarjetas y "apretá para unirte"
-- [ ] Tarjetas de ancho fijo por jugador con el luchador grande
-- [ ] Unirse y salir desde cada teclado/mando; "+ Bot" para sumar bots
-- [ ] Un jugador solo queda unido sin pasos extra (teléfono)
+### Fase 3 — Tarjetas y "apretá para unirte" (hecha 2026-09-30)
+- [x] Una tarjeta de ancho fijo (108 px) por luchador: etiqueta, luchador al
+      doble de tamaño, "‹ personaje ›", equipo como chip de color y
+      "‹ dispositivo ›" con sus teclas. Los textos se recortan, nunca estiran
+      la tarjeta
+- [x] Unirse: en una tarjeta que espera, Ataque/Cubrirse/Tomar/Cambiar en una
+      mitad del teclado libre (J K L I en WASD; . , / en las flechas) o
+      cualquier botón de un mando libre la toma
+      (`ControlSchemes.join_scheme`). Moverse, saltar, Enter y Espacio no
+      unen porque también manejan el menú. El botón "Unirse" hace lo mismo
+      con mouse o táctil
+- [x] Salir: "×" en la tarjeta libera el lugar. Las flechas de dispositivo
+      saltean los que ya tiene otro, así que no puede haber dos jugadores con
+      el mismo mando; "Siguiente" espera a que todos se unan
+- [x] P1 queda unido solo: con el teclado y el primer mando si juega solo
+      (teléfono, PC), o con el dispositivo que venía usando en el menú
+- [ ] Sumar o quitar bots desde las tarjetas: por ahora la cantidad se sigue
+      eligiendo en el paso "¿Cuántos?"
+
+![[img/ui-fase3/04_luchadores_3_humanos.png]]
+![[img/ui-fase3/05_luchadores_mixto.png]]
 
 ### Fase 4 — Pasar todo al sistema
 - [ ] Título, modo, cantidad, mapa, dificultad, rondas

@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-30"
+last_updated_notes: "TASK-024 decisiones aprobadas por Jose y fase 3: tarjetas de luchadores con apretá para unirte"
 last_updated_notes: "TASK-024 fase 1: tema global, fuentes pixel, tokens y test de UI (fuente y paleta provisorias)"
 last_updated_notes: "TASK-024 plan de línea gráfica y sistema de UI propuesto (espera decisiones de Jose)"
 last_updated_notes: "TASK-005 inventario por espacios (cuerpo a cuerpo, pistola, principal, arrojable) y botón Cambiar arma"
@@ -94,7 +95,7 @@ tarea o fase. Es el primer lugar donde un agente mira el estado global.
 | Stack: Godot 4 + Endesga 32 + pipeline AI | `approved` (ver [[PLAN-pixel-brawl|PLAN]]) |
 | Multiagente: OpenCode + Claude Code + Kiro | `approved` (ver [[docs/multi-agent-setup]]) |
 | Engram: guardado solo con aprobación humana | `approved` (ver [[docs/engram-quick-reference]]) |
-| Línea gráfica y sistema de UI | `proposed` (ver [[docs/ui-style-guide]]) |
+| Línea gráfica y sistema de UI (paleta por roles, Pixel Operator + Jersey 10, tarjetas) | `approved` 2026-09-30 por Jose (ver [[docs/ui-style-guide]]) |
 
 ## Descartadas
 

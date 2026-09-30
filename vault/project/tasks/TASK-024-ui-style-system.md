@@ -20,12 +20,12 @@ componentes) y aplicarlo a todo el juego. Plan completo y auditoría en
 
 ## Criterios de done
 
-- [ ] Fase 0: Jose aprueba paleta, fuente y estructura de la pantalla de luchadores
+- [x] Fase 0 (2026-09-30): Jose aprueba la paleta, deja Pixel Operator + Jersey 10 y elige las tarjetas
 - [x] Fase 1: `UiTokens`, fuentes (Pixel Operator + Jersey 10, provisorias),
       `theme.tres` global generado desde los tokens, test
       `scripts/ui/test_ui_theme.gd`, capturas con `tools/ui_screenshots.sh`
-- [ ] Fase 2: pantalla de luchadores en tabla de anchos fijos, sin dispositivos repetidos
-- [ ] Fase 3: tarjetas por jugador con "apretá para unirte"
+- [x] Fase 2: descartada, sus puntos entraron en la Fase 3
+- [x] Fase 3: tarjetas de ancho fijo con "apretá para unirte" (sumar bots desde las tarjetas queda pendiente)
 - [ ] Fase 4: todas las pantallas y el HUD con el sistema
 - [ ] Fase 5: íconos, sonido y movimiento de foco, revisión en teléfono/TV/PC
 
@@ -34,3 +34,5 @@ componentes) y aplicarlo a todo el juego. Plan completo y auditoría en
 - Auditoría con capturas: `vault/docs/img/ui-audit/`
 - Comparación de fuentes: `vault/docs/img/fonts/`
 - Después de la Fase 1: `vault/docs/img/ui-fase1/`
+- Tarjetas de la Fase 3: `vault/docs/img/ui-fase3/`
+- Tests: `scripts/ui/test_ui_theme.gd`, `scripts/test_control_schemes.gd`, `scripts/test_main_menu.gd`
