@@ -18,6 +18,7 @@ func _init() -> void:
 func _run_tests() -> void:
 	await _test_double_tap_sprints()
 	await _test_hang_and_climb()
+	await _test_no_hang_mid_wall()
 	await _test_push_away_lets_go()
 	await _test_recovery_roll()
 	print("OK: double-tap sprint, ledge hang and climb, letting go, and recovery roll verified" if _ok else "FAILED")
@@ -99,6 +100,24 @@ func _test_double_tap_sprints() -> void:
 
 ## A 70 px high block from x 60, too high to jump onto: jumping against its
 ## face catches the edge on the way down.
+## A wall built like the maps (separate 16 px blocks, stacked) whose top
+## (y -112) is just out of reach of a jump: the hands only reach the seam
+## between its two top blocks, which used to read as a ledge and hung the
+## fighter a block below the edge, in the middle of the wall.
+func _test_no_hang_mid_wall() -> void:
+	var stage := _stage()
+	for row in 7:
+		_box(stage, Rect2(20, -16.0 * (row + 1), 16, 16))
+	var player := _fighter(stage, Vector2(0, 0), _hold(10, 1.0) + _hold(20, 1.0, InputFrame.JUMP) + _hold(60, 1.0))
+	var hung := false
+	for i in 90:
+		await physics_frame
+		hung = hung or player.is_hanging()
+	_check(not hung, "jumping against a wall too tall to reach never hangs mid-wall")
+	stage.queue_free()
+	await process_frame
+
+
 func _test_hang_and_climb() -> void:
 	var stage := _stage(Rect2(60, -70, 80, 70))
 	var player := _fighter(stage, Vector2(30, 0), _hold(10, 1.0) + _hold(20, 1.0, InputFrame.JUMP) + _hold(30, 1.0) \

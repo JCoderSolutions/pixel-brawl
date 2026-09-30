@@ -2,6 +2,7 @@
 type: "status-registry"
 project: "pixel-brawl"
 last_updated: "2026-09-30"
+last_updated_notes: "TASK-002 cornisas solo en el borde real; TASK-020 reacción al daño de zona; guía de assets (herramientas y medidas)"
 last_updated_notes: "TASK-011/TASK-018 ronda trabada por muerte en la cuenta regresiva y cámara que no encuadraba en pantallas no 16:9"
 last_updated_notes: "TASK-021 cohete montado más lento y sin salir de la vista"
 last_updated_notes: "TASK-024 fase 5: íconos, sonidos de menú, salto de foco y menú de pausa; falta prueba en dispositivos"

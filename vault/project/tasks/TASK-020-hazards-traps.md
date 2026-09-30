@@ -59,6 +59,11 @@ rondas y sonido reaccionan sin saber que existen los peligros.
       cajas cada 15 s; cada ronda vuelven los barriles y se limpian las cajas
       (`arena_match.reset_props`). Test `scripts/props/test_props.gd`
 - [ ] Test manual: abrir la arena de peligros y probar cada trampa
+- [x] Reacción al daño de zona (feedback de Jose 2026-09-30: el ácido
+      dañaba sin animación): ácido, fuego y pinchos hacen parpadear al
+      luchador, sueltan burbujas del color de la zona y suenan (`sizzle`
+      nuevo; los pinchos usan `hit`), como mucho cada 0.2 s por luchador.
+      `GameFeel._on_hazard_hurt`, test `scripts/audio/test_game_feel.gd`
 
 ## Detalles
 
