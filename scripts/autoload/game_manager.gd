@@ -269,7 +269,10 @@ func _spawn(id: int) -> void:
 
 
 func _on_player_died(source: Node, id: int) -> void:
-	if state != State.FIGHTING:
+	# A death during the countdown (a fall, a leftover grenade) counts too:
+	# ignoring it left the round stuck with a dead fighter that never came
+	# back and a bot with nobody to fight.
+	if state != State.FIGHTING and state != State.ROUND_STARTING:
 		return
 	lives[id] = max(lives[id] - 1, 0)
 	var killer := id_of(source)

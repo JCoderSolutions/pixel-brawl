@@ -33,6 +33,7 @@ func _run_tests() -> void:
 	await _test_pixel_perfect_respects_bounds()
 	await _test_portrait_screen()
 	await _test_portrait_screen_on_wide_map()
+	await _test_coarse_steps_still_fit_everyone()
 	print("OK: shared camera follows, zooms, clamps and shakes" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
@@ -279,6 +280,25 @@ func _test_target_group_is_followed() -> void:
 	await _cleanup([camera, a, b])
 
 
+## A small screen scale (a portrait phone: ~1.1 screen px per world pixel)
+## has no whole step between min_zoom and 1: the camera must still zoom out
+## to fit both fighters instead of jumping up to the 1-pixel step.
+func _test_coarse_steps_still_fit_everyone() -> void:
+	for scale in [1.125, 2.08]:
+		var camera := _make_camera()
+		camera.pixel_perfect_zoom = true
+		camera.screen_scale_override = scale
+		var a := _make_target(Vector2(120, 300))
+		var b := _make_target(Vector2(840, 300))
+		camera.add_target(a)
+		camera.add_target(b)
+		camera.snap()
+		var view := _visible_rect(camera)
+		_check(view.grow(0.01).has_point(a.global_position) and view.grow(0.01).has_point(b.global_position),
+				"at %.2fx screen scale both far-apart fighters stay in view (zoom %.2f)" % [scale, camera.zoom.x])
+		await _cleanup([camera, a, b])
+
+
 func _test_pixel_perfect_zoom_steps() -> void:
 	# At 2x screen scale the camera rests on zooms where every world pixel
 	# covers whole screen pixels, but glides between them instead of popping.
@@ -394,8 +414,9 @@ func _test_view_snaps_to_screen_pixels() -> void:
 
 
 func _test_pixel_perfect_respects_bounds() -> void:
-	# Odd screen scale (a 1170 px tall phone): the smallest step that still
-	# fits inside the map wins, never one that shows past the edge.
+	# Odd screen scale (a 1170 px tall phone): no whole step fits between the
+	# map's limit (0.8) and the fighters' fit, so the view rests on the exact
+	# zoom that shows the whole map width, never past its edge.
 	var bounds := Rect2(0, 0, 600, 400)
 	var camera := _make_camera(bounds)
 	camera.pixel_perfect_zoom = true
@@ -406,9 +427,15 @@ func _test_pixel_perfect_respects_bounds() -> void:
 	camera.add_target(a)
 	camera.add_target(b)
 	camera.snap()
+	_check(is_equal_approx(camera.zoom.x, 0.8), "zoom rests on the map's own fit (%s)" % camera.zoom)
+	_check(bounds.grow(0.01).encloses(_visible_rect(camera)), "the view never shows past the map")
+	# Close together, the step above the map's limit fits them: pixel-perfect.
+	a.position = Vector2(280, 200)
+	b.position = Vector2(320, 200)
+	camera.snap()
 	var pixels := camera.zoom.x * 1.125
-	_check(absf(pixels - roundf(pixels)) < 0.001, "zoom lands on a whole screen-pixel step (%s)" % camera.zoom)
-	_check(bounds.grow(0.01).encloses(_visible_rect(camera)), "pixel-perfect zoom never shows past the map")
+	_check(absf(pixels - roundf(pixels)) < 0.001, "close fighters rest on a whole screen-pixel step (%s)" % camera.zoom)
+	_check(bounds.grow(0.01).encloses(_visible_rect(camera)), "still inside the map")
 	await _cleanup([camera, a, b])
 
 

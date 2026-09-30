@@ -21,6 +21,7 @@ func _init() -> void:
 func _run_tests() -> void:
 	await _test_match_starts_with_spawned_players()
 	await _test_round_win_and_next_round()
+	await _test_death_in_the_countdown_counts()
 	await _test_match_end()
 	await _test_draw()
 	await _test_respawn_with_lives()
@@ -127,6 +128,26 @@ func _test_round_win_and_next_round() -> void:
 	_check(not is_instance_valid(old_p2), "dead body cleared on new round")
 	_check(new_p2.health.current_health == new_p2.health.max_health, "P2 back at full health")
 	_check(new_p2.position == SPAWNS[1], "P2 back at spawn")
+	await _teardown(m)
+
+
+## Dying before "¡PELEA!" (a fall, a leftover grenade) used to be ignored:
+## the round never ended and the fighter never came back.
+func _test_death_in_the_countdown_counts() -> void:
+	var m := _make_match()
+	var manager = m[1]
+	var winners := []
+	manager.round_ended.connect(func(w): winners.append(w))
+	manager.round_start_delay = 1.0
+	manager.start_match()
+	_check(manager.state == manager.State.ROUND_STARTING, "the round is counting down")
+	_kill(manager, 0)
+	_step(manager, 1.5)
+	_check(winners == [1], "the death counts: P2 wins the round (got %s)" % [winners])
+	_step(manager, manager.round_end_delay + 0.2)
+	await process_frame
+	_check(manager.current_round == 2 and not manager.get_player(0).health.is_dead(),
+			"and the next round brings P1 back")
 	await _teardown(m)
 
 

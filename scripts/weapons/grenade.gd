@@ -7,7 +7,9 @@ extends RigidBody2D
 ## Rockets (`explode_on_contact`) also collide with fighters (layer 2), skip
 ## their shooter and blow up on the first thing they touch, except that a
 ## fighter hit head-on gets carried away riding it (Superfighters): the rider
-## steers with left/right and dies in the blast when the ride ends.
+## steers with left/right and dies in the blast when the ride ends. A ridden
+## rocket slows down so the rider can react, and every rocket blows up at the
+## edge of the map the camera shows, so nobody rides out of sight.
 ## A molotov (`fire_width`) shatters on contact, sets fighters in the blast on
 ## fire and leaves a burning puddle on the floor below.
 
@@ -17,7 +19,14 @@ const EXPLOSION_SCENE := preload("res://scenes/items/explosion.tscn")
 ## Longest a rocket can carry a rider before it blows up anyway (seconds).
 const RIDE_TIME := 3.0
 ## How fast a rider turns the rocket (radians per second at full stick).
-const STEER_RATE := 3.0
+## With RIDE_SPEED_SCALE the turning circle stays about as wide as before:
+## more time to react, not an easier way to aim it back at someone.
+const STEER_RATE := 2.0
+## Share of the launch speed a rocket keeps once someone rides it.
+const RIDE_SPEED_SCALE := 0.6
+## A rocket this close (px) to the edge of the camera's bounds hits it like a
+## wall: the rider can't fly off the screen.
+const EDGE_MARGIN := 8.0
 ## How far below the blast (px) a molotov looks for floor to spill onto.
 const SPILL_REACH := 160.0
 ## Height of the burning puddle (px): tall enough to catch feet.
@@ -77,8 +86,17 @@ func _physics_process(delta: float) -> void:
 	elif data.is_rocket() and linear_velocity.length() > _speed * 0.9:
 		_flight = linear_velocity
 	queue_redraw()
-	if fuse_left <= 0.0:
+	if fuse_left <= 0.0 or (data.is_rocket() and _out_of_bounds()):
 		explode()
+
+
+## True past the edge (less EDGE_MARGIN) of the area the shared camera may
+## show; false when there is no camera (tests, demos).
+func _out_of_bounds() -> bool:
+	var camera := get_tree().get_first_node_in_group(SharedCamera.GROUP) as SharedCamera
+	if camera == null or camera.bounds.size.x <= 0.0 or camera.bounds.size.y <= 0.0:
+		return false
+	return not camera.bounds.grow(-EDGE_MARGIN).has_point(global_position)
 
 
 ## Detonates right now (fuse ran out, or a chain reaction later on).
@@ -121,6 +139,7 @@ func _mount(body: Node) -> void:
 	rider = body
 	add_collision_exception_with(body)
 	fuse_left = RIDE_TIME
+	_speed *= RIDE_SPEED_SCALE
 	_flight = _flight.normalized() * _speed
 	linear_velocity = _flight
 	# Now it can come back for whoever fired it.
