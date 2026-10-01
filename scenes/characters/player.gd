@@ -36,9 +36,13 @@ extends CharacterBody2D
 
 @export_group("Aim")
 ## Holding block with a gun, grenade or rocket aims instead (Superfighters):
-## the fighter plants, jump/crouch turn the aim up/down at this speed
-## (rad/s) and left/right picks the side.
-@export var aim_speed := 2.5
+## the fighter plants, jump/crouch turn the aim up/down, speeding up to
+## this (rad/s), and left/right picks the side.
+@export var aim_speed := 3.0
+## Aim turn speed (rad/s) right after pressing up/down: taps nudge the aim
+## finely, holding speeds it up to aim_speed over aim_ramp seconds.
+@export var aim_speed_min := 0.8
+@export var aim_ramp := 0.25
 
 @export_group("Sprint")
 ## Double-tap a direction (within this many seconds) to sprint while it's held.
@@ -169,6 +173,11 @@ var _last_tap_dir := 0.0
 var _since_tap := INF
 var _prev_move_dir := 0.0
 var _hanging := false
+## Seconds the aim has been turning in the same direction.
+var _aim_turn_time := 0.0
+var _aim_turn_dir := 0.0
+## The map piece the hands hold while hanging; if it breaks, the fighter falls.
+var _ledge_body: Object
 var _ledge_timer := 0.0
 var _since_crouch_press := INF
 var _was_airborne := false
@@ -806,6 +815,11 @@ func _can_aim() -> bool:
 	return weapons.has_weapon() and (weapons.weapon.is_ranged() or weapons.weapon is GrenadeData)
 
 
+## Aim turn speed after holding up/down for `held` seconds.
+func aim_turn_speed(held: float) -> float:
+	return lerpf(aim_speed_min, aim_speed, clampf(held / aim_ramp, 0.0, 1.0)) if aim_ramp > 0.0 else aim_speed
+
+
 func _update_aim(delta: float, frame: InputFrame) -> void:
 	var want := frame.is_held(InputFrame.BLOCK) and _can_aim() and is_on_floor() \
 			and not _diving and not _rolling and not is_grabbing() and not health.is_dead()
@@ -813,7 +827,9 @@ func _update_aim(delta: float, frame: InputFrame) -> void:
 		_aiming = true
 		var turn := (1.0 if frame.is_held(InputFrame.CROUCH) else 0.0) \
 				- (1.0 if frame.is_held(InputFrame.JUMP) else 0.0)
-		weapons.aim_angle += turn * aim_speed * delta
+		_aim_turn_time = _aim_turn_time + delta if turn == _aim_turn_dir and turn != 0.0 else 0.0
+		_aim_turn_dir = turn
+		weapons.aim_angle += turn * aim_turn_speed(_aim_turn_time) * delta
 		var dir := signf(frame.move_x())
 		if dir != 0.0 and (dir > 0.0) != _facing_right:
 			_flip(dir > 0.0)
@@ -859,7 +875,9 @@ func _try_ledge_grab(input_dir: float) -> void:
 	# The wall at chest height, right in front.
 	var chest := global_position + Vector2(0.0, -20.0)
 	var wall := space.intersect_ray(PhysicsRayQueryParameters2D.create(chest, chest + Vector2(dir * (half + 4.0), 0.0), 1, [get_rid()]))
-	if wall.is_empty():
+	# Only the map has ledges: crates, barrels and falling blocks share its
+	# layer but move (and a crate may still be falling).
+	if wall.is_empty() or not _is_map(wall.collider):
 		return
 	# Its top: looking down just past the wall face, from above the hands.
 	# Walls are stacks of separate 16 px blocks: a probe that starts inside one
@@ -870,7 +888,7 @@ func _try_ledge_grab(input_dir: float) -> void:
 	var down := PhysicsRayQueryParameters2D.create(from, Vector2(probe_x, chest.y + 2.0), 1, [get_rid()])
 	down.hit_from_inside = true
 	var top := space.intersect_ray(down)
-	if top.is_empty() or top.normal.y > -0.7:
+	if top.is_empty() or top.normal.y > -0.7 or not _is_map(top.collider):
 		return
 	var ledge_y: float = top.position.y
 	# Room to climb onto it: nothing solid right above the edge.
@@ -880,6 +898,7 @@ func _try_ledge_grab(input_dir: float) -> void:
 	if not space.intersect_ray(up).is_empty():
 		return
 	_hanging = true
+	_ledge_body = top.collider
 	_sprinting = false
 	_jump_rising = false
 	velocity = Vector2.ZERO
@@ -887,11 +906,20 @@ func _try_ledge_grab(input_dir: float) -> void:
 	global_position = Vector2(wall.position.x - dir * half, ledge_y + HANG_REACH)
 
 
-## Hanging: jump climbs over the edge, crouch or pushing away lets go.
+static func _is_map(collider: Object) -> bool:
+	return collider is StaticBody2D or collider is TileMap
+
+
+## Hanging: jump climbs over the edge, crouch or pushing away lets go (and
+## so does the ledge breaking away).
 func _update_hang(input_dir: float, just_pressed: int) -> void:
 	var facing := 1.0 if _facing_right else -1.0
 	if _hitstun_timer > 0.0 or health.is_dead():
 		_hanging = false
+		return
+	if not is_instance_valid(_ledge_body) or _ledge_body.is_queued_for_deletion():
+		_hanging = false
+		_ledge_timer = ledge_cooldown
 		return
 	if just_pressed & InputFrame.JUMP:
 		_hanging = false

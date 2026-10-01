@@ -19,9 +19,11 @@ func _run_tests() -> void:
 	await _test_double_tap_sprints()
 	await _test_hang_and_climb()
 	await _test_no_hang_mid_wall()
+	await _test_no_hang_on_props()
+	await _test_ledge_breaks_lets_go()
 	await _test_push_away_lets_go()
 	await _test_recovery_roll()
-	print("OK: double-tap sprint, ledge hang and climb, letting go, and recovery roll verified" if _ok else "FAILED")
+	print("OK: double-tap sprint, ledge hang and climb (map only, drop when it breaks), letting go, and recovery roll verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -114,6 +116,42 @@ func _test_no_hang_mid_wall() -> void:
 		await physics_frame
 		hung = hung or player.is_hanging()
 	_check(not hung, "jumping against a wall too tall to reach never hangs mid-wall")
+	stage.queue_free()
+	await process_frame
+
+
+## Crates, barrels and falling blocks are bodies on the world layer too, but
+## they move: the same jump that hangs from a wall of the map must not hang
+## from one of them (or from a crate still falling).
+func _test_no_hang_on_props() -> void:
+	var stage := _stage()
+	var prop := CharacterBody2D.new()
+	var shape := CollisionShape2D.new()
+	shape.shape = RectangleShape2D.new()
+	shape.shape.size = Vector2(80, 70)
+	prop.add_child(shape)
+	prop.position = Rect2(60, -70, 80, 70).get_center()
+	stage.add_child(prop)
+	var player := _fighter(stage, Vector2(30, 0), _hold(10, 1.0) + _hold(20, 1.0, InputFrame.JUMP) + _hold(60, 1.0))
+	var hung := false
+	for i in 90:
+		await physics_frame
+		hung = hung or player.is_hanging()
+	_check(not hung, "never hangs from a prop (crate, barrel, falling block)")
+	stage.queue_free()
+	await process_frame
+
+
+## The block under the hands is shot away: the fighter falls instead of
+## hanging from thin air.
+func _test_ledge_breaks_lets_go() -> void:
+	var stage := _stage(Rect2(60, -70, 80, 70))
+	var player := _fighter(stage, Vector2(30, 0), _hold(10, 1.0) + _hold(20, 1.0, InputFrame.JUMP) + _hold(200, 1.0))
+	var hung: bool = await _until(func(): return player.is_hanging(), 60)
+	_check(hung, "hangs from the wall before it breaks")
+	stage.get_child(1).queue_free()
+	await _frames(3)
+	_check(not player.is_hanging(), "lets go once the ledge is gone")
 	stage.queue_free()
 	await process_frame
 

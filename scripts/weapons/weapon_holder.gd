@@ -40,7 +40,7 @@ const GRENADE_SCENE := preload("res://scenes/items/grenade.tscn")
 var facing := 1:
 	set(value):
 		facing = 1 if value >= 0 else -1
-		rotation = aim_angle * facing
+		_pose()
 		queue_redraw()
 
 ## The weapon in hand; null means fists.
@@ -64,7 +64,7 @@ var damage_multiplier := 1.0
 var aim_angle := 0.0:
 	set(value):
 		aim_angle = clampf(value, -MAX_AIM, MAX_AIM)
-		rotation = aim_angle * facing
+		_pose()
 		queue_redraw()
 ## Draws a laser sight along the aim while the owner is aiming.
 var aiming := false:
@@ -84,19 +84,43 @@ const DRAW_ORDER := [WeaponData.Slot.RIFLE, WeaponData.Slot.HANDGUN,
 var _carried: Array[WeaponData] = [null, null, null, null]
 var _ammo_left: Array[int] = [-1, -1, -1, -1]
 
+## Recoil: pixels the gun is pushed back along the aim; springs back.
+var kick := 0.0
+## Gun rise per pixel of kick (rad): the muzzle tips up on each shot.
+const KICK_CLIMB := 0.04
+## How fast the gun comes back after a shot (px/s).
+const KICK_RETURN := 28.0
+
 var _cooldown := 0.0
 var _swing_timer := 0.0
+## Where the owner placed the hand; recoil moves the gun off it and back.
+var _rest_position := Vector2.ZERO
+## Seeded, so the same inputs give the same shots (replays, online sync).
+var _rng := RandomNumberGenerator.new()
 var _melee_hitbox: Hitbox
 var _melee_shape: RectangleShape2D
 
 
 func _ready() -> void:
+	_rest_position = position
+	_rng.seed = 1
 	_build_melee_hitbox()
 
 
 func _physics_process(delta: float) -> void:
 	_cooldown = maxf(_cooldown - delta, 0.0)
 	_update_swing(delta)
+	if kick > 0.0:
+		kick = move_toward(kick, 0.0, KICK_RETURN * delta)
+		_pose()
+
+
+## Turns the gun to the aim, tipped up and pushed back by the recoil. Only
+## the drawing moves: shots leave along aim_direction().
+func _pose() -> void:
+	rotation = (aim_angle - kick * KICK_CLIMB) * facing
+	if is_inside_tree():
+		position = _rest_position - aim_direction() * kick
 
 
 func has_weapon() -> bool:
@@ -258,11 +282,14 @@ func _fire(data: WeaponData) -> void:
 	var muzzle := global_position + forward * data.muzzle_offset
 	var exclude := _own_hurtbox_rids()
 	var angles := data.spread_angles()
+	var jitter := _rng.randf_range(-data.jitter_degrees, data.jitter_degrees)
 	for angle in angles:
 		var projectile: Projectile = PROJECTILE_SCENE.instantiate()
 		_world().add_child(projectile)
-		projectile.setup(muzzle, forward.rotated(deg_to_rad(angle)), data, _wielder(), exclude)
+		projectile.setup(muzzle, forward.rotated(deg_to_rad(angle + jitter)), data, _wielder(), exclude)
 		projectile.damage = roundi(projectile.damage * damage_multiplier)
+	kick = data.recoil
+	_pose()
 	fired.emit(data, angles.size())
 
 

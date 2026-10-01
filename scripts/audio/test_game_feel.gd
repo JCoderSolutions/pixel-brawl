@@ -42,6 +42,7 @@ func _run_tests() -> void:
 	await _test_hit_on_block()
 	await _test_projectile_impacts()
 	await _test_weapon_sounds()
+	await _test_shots_leave_camera_still()
 	await _test_explosion_breaks_blocks()
 	await _test_player_death()
 	await _test_jump_and_land()
@@ -184,6 +185,28 @@ func _test_weapon_sounds() -> void:
 		holder.fired.emit(data, 0 if data == KATANA else data.projectiles_per_shot)
 		_check(_played == [expected[data]], "%s plays %s (got %s)" % [data.id, expected[data], _played])
 	_check(_bursts(ImpactBurst.Kind.SPARK) == 2, "guns flash at the muzzle, melee and throws don't")
+	arena.queue_free()
+	await process_frame
+
+
+## The camera is shared: a shake from one fighter's gun would shake every
+## player's view, and four rifles firing together used to pile it up to
+## full trauma. Shots give feedback on the gun (recoil), not the camera.
+func _test_shots_leave_camera_still() -> void:
+	_reset()
+	var arena := _arena()
+	var camera := SharedCamera.new()
+	arena.add_child(camera)
+	var holders: Array[WeaponHolder] = []
+	for i in 4:
+		var holder := WeaponHolder.new()
+		arena.add_child(holder)
+		holders.append(holder)
+	for shot in 20:
+		for holder in holders:
+			holder.fired.emit(SHOTGUN, SHOTGUN.projectiles_per_shot)
+		await _frames(1)
+	_check(camera.trauma == 0.0, "four fighters firing leave the shared camera still (trauma %.2f)" % camera.trauma)
 	arena.queue_free()
 	await process_frame
 

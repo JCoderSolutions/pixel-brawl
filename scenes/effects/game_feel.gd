@@ -281,8 +281,11 @@ func _on_fired(data: WeaponData, projectile_count: int, holder: WeaponHolder) ->
 		_play(&"swing")
 		return
 	_play(&"shotgun" if projectile_count > 1 else &"shot")
-	var muzzle := holder.global_position + Vector2(data.muzzle_offset * holder.facing, 0.0)
-	_burst(ImpactBurst.Kind.SPARK, muzzle, Vector2(holder.facing, 0.0))
+	# The flash leaves along the aim, not always straight ahead.
+	var forward := holder.aim_direction()
+	# No camera shake: the camera is shared, so one gun would shake every
+	# player's view. The gun's own recoil (WeaponHolder.kick) is the feedback.
+	_burst(ImpactBurst.Kind.SPARK, holder.global_position + forward * data.muzzle_offset, forward)
 
 
 func _on_weapon_equipped(_weapon: WeaponData, _ammo: int) -> void:

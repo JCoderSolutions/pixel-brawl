@@ -65,6 +65,18 @@ aparecen al azar en el mapa y hacen daño por el mismo pipeline de TASK-003.
       0.03); Fácil no apunta. Test `scripts/ai/test_bots.gd` (rival sobre
       una plataforma)
 
+- [x] Disparo menos rígido (feedback de Jose 2026-09-30): el arma retrocede
+      y levanta el caño en cada disparo y vuelve a la mano (`recoil` por
+      arma: pistola 2 px, rifle 1.5, escopeta 4, recortada 4.5; solo visual,
+      la bala sale por la mira), el fogonazo sale hacia donde se apunta, el
+      rifle se desvía hasta 3°
+      por disparo (`jitter_degrees`, con semilla: mismas entradas, mismos
+      tiros) y la mira acelera (0.8 → 3 rad/s en 0.25 s: tocar ajusta fino,
+      mantener gira rápido, como el "walk" de precisión de Superfighters).
+      Tests en `scripts/weapons/test_aim.gd`. Sin temblor de cámara por
+      disparo: la cámara es compartida y 4 rifles la llevaban al máximo para
+      todos (test en `scripts/audio/test_game_feel.gd`)
+
 ## Inventario por espacios (2026-09-30)
 
 - [x] Como en Superfighters, cada luchador lleva un arma por espacio:

@@ -28,6 +28,7 @@ Menú: Luchadores → sumar un bot desde la tarjeta → mapa **Arena** → 3 ron
 - [ ] Sprint (doble toque A/D) se nota más rápido y no se activa sin querer
 - [ ] Zambullida (S corriendo): corta, cae y rueda; no cruza medio mapa
 - [ ] Cornisas: se agarra solo en el borde de arriba de una pared, nunca a mitad
+- [ ] Nunca se cuelga de cajas, barriles ni bloques que caen; si el borde se rompe, cae
 
 **Golpes** ([[project/tasks/TASK-003-melee-combat|TASK-003]])
 - [ ] El combo (J J J) termina en uppercut y se siente con peso
@@ -47,7 +48,8 @@ Menú: Luchadores → sumar un bot desde la tarjeta → mapa **Arena** → 3 ron
 - [ ] Recoger (L) y cambiar (I) es rápido; el HUD muestra arma y munición
 - [ ] Pistola, rifle, escopeta, recortada, bazuca: cadencia, daño y retroceso razonables
 - [ ] Bate y katana se sienten distintos a los puños
-- [ ] Apuntar a mano (K + W/S) es cómodo
+- [ ] Apuntar a mano (K + W/S) es cómodo: un toque ajusta fino, mantener gira rápido
+- [ ] Disparar se siente vivo: el arma retrocede, el fogonazo sale hacia la mira, el rifle se abre un poco
 - [ ] Granada: se lanza, rebota y rompe la pared; la cámara tiembla lo justo
 - [ ] Molotov: el fuego se propaga y se apaga en un tiempo razonable
 - [ ] Montar el cohete de la bazuca: se controla, no sale de la pantalla

@@ -10,6 +10,7 @@ const PLAYER_SCENE := preload("res://scenes/characters/player.tscn")
 const PISTOL := preload("res://scripts/weapons/data/pistol.tres")
 const BAZOOKA := preload("res://scripts/weapons/data/bazooka.tres")
 const KATANA := preload("res://scripts/weapons/data/katana.tres")
+const RIFLE := preload("res://scripts/weapons/data/assault_rifle.tres")
 
 var _ok := true
 
@@ -24,7 +25,10 @@ func _run_tests() -> void:
 	await _test_release_resets()
 	await _test_rocket_follows_aim()
 	await _test_blade_still_blocks()
-	print("OK: aim mode with guns, up/down/side aiming, shots and rockets along the aim, reset on release and blades still blocking verified" if _ok else "FAILED")
+	await _test_aim_speeds_up()
+	await _test_recoil_kick()
+	await _test_rifle_jitter()
+	print("OK: aim mode with guns, up/down/side aiming, shots and rockets along the aim, reset on release, blades still blocking, aim ramp, recoil kick and rifle jitter verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -143,3 +147,61 @@ func _test_blade_still_blocks() -> void:
 	_check(player.is_blocking() and not player.is_aiming(), "with a blade the button still blocks")
 	stage.queue_free()
 	await process_frame
+
+
+## A tap nudges the aim a little; holding turns it faster and faster.
+func _test_aim_speeds_up() -> void:
+	var stage := _stage()
+	var tapper: CharacterBody2D = await _fighter(stage, PISTOL, _hold(3, 0.0, InputFrame.BLOCK | InputFrame.JUMP) + _hold(40, 0.0, InputFrame.BLOCK))
+	var holder: CharacterBody2D = await _fighter(stage, PISTOL, _hold(30, 0.0, InputFrame.BLOCK | InputFrame.JUMP) + _hold(20, 0.0, InputFrame.BLOCK))
+	await _frames(60)
+	var tap: float = -tapper.weapons.aim_angle
+	var held: float = -holder.weapons.aim_angle
+	_check(tap > 0.0 and tap < 0.06, "a short tap nudges the aim finely (%.3f rad)" % tap)
+	_check(held > tap * 10.0 * 1.5, "holding turns faster than ten taps' worth (%.3f rad)" % held)
+	_check(is_equal_approx(tapper.aim_turn_speed(0.0), tapper.aim_speed_min) and is_equal_approx(tapper.aim_turn_speed(1.0), tapper.aim_speed),
+			"the turn speed ramps from aim_speed_min to aim_speed")
+	stage.queue_free()
+	await process_frame
+
+
+## Each shot pushes the gun back and tips it up, then it springs back; the
+## bullet still leaves along the aim.
+func _test_recoil_kick() -> void:
+	var stage := _stage()
+	var player: CharacterBody2D = await _fighter(stage, PISTOL, _hold(1, 0.0, InputFrame.ATTACK) + _hold(40))
+	var rest: Vector2 = player.weapons.position
+	await _frames(21)
+	var weapons: WeaponHolder = player.weapons
+	_check(weapons.kick > 0.0 and weapons.position.x < rest.x, "a shot kicks the gun back (%.1f px)" % weapons.kick)
+	_check(weapons.rotation < 0.0, "and tips the muzzle up")
+	var shots := _projectiles(stage)
+	_check(shots.size() == 1 and absf(shots[0].velocity.angle()) < 0.01, "the bullet still flies straight")
+	await _frames(20)
+	_check(weapons.kick == 0.0 and weapons.position.is_equal_approx(rest) and is_zero_approx(weapons.rotation),
+			"the gun springs back to the hand")
+	stage.queue_free()
+	await process_frame
+
+
+## Automatic fire wanders a little (never beyond jitter_degrees), the same
+## way on every run.
+func _test_rifle_jitter() -> void:
+	var runs := []
+	for run in 2:
+		var stage := _stage()
+		var player: CharacterBody2D = await _fighter(stage, RIFLE, _hold(40, 0.0, InputFrame.ATTACK))
+		await _frames(60)
+		var angles := []
+		for shot in _projectiles(stage):
+			angles.append(snappedf(rad_to_deg(shot.velocity.angle()), 0.01))
+		runs.append(angles)
+		stage.queue_free()
+		await process_frame
+	var angles: Array = runs[0]
+	var spread := 0.0
+	for angle in angles:
+		spread = maxf(spread, absf(angle))
+	_check(angles.size() >= 3, "the rifle fired a burst (%d)" % angles.size())
+	_check(spread > 0.1 and spread <= RIFLE.jitter_degrees + 0.01, "shots wander within %.1f degrees (%.2f)" % [RIFLE.jitter_degrees, spread])
+	_check(runs[0] == runs[1], "the same inputs give the same shots")
