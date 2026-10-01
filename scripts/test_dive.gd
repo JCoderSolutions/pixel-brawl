@@ -7,6 +7,8 @@ extends SceneTree
 ## damage; the rig shows it.
 ## Run: godot --headless --path . -s scripts/test_dive.gd
 
+const PROJECTILE_SCENE := preload("res://scenes/items/projectile.tscn")
+const PISTOL := preload("res://scripts/weapons/data/pistol.tres")
 const PLAYER_SCENE := preload("res://scenes/characters/player.tscn")
 
 var _ok := true
@@ -23,7 +25,8 @@ func _run_tests() -> void:
 	await _test_dive_skips_fall_damage()
 	await _test_dive_lands_into_roll()
 	await _test_air_dive_once_per_jump()
-	print("OK: running dive, roll on landing, air dive, standing crouch, dodge window and no fall damage after a dive verified" if _ok else "FAILED")
+	await _test_dive_dodges_bullets()
+	print("OK: running dive, roll on landing, air dive, standing crouch, dodge window, bullets flying through a dive and roll, and no fall damage after a dive verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -199,3 +202,43 @@ func _test_air_dive_once_per_jump() -> void:
 	_check(player._dive_timer < timer, "a second press in the same jump doesn't dive again")
 	s[0].queue_free()
 	await process_frame
+
+
+## Bullets are rays, so the dive's i-frames used to do nothing against them:
+## a low shot (under any crouch) mid-dive and mid-roll flies through, the
+## same shot once the roll is over hits.
+func _test_dive_dodges_bullets() -> void:
+	var frames: Array[InputFrame] = []
+	_hold(frames, 30, 1.0)
+	_hold(frames, 1, 1.0, InputFrame.CROUCH)
+	_hold(frames, 80)
+	var made := _stage(frames)
+	var stage: Node2D = made[0]
+	var player: CharacterBody2D = made[1]
+	for i in 32:
+		await physics_frame
+	var hp: int = player.health.current_health
+	var dodged := 0
+	for i in 22:
+		if player.is_dodging():
+			_shoot(stage, player)
+			dodged += 1
+		await physics_frame
+	_check(dodged >= 15, "the dive and roll dodge for a while (%d frames)" % dodged)
+	_check(player.health.current_health == hp, "bullets fly through a dive and roll (hp %d)" % player.health.current_health)
+	for i in 40:
+		await physics_frame
+	_check(not player.is_dodging(), "the dodge ends")
+	_shoot(stage, player)
+	for i in 5:
+		await physics_frame
+	_check(player.health.current_health < hp, "the same shot hits once the roll is over")
+	stage.queue_free()
+	await process_frame
+
+
+## A pistol bullet from just behind, at shin height.
+func _shoot(stage: Node2D, target: CharacterBody2D) -> void:
+	var bullet: Projectile = PROJECTILE_SCENE.instantiate()
+	stage.add_child(bullet)
+	bullet.setup(target.global_position + Vector2(-30, -5), Vector2.RIGHT, PISTOL, null, [])

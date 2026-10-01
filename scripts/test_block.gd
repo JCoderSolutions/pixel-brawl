@@ -27,9 +27,10 @@ func _run_tests() -> void:
 	await _test_block_does_not_stop_bullets()
 	await _test_katana_parry_returns_bullets()
 	await _test_late_or_wooden_blocks_do_not_parry()
+	await _test_close_combo_is_blocked()
 	await _test_guard_energy_drains_and_refills()
 	await _test_guard_breaks_under_pressure()
-	print("OK: block plants the fighter, stops front hits (with chip damage) and thrown weapons only, not bullets, guard energy drains, refills and breaks, and a timely katana block returns bullets verified" if _ok else "FAILED")
+	print("OK: block plants the fighter, stops front hits (with chip damage, point blank too) and thrown weapons, soaks bullets only with a melee weapon, guard energy drains, refills and breaks, and a timely katana block returns bullets verified" if _ok else "FAILED")
 	quit(0 if _ok else 1)
 
 
@@ -183,6 +184,8 @@ func _test_katana_parry_returns_bullets() -> void:
 	await process_frame
 
 
+## Too late for a parry, or a wooden blade: the guard soaks the bullet
+## instead (Superfighters), letting only the chip through.
 func _test_late_or_wooden_blocks_do_not_parry() -> void:
 	for case in ["late katana", "bat"]:
 		var stage := _stage()
@@ -191,14 +194,34 @@ func _test_late_or_wooden_blocks_do_not_parry() -> void:
 		var shooter := await _shoot_at(stage, 150, blocker)
 		blocker.weapons.equip(KATANA if case == "late katana" else BAT)
 		await _frames(70)
-		_check(blocker.health.current_health == blocker.health.max_health - PISTOL.damage,
-				"%s: the bullet hits (hp %d)" % [case, blocker.health.current_health])
+		var chip := ceili(PISTOL.damage * blocker.block_chip)
+		_check(blocker.health.current_health == blocker.health.max_health - chip,
+				"%s: the guard soaks the bullet, chip only (hp %d)" % [case, blocker.health.current_health])
 		_check(shooter.health.current_health == shooter.health.max_health, "%s: nothing comes back" % case)
 		stage.queue_free()
 		await process_frame
 
 
-## Holding the guard slowly spends energy; letting go refills it.
+## Point blank: fighters overlap, so the punch's box ends up past the
+## blocker's middle. It still comes from the front and every hit of the
+## combo is blocked.
+func _test_close_combo_is_blocked() -> void:
+	var stage := _stage()
+	var blocker := _fighter(stage, 18, _hold(300, 0.0, InputFrame.BLOCK), true)
+	var frames := _hold(10)
+	for i in 3:
+		frames += _hold(1, 0.0, InputFrame.ATTACK) + _hold(9)
+	var attacker := _fighter(stage, 0, frames)
+	var blocked := [0]
+	var full_hits := [0]
+	blocker.get_node("Hurtbox").blocked.connect(func(_kind): blocked[0] += 1)
+	blocker.get_node("Hurtbox").hit_received.connect(func(_d, _k, _s): full_hits[0] += 1)
+	await _frames(80)
+	_check(blocked[0] == 3 and full_hits[0] == 0, "a point-blank combo is fully blocked (%d blocked, %d through)" % [blocked[0], full_hits[0]])
+	stage.queue_free()
+	await process_frame
+
+
 func _test_guard_energy_drains_and_refills() -> void:
 	var stage := _stage()
 	var player := _fighter(stage, 0, _hold(120, 0.0, InputFrame.BLOCK) + _hold(240))

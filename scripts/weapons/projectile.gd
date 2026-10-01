@@ -42,6 +42,10 @@ func _physics_process(delta: float) -> void:
 	var query := PhysicsRayQueryParameters2D.create(global_position, global_position + step, HIT_MASK, _exclude)
 	query.collide_with_areas = true
 	var hit := get_world_2d().direct_space_state.intersect_ray(query)
+	# A fighter mid-dodge (dive, roll) lets the bullet fly through.
+	while not hit.is_empty() and hit.collider is Hurtbox and hit.collider.dodging:
+		query.exclude = query.exclude + [hit.rid]
+		hit = get_world_2d().direct_space_state.intersect_ray(query)
 	if not hit.is_empty():
 		_impact(hit)
 		return
@@ -63,7 +67,8 @@ func _impact(hit: Dictionary) -> void:
 		_deflect(hurtbox)
 		return
 	if hurtbox != null:
-		hurtbox.receive_hit(damage, knockback, shooter)
+		# `from` a little back along the flight: the side it came from.
+		hurtbox.receive_hit(damage, knockback, shooter, &"bullet", global_position - velocity.normalized() * 4.0)
 	impacted.emit(hit.position, hit.collider)
 	set_physics_process(false)
 	queue_free()
