@@ -34,7 +34,9 @@ Menú: Luchadores → sumar un bot desde la tarjeta → mapa **Arena** → 3 ron
 - [ ] El combo (J J J) termina en uppercut y se siente con peso
 - [ ] El alcance es justo: si parece que tocó, pegó
 - [ ] Patada en el aire: patea sin tirarse al piso
-- [ ] Cubrirse (K) frena golpes y la barra de energía se entiende
+- [ ] Cubrirse (K) frena golpes, también de cerca, y la barra de energía se entiende
+- [ ] Con bate o katana, cubrirse frena balas de frente (con la katana justo a tiempo, las devuelve)
+- [ ] Zambullida y rodada: las balas pasan a través mientras dura
 - [ ] Agarrar y lanzar al rival funciona y se entiende cuándo se puede
 
 **Bloques** ([[project/tasks/TASK-004-destructible-tiles|TASK-004]],

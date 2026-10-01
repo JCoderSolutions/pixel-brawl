@@ -48,6 +48,14 @@ con un pipeline de daño reutilizable para armas, props y tiles destructibles.
       de cornisa allá arriba perseguirían al rival fuera del mapa)
 - [ ] Test manual de sensaciones: el golpe se siente con peso y el alcance es justo
 
+- [x] Cubrirse de verdad (feedback de Jose 2026-10-01: "al cubrir sigo
+      recibiendo bastante"). Dos fallas: de cerca los luchadores se
+      superponen y el golpe se leía como por la espalda (pasaba entero); se
+      juzga por la posición del atacante. Y, como en Superfighters, cubrirse
+      con un arma cuerpo a cuerpo absorbe balas de frente (25 % pasa); con
+      la katana justo a tiempo las devuelve. Con las manos vacías las balas
+      siguen pasando. Tests `scripts/test_block.gd`
+
 ## Detalles
 
 - Capas de física: 1 `world`, 2 `players`, 3 `hitboxes`, 4 `hurtboxes`.
