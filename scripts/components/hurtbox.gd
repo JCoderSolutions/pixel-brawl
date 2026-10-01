@@ -13,6 +13,10 @@ signal blocked(kind: StringName)
 ## Melee (Hitbox) swings land (hit_landed, sounds) but deal no damage: map
 ## blocks that only bullets and blasts can break.
 @export var melee_proof := false
+## Set by the owner during a dodge (dive, roll): bullets fly through. Melee
+## already misses then because the owner turns `monitorable` off, but
+## bullets are rays and don't look at it.
+var dodging := false
 
 
 ## `kind` and `from` (where the hit comes from, global) let the owner block

@@ -137,6 +137,8 @@ var _facing_right := true
 var _attack_timer := 0.0
 var _hitstun_timer := 0.0
 var _invulnerable_timer := 0.0
+## Seconds left of a dive or roll's dodge (bullets fly through).
+var _dodge_timer := 0.0
 var _prev_buttons := 0
 var _move := &"jab"
 ## 1 after a jab, 2 after a cross: what the next press in the window chains.
@@ -218,6 +220,9 @@ func _physics_process(delta: float) -> void:
 		_invulnerable_timer = max(_invulnerable_timer - delta, 0.0)
 		if _invulnerable_timer == 0.0:
 			_end_invulnerability()
+	if _dodge_timer > 0.0:
+		_dodge_timer = maxf(_dodge_timer - delta, 0.0)
+		$Hurtbox.dodging = _dodge_timer > 0.0
 
 	# Sample every tick, even when unable to act, so a button held through
 	# hitstun doesn't read as a fresh press once control returns.
@@ -379,10 +384,24 @@ func is_blocking() -> bool:
 
 ## Hurtbox asks before a hit lands: a guard stops melee (fists, blades,
 ## thrown weapons) coming from the front and pushes the blocker back a bit.
+## With a melee weapon in hand it also soaks bullets from the front
+## (Superfighters; a fresh metal block sends them back instead, see parry).
 ## Some damage still gets through (chip) and each hit spends guard energy;
 ## the hit that empties it breaks the guard and stuns the blocker.
 func guard(kind: StringName, from: Vector2, damage := 0, source: Node = null) -> bool:
-	if not _blocking or kind != &"melee" or not _in_front(from):
+	if not _blocking:
+		return false
+	if kind == &"melee" and source is Node2D:
+		# Judge the side by the attacker, not the hitbox: fighters overlap,
+		# and a punch thrown from that close has its box past our middle.
+		from = source.global_position
+	if not _in_front(from):
+		return false
+	if kind == &"bullet":
+		var held := weapons.weapon if weapons.has_weapon() else null
+		if held == null or held.is_ranged() or held is GrenadeData:
+			return false
+	elif kind != &"melee":
 		return false
 	velocity.x = (-1.0 if _facing_right else 1.0) * block_push
 	_guard = maxf(_guard - damage * block_hit_cost, 0.0)
@@ -780,6 +799,7 @@ func _start_dive(dir: float, lift: float) -> void:
 	velocity = Vector2(dir * dive_speed, lift)
 	_flip(dir > 0.0)
 	_invulnerable_timer = maxf(_invulnerable_timer, dive_dodge_time)
+	_dodge(dive_dodge_time)
 	$Hurtbox.set_deferred("monitorable", false)
 
 
@@ -788,7 +808,18 @@ func _start_roll(dir: float) -> void:
 	_roll_timer = roll_time
 	_roll_dir = dir
 	_invulnerable_timer = maxf(_invulnerable_timer, roll_dodge_time)
+	_dodge(roll_dodge_time)
 	$Hurtbox.set_deferred("monitorable", false)
+
+
+## Bullets fly through for `seconds` (dive and roll i-frames).
+func _dodge(seconds: float) -> void:
+	_dodge_timer = maxf(_dodge_timer, seconds)
+	$Hurtbox.dodging = true
+
+
+func is_dodging() -> bool:
+	return _dodge_timer > 0.0
 
 
 ## The roll slows down along the floor; rolling off a ledge just falls.

@@ -64,3 +64,8 @@ Personaje jugable que corre, salta y agacha con física cómoda (feel over perfe
       colgaba de ellos (hasta de una caja cayendo). Ahora solo cuelga de
       `StaticBody2D`/`TileMap`, y si el bloque se rompe mientras cuelga, cae.
       Tests en `scripts/test_mobility.gd`
+- [x] La zambullida y la rodada esquivan balas (feedback de Jose
+      2026-10-01): la invulnerabilidad apagaba la zona de golpe, pero las
+      balas son rayos y no la miran, así que no esquivaba ninguna. Ahora la
+      zona de golpe marca `dodging` y las balas la atraviesan durante la
+      ventana (zambullida 0.3 s, rodada 0.15 s). Test `scripts/test_dive.gd`
